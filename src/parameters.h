@@ -59,8 +59,6 @@
 #include <cassert>
 
 
-// #include "DBoW3/DBoW3.h"
-#include "../ThirdParty/DVision/DVision.h"
 
 using namespace std;
 
@@ -72,14 +70,10 @@ extern string PATH_TOPIC;
 extern int IMAGE_WIDTH;
 extern int IMAGE_HEIGHT;
 extern int IMAGE_CROP;
-extern int USE_BRIEF;
-extern int USE_ORB;
-extern int NUM_BRI_FEATURES;
 extern int NUM_ORB_FEATURES;
 extern int MIN_LOOP_FEATURE_NUM;
 extern int MIN_LOOP_SEARCH_GAP;
 extern double MIN_LOOP_SEARCH_TIME;
-// extern float MIN_LOOP_BOW_TH;
 extern double SKIP_TIME;
 extern int NUM_THREADS;
 extern int DEBUG_IMAGE;
@@ -122,32 +116,3 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
 
 
 
-class BriefExtractor
-{
-public:
-
-    DVision::BRIEF m_brief;
-
-    virtual void operator()(const cv::Mat &im, vector<cv::KeyPoint> &keys, vector<DVision::BRIEF::bitset> &descriptor_and_images) const
-    {
-        m_brief.compute(im, keys, descriptor_and_images);
-    }
-
-    BriefExtractor(){};
-
-    BriefExtractor(const std::string &pattern_file)
-    {
-        cv::FileStorage fs(pattern_file.c_str(), cv::FileStorage::READ);
-        if(!fs.isOpened()) throw string("Could not open file ") + pattern_file;
-
-        vector<int> x1, y1, x2, y2;
-        fs["x1"] >> x1;
-        fs["x2"] >> x2;
-        fs["y1"] >> y1;
-        fs["y2"] >> y2;
-
-        m_brief.importPairs(x1, y1, x2, y2);
-    }
-};
-
-extern BriefExtractor briefExtractor;

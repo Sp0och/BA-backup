@@ -7,11 +7,11 @@ public:
     ros::NodeHandle nh;
 
     ros::Publisher pub_image;
-
+    //pictures
     cv::Mat image_range;
     cv::Mat image_noise;
     cv::Mat image_intensity;
-
+    //pointcloud
     pcl::PointCloud<PointType>::Ptr cloud_track;
     //class constructor: reset the pointcloud and declare a publisher
     ImageHandler()

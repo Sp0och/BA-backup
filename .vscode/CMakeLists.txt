@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(descriptor_and_image)
+project(descriptor)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -36,7 +36,9 @@ include_directories(
 )
 
 file(GLOB all_source_files 
-"src/cloud_handler_node.cpp"
+"src/*.cpp"
+"ThirdParty/DUtils/*.cpp"
+"ThirdParty/DVision/*.cpp"
 )
 
  add_executable(${PROJECT_NAME}_main ${all_source_files})

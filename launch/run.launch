@@ -12,6 +12,7 @@
           name="$(arg project)_main"
           output="screen"
           />
+
       <node pkg="rosbag" type="play" name="player" output="screen" 
         args="$(arg bag_path)"/>
     <!--- Run Rviz-->
@@ -20,5 +21,5 @@
           name="$(arg project)_rviz" 
           args="-d $(find descriptor_and_image)/launch/rviz.rviz" 
           />
-
 </launch>
+
