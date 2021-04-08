@@ -1,0 +1,23 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/beginner_tutorials/include/**",
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/include/**",
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/my_lidar/include/**",
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/pcl_tutorial_pkg/include/**",
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/pub_sub/include/**",
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/smb_highlevel_controller/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}

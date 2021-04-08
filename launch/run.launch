@@ -1,0 +1,24 @@
+<launch>
+
+    <arg name="project" default="descriptor_and_image"/>
+    <arg name="bag_path" default="/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/imaging_lidar_place_recognition/launch/handheld_registered.bag"/>
+    
+    <!--- Param file-->
+    <param name="lio_loop_config_file" type="string" value="$(find descriptor_and_image)/config/params.yaml" />
+
+    <!--- Node-->
+    <node pkg="$(arg project)"  
+          type="$(arg project)_main"
+          name="$(arg project)_main"
+          output="screen"
+          />
+      <node pkg="rosbag" type="play" name="player" output="screen" 
+        args="$(arg bag_path)"/>
+    <!--- Run Rviz-->
+    <node pkg="rviz" 
+          type="rviz" 
+          name="$(arg project)_rviz" 
+          args="-d $(find descriptor_and_image)/launch/rviz.rviz" 
+          />
+
+</launch>
