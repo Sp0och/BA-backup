@@ -1,9 +1,11 @@
 #include "image_handler.h"
 #include "parameters.h"
+#include "ORB.h"
 
 std::string PROJECT_NAME;
 std::string CLOUD_TOPIC;
 std::string PATH_TOPIC;
+std::string ORB_TOPIC;
 int IMAGE_WIDTH;
 int IMAGE_HEIGHT;
 int IMAGE_CROP;
@@ -15,12 +17,6 @@ int NUM_ORB_FEATURES;
 double MATCH_IMAGE_SCALE;
 cv::Mat MASK;
 pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
-
-ros::Publisher pub_match_img;
-ros::Publisher pub_match_msg;
-ros::Publisher pub_prepnp_img;
-ros::Publisher pub_marker;
-ros::Publisher pub_index;
 
 
 ImageHandler *image_handler;
@@ -39,12 +35,10 @@ void updateParams (ros::NodeHandle& n){
     fsSettings["project_name"] >> PROJECT_NAME;
     fsSettings["cloud_topic"]  >> CLOUD_TOPIC;
     fsSettings["path_topic"]   >> PATH_TOPIC;
+    fsSettings["orb_topic"]   >> ORB_TOPIC;
     fsSettings["image_width"]  >> IMAGE_WIDTH;
     fsSettings["image_height"] >> IMAGE_HEIGHT;
     fsSettings["image_crop"]   >> IMAGE_CROP;
-    fsSettings["min_loop_feature_num"] >> MIN_LOOP_FEATURE_NUM;
-    fsSettings["min_loop_search_gap"]  >> MIN_LOOP_SEARCH_GAP;
-    fsSettings["min_loop_search_time"] >> MIN_LOOP_SEARCH_TIME;
     fsSettings["num_threads"]  >> NUM_THREADS;
     fsSettings["debug_image"]  >> DEBUG_IMAGE;
     fsSettings["match_image_scale"] >> MATCH_IMAGE_SCALE;
@@ -63,7 +57,7 @@ cv::Mat create_mask(){
 
 
 /**
- * Class cloud_projector: create a subscriber that subscribes to the topic of the raw PC and via callback function projects that
+ * Class cloud_displayer: create a subscriber that subscribes to the topic of the raw PC and via callback function projects that
  * data and publishes the projections.
  * */
 class cloud_displayer{
@@ -71,19 +65,20 @@ class cloud_displayer{
     public:
     cloud_displayer(){
     //create subscriber subscribing to topic "points_raw"
-    CSub = nps.subscribe/* <const sensor_msgs::PointCloud2> */(CLOUD_TOPIC, 1000, &cloud_displayer::callback_c, this);
-    PSub = nps.subscribe/* <const nav_msgs::PathConstPtr&> */(PATH_TOPIC, 1000, &cloud_displayer::callback_p, this);
+    CSub = nps.subscribe(CLOUD_TOPIC, 1000, &cloud_displayer::callback_c, this);
+    PSub = nps.subscribe(PATH_TOPIC, 1000, &cloud_displayer::callback_p, this);
     }
     //callback fct for the cloud.
     void callback_c(const sensor_msgs::PointCloud2::ConstPtr&  cloud_message){
         //Image handler part: project and visualize the pointcloud
         image_handler->cloud_handler(cloud_message);
-
-        MASK = create_mask();
         //ORB descriptor
+        MASK = create_mask();
         /* Take the pictures, detect keypoints, create descriptors, publish indications of  decsriptors */
-        //
+        ORB* orb = new ORB(image_handler->image_intensity, image_handler->cloud_track);
     }
+
+    
     //callback function for the path
     void callback_p(const nav_msgs::PathConstPtr& path_msg)
     {
@@ -112,16 +107,6 @@ ros::init(argc, argv, "cloud_projection");
 ros::NodeHandle n;
 
     updateParams(n);
-
-
-    //set up publishers
-    pub_match_img  = n.advertise<sensor_msgs::Image>                ("loop_detector/image", 1);
-    pub_match_msg  = n.advertise<std_msgs::Float64MultiArray>       ("loop_detector/time", 1);
-    pub_prepnp_img = n.advertise<sensor_msgs::Image>                ("loop_detector/prepnp", 1);
-    pub_marker     = n.advertise<visualization_msgs::MarkerArray>   ("loop_detector/marker", 1);
-    pub_index      = n.advertise<std_msgs::Int64MultiArray>         ("loop_detector/index", 1);
-
-    
 
 
     image_handler = new ImageHandler();

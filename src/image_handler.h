@@ -7,6 +7,7 @@ public:
     ros::NodeHandle nh;
 
     ros::Publisher pub_image;
+    ros::Publisher pub_intensity;
     //pictures
     cv::Mat image_range;
     cv::Mat image_noise;
@@ -20,6 +21,7 @@ public:
         cloud_track->resize(IMAGE_HEIGHT * IMAGE_WIDTH);
         //creates the publisher publishing the image
         pub_image  = nh.advertise<sensor_msgs::Image>("loop_detector/image_stack", 1);
+        pub_intensity  = nh.advertise<sensor_msgs::Image>("loop_detector/intensity_image", 1);
     }
 
     void cloud_handler(const sensor_msgs::PointCloud2ConstPtr &cloud_msg)
@@ -78,9 +80,9 @@ public:
         if (pub_image.getNumSubscribers() != 0)
         {
             // option 1: display intensity image
-            // cv::Mat image_visualization = image_intensity.clone();
-            // cv::cvtColor(image_visualization, image_visualization, CV_GRAY2RGB);
-            // pubImage(&pub_image, image_visualization, cloud_msg->header, "bgr8");
+            cv::Mat intensity_visualization = image_intensity.clone();
+            cv::cvtColor(intensity_visualization, intensity_visualization, CV_GRAY2RGB);
+            pubImage(&pub_intensity, intensity_visualization, cloud_msg->header, "bgr8");
 
             // option 2: display all images from available lidar channels
             cv::Mat image_visualization;

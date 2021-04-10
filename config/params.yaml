@@ -15,6 +15,9 @@ image_crop: 256                 # mask for blocking feature extraction; indoor/h
 # Registered path
 path_topic: "lio_sam/mapping/path"
 
+#orb descriptor
+orb_topic: "loop_detector/intensity_image"  #orb image input topic
+
 # Feature matching
 use_brief: 1                    # enabling flag for BRIEF feature 
 use_orb: 1                      # enabling flag for ORB feature 

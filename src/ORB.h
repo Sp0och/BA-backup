@@ -8,7 +8,6 @@ struct ORB
 {
     cv::Mat image;
     cv::Mat image_intensity;
-    cv::Mat thumbnail;
     pcl::PointCloud<PointType>::Ptr cloud;
 
     vector<cv::Point3f> orb_point_3d;
@@ -17,9 +16,14 @@ struct ORB
     vector<cv::KeyPoint> orb_keypoints;
     cv::Mat orb_descriptors;
 
-    void create_keypoints();
+    void visualize_keypoints();
 
-    ORB::ORB(const cv::Mat &_image_intensity, 
+    ORB(const cv::Mat &_image_intensity, 
              const pcl::PointCloud<PointType>::Ptr _cloud);
+
+    private:
+    ros::NodeHandle n;
+    ros::Publisher KP_pub;
+
 
 };
