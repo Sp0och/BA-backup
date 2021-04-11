@@ -20,8 +20,8 @@ public:
         cloud_track.reset(new pcl::PointCloud<PointType>());
         cloud_track->resize(IMAGE_HEIGHT * IMAGE_WIDTH);
         //creates the publisher publishing the image
-        pub_image  = nh.advertise<sensor_msgs::Image>("loop_detector/image_stack", 1);
-        pub_intensity  = nh.advertise<sensor_msgs::Image>("loop_detector/intensity_image", 1);
+        pub_image  = nh.advertise<sensor_msgs::Image>("image_stack", 1);
+        pub_intensity  = nh.advertise<sensor_msgs::Image>("intensity_image", 1);
     }
 
     void cloud_handler(const sensor_msgs::PointCloud2ConstPtr &cloud_msg)
@@ -39,7 +39,7 @@ public:
         image_intensity = cv::Mat(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC1, cv::Scalar(0));
 
         #pragma omp parallel for num_threads(NUM_THREADS)
-        //iterate through the points of the point cloud vector and assign them as pixels. Do so with multithreading to safe time.
+        //create the images from the pointcloud
         for (int u = 0; u < IMAGE_HEIGHT; u++) 
         {
             for (int v = 0; v < IMAGE_WIDTH; v++) 
@@ -76,13 +76,14 @@ public:
                 }
             }
         }
-
-        if (pub_image.getNumSubscribers() != 0)
-        {
+        if(pub_intensity.getNumSubscribers()!=0){
             // option 1: display intensity image
             cv::Mat intensity_visualization = image_intensity.clone();
             cv::cvtColor(intensity_visualization, intensity_visualization, CV_GRAY2RGB);
             pubImage(&pub_intensity, intensity_visualization, cloud_msg->header, "bgr8");
+        }
+        if (pub_image.getNumSubscribers() != 0)
+        {
 
             // option 2: display all images from available lidar channels
             cv::Mat image_visualization;

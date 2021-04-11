@@ -47,27 +47,68 @@ void publish_keypoints (ros::Publisher* publisher, cv::Mat& image, const vector<
 
 
 
-ORB::ORB(const cv::Mat &_image_intensity, 
+/* ORB::ORB(const cv::Mat &_image_intensity, 
          const pcl::PointCloud<PointType>::Ptr _cloud){
 
              KP_pub = n.advertise<sensor_msgs::Image>("loop_detector/detected_keypoints", 1);
              image_intensity = _image_intensity.clone();
              cloud = _cloud;
              cv::resize(image_intensity, image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
-            //  ROS_INFO("we get so far");
              visualize_keypoints();
+} */
+
+ORB::ORB(const cv::Mat &_image_intensity, 
+         const pcl::PointCloud<PointType>::Ptr _cloud){
+
+             KP_pub = n.advertise<sensor_msgs::Image>("orb_keypoints", 1);
+             image_intensity = _image_intensity.clone();
+             cloud = _cloud;
+             cv::resize(image_intensity, image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
+             create_descriptors();
 }
 
 
 
 
-void ORB::visualize_keypoints(){
+/* void ORB::visualize_keypoints(){
     cv::Ptr<cv::ORB> detector = cv::ORB::create(NUM_ORB_FEATURES, 1.2f, 8, 1);
     //store keypoints in orb_keypoints
     detector->detect(image,orb_keypoints,MASK);
-    keypointTransition(orb_keypoints,orb_point_2d_uv);
-    publish_keypoints(&KP_pub,image,orb_point_2d_uv,5,cv::Scalar(0, 255, 0));
+    keypointTransition(orb_keypoints,orb_keypoints_2d);
+    publish_keypoints(&KP_pub,image,orb_keypoints_2d,5,cv::Scalar(0, 255, 0));
+} */
+
+/**
+ * Stores the ORB keypoints in the vector in the std::vector format
+ * @param orb_keypoints_2d is then the vector containing the keypoints
+ * */
+void ORB::create_descriptors(){
+    cv::Ptr<cv::ORB> detector = cv::ORB::create(NUM_ORB_FEATURES, 1.2f, 8, 1);
+    //store keypoints in orb_keypoints
+    detector->detect(image,orb_keypoints,MASK);
+    keypointTransition(orb_keypoints,orb_keypoints_2d);
+    publish_keypoints(&KP_pub, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
+    detector->compute(image,orb_keypoints,orb_descriptors);
 }
+
+    /* void ORB::real_keypoints(const vector<cv::Point2f>& in_vector, 
+                        vector<cv::Point3f>& out_3d,
+                        vector<cv::Point2f>& out_2d_norm
+                        vector<uchar>& out_status){
+        orb_point_3d.resize(in_vector.size());
+        orb_point_2d_norm.resize(in_vector.size());
+
+        #pragma omp parallel for num_threads(NUM_THREADS)
+
+        for(int i = 0; i < in_vector.size(); i++){
+            int row_index = (int)in_vector[i].y;
+            int col_index = (int)in_vector[i].x;
+            int index = row_index*IMAGE_WIDTH + col_index;
+            orb_point_3d[i].x = cloud;
+        }
+    } */
+
+
 
 
 

@@ -79,16 +79,8 @@ extern int NUM_THREADS;
 extern int DEBUG_IMAGE;
 extern double MATCH_IMAGE_SCALE;
 extern cv::Mat MASK;
-extern map<int, int> index_match_container;
-extern map<int, int> index_poseindex_container;
 extern pcl::PointCloud<PointType>::Ptr cloud_traj;
 
-extern ros::Publisher pub_match_img;
-extern ros::Publisher pub_match_msg;
-extern ros::Publisher pub_bow_img;
-extern ros::Publisher pub_prepnp_img;
-extern ros::Publisher pub_marker;
-extern ros::Publisher pub_index;
 
 
 

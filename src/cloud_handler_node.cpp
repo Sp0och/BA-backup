@@ -1,6 +1,7 @@
 #include "image_handler.h"
 #include "parameters.h"
 #include "ORB.h"
+#include "frame_handler.h"
 
 std::string PROJECT_NAME;
 std::string CLOUD_TOPIC;
@@ -20,6 +21,7 @@ pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
 
 
 ImageHandler *image_handler;
+Framehandler *frame_handler;
 
 void updateParams (ros::NodeHandle& n){
     // Load params from parameter server
@@ -76,6 +78,8 @@ class cloud_displayer{
         MASK = create_mask();
         /* Take the pictures, detect keypoints, create descriptors, publish indications of  decsriptors */
         ORB* orb = new ORB(image_handler->image_intensity, image_handler->cloud_track);
+        //frame pipeline
+        frame_handler->newIteration(orb);
     }
 
     
@@ -110,6 +114,7 @@ ros::NodeHandle n;
 
 
     image_handler = new ImageHandler();
+    frame_handler = new Framehandler();
     cloud_displayer cloudDisplayer;
 
   

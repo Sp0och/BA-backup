@@ -15,8 +15,6 @@ image_crop: 256                 # mask for blocking feature extraction; indoor/h
 # Registered path
 path_topic: "lio_sam/mapping/path"
 
-#orb descriptor
-orb_topic: "loop_detector/intensity_image"  #orb image input topic
 
 # Feature matching
 use_brief: 1                    # enabling flag for BRIEF feature 
@@ -37,7 +35,3 @@ num_threads: 4                  # CPU thread number
 # Visualization
 debug_image: 0                  # debug flag (warning: uses massive memory)
 match_image_scale: 1.0          # debug image display size
-
-# Vocab file
-vocabulary_file: "/config/orbvoc.dbow3"
-brief_pattern_file: "/config/brief_pattern.yml"
