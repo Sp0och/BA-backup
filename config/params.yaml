@@ -15,6 +15,8 @@ image_crop: 256                 # mask for blocking feature extraction; indoor/h
 # Registered path
 path_topic: "lio_sam/mapping/path"
 
+#picture mode
+mode: 2
 
 # Feature matching
 use_brief: 1                    # enabling flag for BRIEF feature 

@@ -15,6 +15,7 @@ int MIN_LOOP_SEARCH_GAP;
 int NUM_THREADS;
 int DEBUG_IMAGE;
 int NUM_ORB_FEATURES;
+int MODE;
 double MATCH_IMAGE_SCALE;
 cv::Mat MASK;
 pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
@@ -45,6 +46,8 @@ void updateParams (ros::NodeHandle& n){
     fsSettings["debug_image"]  >> DEBUG_IMAGE;
     fsSettings["match_image_scale"] >> MATCH_IMAGE_SCALE;
     fsSettings["num_orb_features"] >> NUM_ORB_FEATURES;
+    fsSettings["mode"] >> MODE;
+    
 }
 
 cv::Mat create_mask(){
@@ -80,14 +83,14 @@ class cloud_displayer{
         //choose image source for keypoint detection
 
         // image_intensity 
-        ORB* orb1 = new ORB(image_handler->image_intensity, image_handler->cloud_track,1);
+        ORB* orb1 = new ORB(image_handler->image_intensity, image_handler->cloud_track,MODE);
         // image_range 
-        ORB* orb2 = new ORB(image_handler->image_range, image_handler->cloud_track,2);
+        // ORB* orb2 = new ORB(image_handler->image_range, image_handler->cloud_track,2);
         // image_ambient (noise) 
-        ORB* orb3 = new ORB(image_handler->image_noise, image_handler->cloud_track,3);
+        // ORB* orb3 = new ORB(image_handler->image_noise, image_handler->cloud_track,3);
         
         //frame pipeline
-        // frame_handler->newIteration(orb1);
+        frame_handler->newIteration(orb1);
     }
 
     
