@@ -76,10 +76,18 @@ class cloud_displayer{
         image_handler->cloud_handler(cloud_message);
         //ORB descriptor
         MASK = create_mask();
-        /* Take the pictures, detect keypoints, create descriptors, publish indications of  decsriptors */
-        ORB* orb = new ORB(image_handler->image_intensity, image_handler->cloud_track);
+
+        //choose image source for keypoint detection
+
+        // image_intensity 
+        ORB* orb1 = new ORB(image_handler->image_intensity, image_handler->cloud_track,1);
+        // image_range 
+        ORB* orb2 = new ORB(image_handler->image_range, image_handler->cloud_track,2);
+        // image_ambient (noise) 
+        ORB* orb3 = new ORB(image_handler->image_noise, image_handler->cloud_track,3);
+        
         //frame pipeline
-        frame_handler->newIteration(orb);
+        // frame_handler->newIteration(orb1);
     }
 
     

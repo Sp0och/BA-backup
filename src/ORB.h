@@ -8,7 +8,7 @@ class ORB
 {
     public:
     cv::Mat image;
-    cv::Mat image_intensity;
+    cv::Mat input_image;
     pcl::PointCloud<PointType>::Ptr cloud;
 
     vector<cv::Point3f> orb_point_3d;
@@ -25,11 +25,14 @@ class ORB
                         vector<uchar>& out_status); */
 
     ORB(const cv::Mat &_image_intensity, 
-             const pcl::PointCloud<PointType>::Ptr _cloud);
+             const pcl::PointCloud<PointType>::Ptr _cloud, int mode);
 
     private:
     ros::NodeHandle n;
-    ros::Publisher KP_pub;
+    ros::Publisher KP_pub_intensity;
+    ros::Publisher KP_pub_range;
+    ros::Publisher KP_pub_ambient;
+    int mode;
 
 
 };

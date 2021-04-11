@@ -23,16 +23,6 @@ void keypointTransition(vector<cv::Point2f>& points_in, vector<cv::KeyPoint>& ke
     }
 }
 
-/* void publish_keypoints (ros::Publisher* publisher, cv::Mat& image, const vector<cv::Point2f>& keypoints, const int circle_size,const cv::Scalar line_color){
-    cv::cvtColor(image, image, CV_GRAY2RGB);
-    for(int i = 0; i < (int)keypoints.size(); i++){
-        cv::Point2f cur_pt = keypoints[i] * MATCH_IMAGE_SCALE;
-        cv::circle(image,cur_pt,circle_size,line_color);
-    }
-
-    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
-    publisher->publish(msg);
-} */
 
 void publish_keypoints (ros::Publisher* publisher, cv::Mat& image, const vector<cv::Point2f>& keypoints, const int circle_size,const cv::Scalar line_color){
     cv::cvtColor(image, image, CV_GRAY2RGB);
@@ -40,43 +30,36 @@ void publish_keypoints (ros::Publisher* publisher, cv::Mat& image, const vector<
         cv::Point2f cur_pt = keypoints[i] * MATCH_IMAGE_SCALE;
         cv::circle(image,cur_pt,circle_size,line_color);
     }
-
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
     publisher->publish(msg);
 }
 
 
 
-/* ORB::ORB(const cv::Mat &_image_intensity, 
-         const pcl::PointCloud<PointType>::Ptr _cloud){
+ORB::ORB(const cv::Mat &_input_image, 
+         const pcl::PointCloud<PointType>::Ptr _cloud,
+         int _mode){
+        mode = _mode;
+        assert(mode == 1 || mode == 2 || mode == 3);
 
-             KP_pub = n.advertise<sensor_msgs::Image>("loop_detector/detected_keypoints", 1);
-             image_intensity = _image_intensity.clone();
-             cloud = _cloud;
-             cv::resize(image_intensity, image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
-             visualize_keypoints();
-} */
+        input_image = _input_image.clone();
+        cv::resize(input_image, image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
+        cv::resize(input_image, input_image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
+        cloud = _cloud;
 
-ORB::ORB(const cv::Mat &_image_intensity, 
-         const pcl::PointCloud<PointType>::Ptr _cloud){
+        if(mode == 1)
+        KP_pub_intensity = n.advertise<sensor_msgs::Image>("orb_keypoints_intensity", 1);
+        else if(mode == 2)
+        KP_pub_range = n.advertise<sensor_msgs::Image>("orb_keypoints_range", 1);
+        else
+        KP_pub_ambient = n.advertise<sensor_msgs::Image>("orb_keypoints_ambient", 1);
+        
+        create_descriptors();
 
-             KP_pub = n.advertise<sensor_msgs::Image>("orb_keypoints", 1);
-             image_intensity = _image_intensity.clone();
-             cloud = _cloud;
-             cv::resize(image_intensity, image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
-             create_descriptors();
+        
+
 }
 
-
-
-
-/* void ORB::visualize_keypoints(){
-    cv::Ptr<cv::ORB> detector = cv::ORB::create(NUM_ORB_FEATURES, 1.2f, 8, 1);
-    //store keypoints in orb_keypoints
-    detector->detect(image,orb_keypoints,MASK);
-    keypointTransition(orb_keypoints,orb_keypoints_2d);
-    publish_keypoints(&KP_pub,image,orb_keypoints_2d,5,cv::Scalar(0, 255, 0));
-} */
 
 /**
  * Stores the ORB keypoints in the vector in the std::vector format
@@ -87,8 +70,14 @@ void ORB::create_descriptors(){
     //store keypoints in orb_keypoints
     detector->detect(image,orb_keypoints,MASK);
     keypointTransition(orb_keypoints,orb_keypoints_2d);
-    publish_keypoints(&KP_pub, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
     detector->compute(image,orb_keypoints,orb_descriptors);
+
+    if(mode == 1)
+    publish_keypoints(&KP_pub_intensity, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
+    else if(mode == 2)
+    publish_keypoints(&KP_pub_range, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
+    else
+    publish_keypoints(&KP_pub_ambient, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
 }
 
     /* void ORB::real_keypoints(const vector<cv::Point2f>& in_vector, 
