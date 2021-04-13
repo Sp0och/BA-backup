@@ -2,6 +2,15 @@
 #include "parameters.h"
 #include "ORB.h"
 
+template <typename Derived>
+
+void trim_vector(vector<Derived> &v, vector<uchar>& status){
+    int j = 0;
+    for (int i = 0; i < int(v.size()); i++)
+        if (status[i])
+            v[j++] = v[i];
+    v.resize(j);
+}
 
 class Framehandler{
 
@@ -11,6 +20,7 @@ class Framehandler{
         cur_orb = nullptr;
         prev_orb = nullptr;
         match_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
+        filtered_publisher = n_frame.advertise<sensor_msgs::Image>("filtered_matches", 1);
     }
 
     void newIteration(ORB* new_frame){
@@ -18,15 +28,16 @@ class Framehandler{
             cur_orb = new_frame;
         }
         else{
+            // if(prev_orb != nullptr)
+            // prev_orb->freeMemory();
             prev_orb = cur_orb;
             cur_orb = new_frame;
             create_matches();
-            // publish_matches(&match_publisher,true,5,cv::Scalar(0,255,0),cur_orb->image,prev_orb->image,cur_orb->orb_descriptors,prev_orb->orb_descriptors);
-            publish_matches(5,cv::Scalar(0,255,0),true);
         }
     }
 
     void create_matches(){
+        cv::BFMatcher matcher = cv::BFMatcher(cv::NORM_HAMMING);
         //create matches
         matcher.match(cur_orb->orb_descriptors,prev_orb->orb_descriptors,matches);
         //sort matches in ascending order (concerning distance)
@@ -38,14 +49,51 @@ class Framehandler{
             if(matches[i].distance > matches[0].distance * 2)
             break;
         }
-        
+        if((int)good_matches.size() > MIN_LOOP_FEATURE_NUM){
+        std::vector<cv::Point2f> sorted_2d_cur, sorted_2d_prev, sorted_2d_norm_prev;
+        std::vector<cv::Point3f> sorted_3d_cur;
+        //pair the keypoints up and thus also the matches:
+        for (size_t i = 0; i < good_matches.size(); i++)
+        {
+            int cur_index = good_matches[i].queryIdx;
+            int prev_index = good_matches[i].trainIdx;
+
+            sorted_3d_cur.push_back(cur_orb->orb_point_3d[cur_index]);
+            sorted_2d_cur.push_back(cur_orb->orb_keypoints_2d[cur_index]);
+            sorted_2d_prev.push_back(prev_orb->orb_keypoints_2d[prev_index]);
+            sorted_2d_norm_prev.push_back(prev_orb->orb_point_2d_norm[prev_index]);
+        }
+        publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
         //here comes the RANSAC part
+        std::vector<uchar> status;
+        cv::Mat r, rvec, tvec, D, inliers;
+        cv::Mat K = (cv::Mat_<double>(3, 3) << 1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0);
+        solvePnPRansac(sorted_3d_cur, sorted_2d_norm_prev, K, D, rvec, tvec, false, 100, 0.025, 0.99, inliers);
+
+        status.resize(sorted_2d_norm_prev.size(), 0);
+        for( int i = 0; i < inliers.rows; i++)
+        {
+            int n = inliers.at<int>(i,0);
+            status[n] = 1;
+        }
+
+
+        trim_vector(sorted_2d_cur,status);  
+        trim_vector(sorted_2d_prev,status);
+
+        publish_matches(&filtered_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        }
+        else
+        ROS_INFO("too few features matched");
     }
-    void publish_matches(int circle_size, cv::Scalar line_color, bool draw_lines){
-    int gap = 1;
+
+
+
+    void publish_matches(const ros::Publisher* this_pub, std::vector<cv::Point2f>& sorted_KP_cur, std::vector<cv::Point2f>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
     cv::Mat color_img,gray_img;
     const cv::Mat old_img = prev_orb->input_image;
     const cv::Mat new_img = cur_orb->input_image;
+    int gap = 1;
     cv::Mat gap_img(gap, new_img.size().width, CV_8UC1, cv::Scalar(255, 255, 255));
     //create colored concatenated image with gap inbetween
     cv::vconcat(new_img,gap_img,gap_img);
@@ -53,43 +101,48 @@ class Framehandler{
 
     cv::cvtColor(gray_img,color_img,CV_GRAY2RGB);
     //indicate features in new image
-    for(int i = 0; i< (int)cur_orb->orb_keypoints_2d.size(); i++)
+    for(int i = 0; i< (int)sorted_KP_cur.size(); i++)
     {
-        cv::Point2f cur_pt = cur_orb->orb_keypoints_2d[i] * MATCH_IMAGE_SCALE;
+        cv::Point2f cur_pt = sorted_KP_cur[i] * MATCH_IMAGE_SCALE;
         cv::circle(color_img, cur_pt, circle_size*MATCH_IMAGE_SCALE, line_color, MATCH_IMAGE_SCALE*2);
     }
     //indicate features in old image
-    for(int i = 0; i< (int)prev_orb->orb_keypoints_2d.size(); i++)
+    for(int i = 0; i< (int)sorted_KP_prev.size(); i++)
     {
-        cv::Point2f old_pt = prev_orb->orb_keypoints_2d[i] * MATCH_IMAGE_SCALE;
+        cv::Point2f old_pt = sorted_KP_prev[i] * MATCH_IMAGE_SCALE;
         old_pt.y += new_img.size().height + gap;
         cv::circle(color_img, old_pt, circle_size*MATCH_IMAGE_SCALE, line_color, MATCH_IMAGE_SCALE*2);
     }
 
     if(draw_lines){
-        for (int i = 0; i< (int)cur_orb->orb_keypoints_2d.size(); i++)
+        for (int i = 0; i< (int)sorted_KP_cur.size(); i++)
         {
-            cv::Point2f old_pt = prev_orb->orb_keypoints_2d[i] * MATCH_IMAGE_SCALE;
+            cv::Point2f old_pt = sorted_KP_prev[i] * MATCH_IMAGE_SCALE;
             old_pt.y += new_img.size().height + gap;
-            cv::line(color_img, cur_orb->orb_keypoints_2d[i] * MATCH_IMAGE_SCALE, old_pt, line_color, MATCH_IMAGE_SCALE*2, 8, 0);
+            cv::line(color_img, sorted_KP_cur[i] * MATCH_IMAGE_SCALE, old_pt, line_color, MATCH_IMAGE_SCALE*2, 8, 0);
         }
     }
 
-
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", color_img).toImageMsg();
-    match_publisher.publish(msg);
+    this_pub->publish(msg);
 
 }
+
 
 
     private:
 
     ORB* cur_orb;
     ORB* prev_orb;
-    ros::Publisher match_publisher;
-    ros::NodeHandle n_frame;
     vector<cv::DMatch> matches, good_matches; 
-    cv::BFMatcher matcher = cv::BFMatcher(cv::NORM_HAMMING);
+    
+
+
+
+    ros::Publisher match_publisher;
+    ros::Publisher filtered_publisher;
+    ros::NodeHandle n_frame;
+    
 
 
 };

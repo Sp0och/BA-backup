@@ -109,6 +109,5 @@ public:
         bridge.encoding = image_format;
         bridge.image = this_image;
         this_pub->publish(bridge.toImageMsg());
-        /* ROS_INFO(bridge.toImageMsg()); */
     }
 };

@@ -36,7 +36,7 @@ include_directories(
 )
 
 file(GLOB all_source_files 
-"src/*.cpp"
+"src/cloud_handler_node.cpp"
 )
 
  add_executable(${PROJECT_NAME}_main ${all_source_files})

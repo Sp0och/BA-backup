@@ -10,11 +10,10 @@ std::string ORB_TOPIC;
 int IMAGE_WIDTH;
 int IMAGE_HEIGHT;
 int IMAGE_CROP;
-int MIN_LOOP_FEATURE_NUM;
-int MIN_LOOP_SEARCH_GAP;
 int NUM_THREADS;
-int DEBUG_IMAGE;
 int NUM_ORB_FEATURES;
+int NUM_SIFT_FEATURES;
+int MIN_LOOP_FEATURE_NUM;
 int MODE;
 double MATCH_IMAGE_SCALE;
 cv::Mat MASK;
@@ -43,9 +42,10 @@ void updateParams (ros::NodeHandle& n){
     fsSettings["image_height"] >> IMAGE_HEIGHT;
     fsSettings["image_crop"]   >> IMAGE_CROP;
     fsSettings["num_threads"]  >> NUM_THREADS;
-    fsSettings["debug_image"]  >> DEBUG_IMAGE;
     fsSettings["match_image_scale"] >> MATCH_IMAGE_SCALE;
     fsSettings["num_orb_features"] >> NUM_ORB_FEATURES;
+    fsSettings["num_sift_features"] >> NUM_SIFT_FEATURES;
+    fsSettings["min_loop_feature_num"] >> MIN_LOOP_FEATURE_NUM;
     fsSettings["mode"] >> MODE;
     
 }
@@ -77,11 +77,10 @@ class cloud_displayer{
     void callback_c(const sensor_msgs::PointCloud2::ConstPtr&  cloud_message){
         //Image handler part: project and visualize the pointcloud
         image_handler->cloud_handler(cloud_message);
-        //ORB descriptor
+
         MASK = create_mask();
 
         //choose image source for keypoint detection
-
         // image_intensity 
         ORB* orb1 = new ORB(image_handler->image_intensity, image_handler->cloud_track,MODE);
         // image_range 

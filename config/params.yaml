@@ -16,22 +16,15 @@ image_crop: 256                 # mask for blocking feature extraction; indoor/h
 path_topic: "lio_sam/mapping/path"
 
 #picture mode
-mode: 2
+mode: 1
 
 # Feature matching
-use_brief: 1                    # enabling flag for BRIEF feature 
-use_orb: 1                      # enabling flag for ORB feature 
-num_bri_features: 200           # feature num for BRIEF
+min_loop_feature_num: 15        # the minimum number of features to plot
 num_orb_features: 500           # feature num for ORB
+num_sift_features: 500          # feature num for sift
 
-# Loop settings
-min_loop_feature_num: 15        # minimum feature number threshold
-min_loop_search_gap: 50         # search Frames older than x frames
-min_loop_search_time: 30        # search Frames older than x seconds
-min_loop_bow_th: 0.015          # BOW search threshold
 
 # CPU
-skip_time: 0.15                 # point cloud processing time interval
 num_threads: 4                  # CPU thread number
 
 # Visualization
