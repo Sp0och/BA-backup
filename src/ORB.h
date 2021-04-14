@@ -63,24 +63,25 @@ class ORB
 
     ORB(const cv::Mat &_input_image, 
         const pcl::PointCloud<PointType>::Ptr _cloud,
-        int _mode){
-        mode = _mode;
-        assert(mode == 1 || mode == 2 || mode == 3);
+        int _mode)
+        {
+            mode = _mode;
+            assert(mode == 1 || mode == 2 || mode == 3);
 
-        input_image = _input_image.clone();
-        cv::resize(input_image, image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
-        cv::resize(input_image, input_image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
-        cloud = _cloud;
+            input_image = _input_image.clone();
+            cv::resize(input_image, image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
+            cv::resize(input_image, input_image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
+            cloud = _cloud;
 
-        if(mode == 1)
-        KP_pub_intensity = n.advertise<sensor_msgs::Image>("orb_keypoints_intensity", 1);
-        else if(mode == 2)
-        KP_pub_range = n.advertise<sensor_msgs::Image>("orb_keypoints_range", 1);
-        else
-        KP_pub_ambient = n.advertise<sensor_msgs::Image>("orb_keypoints_ambient", 1);
+            if(mode == 1)
+            KP_pub_intensity = n.advertise<sensor_msgs::Image>("orb_keypoints_intensity", 1);
+            else if(mode == 2)
+            KP_pub_range = n.advertise<sensor_msgs::Image>("orb_keypoints_range", 1);
+            else
+            KP_pub_ambient = n.advertise<sensor_msgs::Image>("orb_keypoints_ambient", 1);
 
-        create_descriptors();
-             }
+            create_descriptors();
+        }
 
 
 /**
@@ -148,6 +149,9 @@ class ORB
                 p_2d_n.x = p_3d.x / p_3d.z;
                 p_2d_n.y = p_3d.y / p_3d.z;
             }
+            //fill our 3d and normed 2d pointcloud vectors.
+            orb_point_3d[i] = p_3d;
+            orb_point_2d_norm[i] = p_2d_n;
         }
         
         trimVector(orb_point_3d,status);

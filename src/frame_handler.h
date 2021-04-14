@@ -64,10 +64,16 @@ class Framehandler{
             sorted_2d_norm_prev.push_back(prev_orb->orb_point_2d_norm[prev_index]);
         }
         publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        //attempt with findHomography: doesn't seem to change match amount at all
+        // cv::Mat H = cv::findHomography(sorted_2d_cur,sorted_2d_prev,cv::RANSAC);
         //here comes the RANSAC part
+
         std::vector<uchar> status;
         cv::Mat r, rvec, tvec, D, inliers;
         cv::Mat K = (cv::Mat_<double>(3, 3) << 1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0);
+
+        // K = cv::getDefaultNewCameraMatrix(K,cur_orb->input_image.size());
+
         solvePnPRansac(sorted_3d_cur, sorted_2d_norm_prev, K, D, rvec, tvec, false, 100, 0.025, 0.99, inliers);
 
         status.resize(sorted_2d_norm_prev.size(), 0);

@@ -34,6 +34,9 @@ include_directories(
   ${PCL_LIBRSRY_DIRS}
   ${OpenCV_LIBRARY_DIRS}
 )
+# add_library(xfeatures
+#   "opencv_xfeaturesd420.lib"
+# )
 
 file(GLOB all_source_files 
 "src/cloud_handler_node.cpp"
@@ -41,4 +44,10 @@ file(GLOB all_source_files
 
  add_executable(${PROJECT_NAME}_main ${all_source_files})
  target_compile_options(${PROJECT_NAME}_main PRIVATE ${OpenMP_CXX_FLAGS})
- target_link_libraries(${PROJECT_NAME}_main ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES} ${DBoW3_LIBRARIES} ${OpenMP_CXX_FLAGS})
+ target_link_libraries(${PROJECT_NAME}_main ${catkin_LIBRARIES}
+                                             ${PCL_LIBRARIES} 
+                                             ${OpenCV_LIBRARIES} 
+                                             ${DBoW3_LIBRARIES} 
+                                             ${OpenMP_CXX_FLAGS} 
+                                            #  ${xfeatures}
+                                            )

@@ -19,6 +19,8 @@
 #include <cv_bridge/cv_bridge.h>
 #include <eigen3/Eigen/Dense>
 #include <opencv2/core/eigen.hpp>
+#include <opencv2/calib3d.hpp>
+#include <opencv2/features2d.hpp>
 #include <opencv2/highgui.hpp>
 // #include <opencv2/xfeatures2d.hpp>
 
@@ -74,6 +76,7 @@ extern int IMAGE_HEIGHT;
 extern int IMAGE_CROP;
 extern int NUM_ORB_FEATURES;
 extern int NUM_SIFT_FEATURES;
+extern int NUM_BRIEF_FEATURES;
 extern int MIN_LOOP_FEATURE_NUM;
 extern double SKIP_TIME;
 extern int NUM_THREADS;
