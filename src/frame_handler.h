@@ -16,20 +16,19 @@ class Framehandler{
 
     public:
 
-    Framehandler(){
+    Framehandler(int _mode){
+        mode = _mode;
         cur_orb = nullptr;
         prev_orb = nullptr;
         match_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
         filtered_publisher = n_frame.advertise<sensor_msgs::Image>("filtered_matches", 1);
     }
 
-    void newIteration(ORB* new_frame){
+    void newIteration(std::shared_ptr<ORB> new_frame){
         if(cur_orb == nullptr){
             cur_orb = new_frame;
         }
         else{
-            // if(prev_orb != nullptr)
-            // prev_orb->freeMemory();
             prev_orb = cur_orb;
             cur_orb = new_frame;
             create_matches();
@@ -37,19 +36,20 @@ class Framehandler{
     }
 
     void create_matches(){
-        cv::BFMatcher matcher = cv::BFMatcher(cv::NORM_HAMMING);
+        static cv::Ptr<cv::BFMatcher> matcher = cv::BFMatcher::create(cv::NORM_HAMMING);
+        // cv::BFMatcher matcher = cv::BFMatcher::create(cv::NORM_HAMMING);
         //create matches
-        matcher.match(cur_orb->orb_descriptors,prev_orb->orb_descriptors,matches);
+        matcher->match(cur_orb->orb_descriptors,prev_orb->orb_descriptors,matches);
         //sort matches in ascending order (concerning distance)
         std::sort(matches.begin(),matches.end());
-        //only keep the good matches
+        //prefiltering for distance
         for (size_t i = 0; i < matches.size(); i++)
         {
             good_matches.push_back(matches[i]);
-            if(matches[i].distance > matches[0].distance * 2)
-            break;
+            // if(matches[i].distance > matches[0].distance * 3)
+            // break;
         }
-        if((int)good_matches.size() > MIN_LOOP_FEATURE_NUM){
+        matches.clear();
         std::vector<cv::Point2f> sorted_2d_cur, sorted_2d_prev, sorted_2d_norm_prev;
         std::vector<cv::Point3f> sorted_3d_cur;
         //pair the keypoints up and thus also the matches:
@@ -63,23 +63,21 @@ class Framehandler{
             sorted_2d_prev.push_back(prev_orb->orb_keypoints_2d[prev_index]);
             sorted_2d_norm_prev.push_back(prev_orb->orb_point_2d_norm[prev_index]);
         }
-        publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
-        //attempt with findHomography: doesn't seem to change match amount at all
-        // cv::Mat H = cv::findHomography(sorted_2d_cur,sorted_2d_prev,cv::RANSAC);
-        //here comes the RANSAC part
+        good_matches.clear();
 
-        std::vector<uchar> status;
+        publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        
+        //here comes the RANSAC part
         cv::Mat r, rvec, tvec, D, inliers;
         cv::Mat K = (cv::Mat_<double>(3, 3) << 1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0);
-
-        // K = cv::getDefaultNewCameraMatrix(K,cur_orb->input_image.size());
-
+        //get the filtered keypoint vectors via inliers
         solvePnPRansac(sorted_3d_cur, sorted_2d_norm_prev, K, D, rvec, tvec, false, 100, 0.025, 0.99, inliers);
-
-        status.resize(sorted_2d_norm_prev.size(), 0);
+        //create the status vector for the flags
+        std::vector<uchar> status;
+        status.resize(sorted_2d_norm_prev.size(), 1);
         for( int i = 0; i < inliers.rows; i++)
         {
-            int n = inliers.at<int>(i,0);
+            int n = inliers.at<int>(i);
             status[n] = 1;
         }
 
@@ -88,9 +86,6 @@ class Framehandler{
         trim_vector(sorted_2d_prev,status);
 
         publish_matches(&filtered_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
-        }
-        else
-        ROS_INFO("too few features matched");
     }
 
 
@@ -128,6 +123,12 @@ class Framehandler{
             cv::line(color_img, sorted_KP_cur[i] * MATCH_IMAGE_SCALE, old_pt, line_color, MATCH_IMAGE_SCALE*2, 8, 0);
         }
     }
+    if(mode == 1)
+    cv::putText(color_img, "Intensity",   cv::Point2f(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    else if (mode == 2)
+    cv::putText(color_img, "Range",   cv::Point2f(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    else
+    cv::putText(color_img, "Ambient",   cv::Point2f(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
 
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", color_img).toImageMsg();
     this_pub->publish(msg);
@@ -138,14 +139,16 @@ class Framehandler{
 
     private:
 
-    ORB* cur_orb;
-    ORB* prev_orb;
+    std::shared_ptr<ORB> cur_orb;
+    std::shared_ptr<ORB> prev_orb;
     vector<cv::DMatch> matches, good_matches; 
-    
+    int mode;
 
 
 
     ros::Publisher match_publisher;
+    ros::Publisher range_publisher;
+    ros::Publisher ambient_publisher;
     ros::Publisher filtered_publisher;
     ros::NodeHandle n_frame;
     

@@ -11,16 +11,16 @@ void keypointTransition(vector<cv::KeyPoint>& keypoints_in, vector<cv::Point2f>&
     }
 }
 //Convert points to keypoints vector
-void keypointTransition(vector<cv::Point2f>& points_in, vector<cv::KeyPoint>& keypoints_in)
-{
-    keypoints_in.resize(points_in.size());
-    for(size_t i = 0; i < points_in.size(); i++)
-    {
-        cv::KeyPoint key;
-        key.pt = points_in[i];
-        keypoints_in[i] = key;
-    }
-}
+// void keypointTransition(vector<cv::Point2f>& points_in, vector<cv::KeyPoint>& keypoints_in)
+// {
+//     keypoints_in.resize(points_in.size());
+//     for(size_t i = 0; i < points_in.size(); i++)
+//     {
+//         cv::KeyPoint key;
+//         key.pt = points_in[i];
+//         keypoints_in[i] = key;
+//     }
+// }
 
 
 void publish_keypoints (ros::Publisher* publisher, cv::Mat& image, const vector<cv::Point2f>& keypoints, const int circle_size,const cv::Scalar line_color){
@@ -56,17 +56,16 @@ class ORB
     vector<cv::KeyPoint> orb_keypoints;
     cv::Mat orb_descriptors;
 
-    vector<cv::KeyPoint> reference_keypoints;
-    vector<cv::Point2f> reference_keypoints_2d;
-    vector<cv::Point2f> reference_keypoints_2d_norm;
-    cv::Mat reference_descriptors;
+    // vector<cv::KeyPoint> reference_keypoints;
+    // vector<cv::Point2f> reference_keypoints_2d;
+    // vector<cv::Point2f> reference_keypoints_2d_norm;
+    // cv::Mat reference_descriptors;
 
     ORB(const cv::Mat &_input_image, 
         const pcl::PointCloud<PointType>::Ptr _cloud,
         int _mode)
         {
             mode = _mode;
-            assert(mode == 1 || mode == 2 || mode == 3);
 
             input_image = _input_image.clone();
             cv::resize(input_image, image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
@@ -124,7 +123,7 @@ class ORB
         status.resize(orb_keypoints_2d.size());
         
         #pragma omp parallel for num_threads(NUM_THREADS)
-        for(int i = 0; i < orb_keypoints_2d.size(); i++){
+        for(size_t i = 0; i < orb_keypoints_2d.size(); i++){
             int row_index = cvRound(orb_keypoints_2d[i].y);
             int col_index = cvRound(orb_keypoints_2d[i].x);
             int index = row_index*IMAGE_WIDTH + col_index;
@@ -132,7 +131,7 @@ class ORB
 
             cv::Point3f p_3d(0.f, 0.f, 0.f);
             cv::Point2f p_2d_n(0.f, 0.f);
-            //why? Cut off left edge?
+            
             if (abs(pi->x) < 0.01)
             {
                 status[i] = 0;
@@ -197,23 +196,7 @@ class ORB
     //     trimVector(reference_keypoints_2d_norm,status);
     // }
 
-    //not too sure if necessary
-    void freeMemory()
-{
 
-    orb_point_3d.clear(); orb_point_3d.shrink_to_fit();
-    orb_keypoints_2d.clear(); orb_keypoints_2d.shrink_to_fit();
-    orb_point_2d_norm.clear(); orb_point_2d_norm.shrink_to_fit();
-    orb_keypoints.clear(); orb_keypoints.shrink_to_fit();
-    orb_descriptors.release();
-
-    reference_keypoints.clear(); reference_keypoints.shrink_to_fit();
-    reference_keypoints_2d.clear(); reference_keypoints_2d.shrink_to_fit();
-    reference_keypoints_2d_norm.clear(); reference_keypoints_2d_norm.shrink_to_fit();
-    reference_descriptors.release();
-}
-
-    ~ORB();
     
     private:
     ros::NodeHandle n;

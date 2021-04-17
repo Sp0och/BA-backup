@@ -1,1 +1,19 @@
 launch-prefix="gdb -ex run --args"
+
+
+Homography:
+
+cv::Mat MASK;
+        cv::Mat H = cv::findHomography(sorted_2d_cur,sorted_2d_prev,cv::RANSAC,3.0,MASK);
+        std::vector<uchar> status(MASK.rows*MASK.cols,0);
+        int e = 0;
+        for(int i = 0; i< MASK.rows; i++){
+            for(int j = 0; j < MASK.cols; j++){
+                if(MASK.at<uint8_t>(i, j) == 1){
+                    sorted_2d_cur[e] = sorted_2d_cur[i*IMAGE_WIDTH + j];
+                    sorted_2d_prev[e++] = sorted_2d_prev[i*IMAGE_WIDTH + j];
+                }
+            }
+        }
+        sorted_2d_cur.resize(e);
+        sorted_2d_prev.resize(e);

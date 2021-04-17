@@ -57,7 +57,7 @@ cv::Mat create_mask(){
     MASK = cv::Mat(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC1, cv::Scalar(255));
     for (int i = 0; i < IMAGE_HEIGHT; ++i)
         for (int j = 0; j < IMAGE_WIDTH; ++j)
-            if (j < IMAGE_CROP || j > IMAGE_WIDTH - IMAGE_CROP)
+            if (j < IMAGE_CROP || j > IMAGE_WIDTH - IMAGE_CROP/4)
                 MASK.at<uchar>(i,j) = 0;
     return MASK;
 }
@@ -81,17 +81,28 @@ class cloud_displayer{
         image_handler->cloud_handler(cloud_message);
 
         MASK = create_mask();
-
+        assert(MODE == 1 || MODE == 2 || MODE == 3);
         //choose image source for keypoint detection
-        // image_intensity 
-        ORB* orb1 = new ORB(image_handler->image_intensity, image_handler->cloud_track,MODE);
-        // image_range 
-        // ORB* orb2 = new ORB(image_handler->image_range, image_handler->cloud_track,2);
-        // image_ambient (noise) 
-        // ORB* orb3 = new ORB(image_handler->image_noise, image_handler->cloud_track,3);
         
+        cv::Mat& input_image = image_handler->image_intensity;
+        // image_intensity 
+        if(MODE == 1);
+        // image_range 
+        else if(MODE == 2)
+        input_image = image_handler->image_range;
+        // image_ambient (noise) 
+        else
+        input_image = image_handler->image_noise;
+
+        // ORB* orb = new ORB(input_image, image_handler->cloud_track,MODE);
+        std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
+        // ORB* orb = new ORB(image_handler->image_range, image_handler->cloud_track,MODE);
+        // ORB* orb = new ORB(image_handler->image_noise, image_handler->cloud_track,MODE);
+        
+
+
         //frame pipeline
-        frame_handler->newIteration(orb1);
+        frame_handler->newIteration(orb);
     }
 
     
@@ -126,7 +137,7 @@ ros::NodeHandle n;
 
 
     image_handler = new ImageHandler();
-    frame_handler = new Framehandler();
+    frame_handler = new Framehandler(MODE);
     cloud_displayer cloudDisplayer;
 
   

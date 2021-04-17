@@ -3,14 +3,11 @@
 # Project
 project_name: "descriptor_and_image"
 
-# Enable flag
-loop_closure: 1
-
 # Cloud parameters
 cloud_topic: "points_raw"       # point cloud input topic
 image_width: 1024               # image horitontal resolution
 image_height: 128               # image vertical resolution
-image_crop: 256                 # mask for blocking feature extraction; indoor/handheld=196-256; jackal=0 
+image_crop: 200                 # mask for blocking feature extraction; indoor/handheld=196-256; jackal=0 
 
 # Registered path
 path_topic: "lio_sam/mapping/path"
@@ -20,7 +17,7 @@ mode: 1
 
 # Feature matching
 min_loop_feature_num: 15        # the minimum number of features to plot
-num_orb_features: 500           # feature num for ORB
+num_orb_features: 1000           # feature num for ORB
 num_sift_features: 500          # feature num for SIFT
 num_brief_features: 500         # feature num for BRIEF
 

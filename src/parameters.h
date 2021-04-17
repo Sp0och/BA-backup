@@ -61,6 +61,7 @@
 #include <thread>
 #include <mutex>
 #include <cassert>
+#include <memory>
 
 
 
