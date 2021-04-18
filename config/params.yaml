@@ -17,7 +17,7 @@ mode: 1
 
 # Feature matching
 min_loop_feature_num: 15        # the minimum number of features to plot
-num_orb_features: 1000           # feature num for ORB
+num_orb_features: 500           # feature num for ORB
 num_sift_features: 500          # feature num for SIFT
 num_brief_features: 500         # feature num for BRIEF
 

@@ -71,6 +71,8 @@ class Framehandler{
         cv::Mat r, rvec, tvec, D, inliers;
         cv::Mat K = (cv::Mat_<double>(3, 3) << 1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0);
         //get the filtered keypoint vectors via inliers
+        ROS_INFO("length 3d: %i", sorted_3d_cur.size());
+        ROS_INFO("length 2d: %i", sorted_2d_norm_prev.size());
         solvePnPRansac(sorted_3d_cur, sorted_2d_norm_prev, K, D, rvec, tvec, false, 100, 0.025, 0.99, inliers);
         //create the status vector for the flags
         std::vector<uchar> status;
