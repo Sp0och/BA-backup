@@ -46,8 +46,8 @@ class Framehandler{
         for (size_t i = 0; i < matches.size(); i++)
         {
             good_matches.push_back(matches[i]);
-            // if(matches[i].distance > matches[0].distance * 3)
-            // break;
+            if(matches[i].distance > matches[0].distance * 3)
+            break;
         }
         matches.clear();
         std::vector<cv::Point2f> sorted_2d_cur, sorted_2d_prev, sorted_2d_norm_prev;
@@ -68,24 +68,24 @@ class Framehandler{
         publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
         
         //here comes the RANSAC part
-        cv::Mat r, rvec, tvec, D, inliers;
-        cv::Mat K = (cv::Mat_<double>(3, 3) << 1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0);
-        //get the filtered keypoint vectors via inliers
-        ROS_INFO("length 3d: %i", sorted_3d_cur.size());
-        ROS_INFO("length 2d: %i", sorted_2d_norm_prev.size());
-        solvePnPRansac(sorted_3d_cur, sorted_2d_norm_prev, K, D, rvec, tvec, false, 100, 0.025, 0.99, inliers);
-        //create the status vector for the flags
-        std::vector<uchar> status;
-        status.resize(sorted_2d_norm_prev.size(), 1);
-        for( int i = 0; i < inliers.rows; i++)
-        {
-            int n = inliers.at<int>(i);
-            status[n] = 1;
-        }
+        // cv::Mat r, rvec, tvec, D, inliers;
+        // cv::Mat K = (cv::Mat_<double>(3, 3) << 1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0);
+        // //get the filtered keypoint vectors via inliers
+        // ROS_INFO("length 3d: %i", sorted_3d_cur.size());
+        // ROS_INFO("length 2d: %i", sorted_2d_norm_prev.size());
+        // solvePnPRansac(sorted_3d_cur, sorted_2d_norm_prev, K, D, rvec, tvec, false, 100, 0.025, 0.99, inliers);
+        // //create the status vector for the flags
+        // std::vector<uchar> status;
+        // status.resize(sorted_2d_norm_prev.size(), 1);
+        // for( int i = 0; i < inliers.rows; i++)
+        // {
+        //     int n = inliers.at<int>(i);
+        //     status[n] = 1;
+        // }
 
 
-        trim_vector(sorted_2d_cur,status);  
-        trim_vector(sorted_2d_prev,status);
+        // trim_vector(sorted_2d_cur,status);  
+        // trim_vector(sorted_2d_prev,status);
 
         publish_matches(&filtered_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
     }
