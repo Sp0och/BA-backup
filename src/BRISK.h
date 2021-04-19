@@ -44,20 +44,20 @@ static void trimVector(vector<Derived> &v, vector<uchar> status)
 }
 
 
-class SIFT
+class BRISK
 {
     public:
     cv::Mat image;
     cv::Mat input_image;
     pcl::PointCloud<PointType>::Ptr cloud;
 
-    vector<cv::Point2f> sift_keypoints_2d;
-    vector<cv::Point3f> sift_point_3d;
-    vector<cv::Point2f> sift_point_2d_norm;
-    vector<cv::KeyPoint> sift_keypoints;
-    cv::Mat sift_descriptors;
+    vector<cv::Point2f> brisk_keypoints_2d;
+    vector<cv::Point3f> brisk_point_3d;
+    vector<cv::Point2f> brisk_point_2d_norm;
+    vector<cv::KeyPoint> brisk_keypoints;
+    cv::Mat brisk_descriptors;
 
-    SIFT(const cv::Mat &_input_image, 
+    BRISK(const cv::Mat &_input_image, 
         const pcl::PointCloud<PointType>::Ptr _cloud,
         int _mode){
         mode = _mode;
@@ -69,19 +69,19 @@ class SIFT
         cloud = _cloud;
 
         if(mode == 1)
-        KP_pub_intensity = n.advertise<sensor_msgs::Image>("sift_keypoints_intensity", 1);
+        KP_pub_intensity = n.advertise<sensor_msgs::Image>("brisk_keypoints_intensity", 1);
         else if(mode == 2)
-        KP_pub_range = n.advertise<sensor_msgs::Image>("sift_keypoints_range", 1);
+        KP_pub_range = n.advertise<sensor_msgs::Image>("brisk_keypoints_range", 1);
         else
-        KP_pub_ambient = n.advertise<sensor_msgs::Image>("sift_keypoints_ambient", 1);
+        KP_pub_ambient = n.advertise<sensor_msgs::Image>("brisk_keypoints_ambient", 1);
 
         create_descriptors();
              }
 
 
 /**
- * Stores the SIFT keypoints in the vector in the std::vector format, creates the descriptors around the keypoints and calls the ransac point creator
- * @param sift_keypoints_2d is then the vector containing the keypoints
+ * Stores the BRISK keypoints in the vector in the std::vector format, creates the descriptors around the keypoints and calls the ransac point creator
+ * @param brisk_keypoints_2d is then the vector containing the keypoints
  * */
     void create_descriptors(){
         
@@ -89,26 +89,26 @@ class SIFT
         points_for_ransac();
 
         if(mode == 1)
-        publish_keypoints(&KP_pub_intensity, image,sift_keypoints_2d,5,cv::Scalar(0,255,0));
+        publish_keypoints(&KP_pub_intensity, image,brisk_keypoints_2d,5,cv::Scalar(0,255,0));
         else if(mode == 2)
-        publish_keypoints(&KP_pub_range, image,sift_keypoints_2d,5,cv::Scalar(0,255,0));
+        publish_keypoints(&KP_pub_range, image,brisk_keypoints_2d,5,cv::Scalar(0,255,0));
         else
-        publish_keypoints(&KP_pub_ambient, image,sift_keypoints_2d,5,cv::Scalar(0,255,0));
+        publish_keypoints(&KP_pub_ambient, image,brisk_keypoints_2d,5,cv::Scalar(0,255,0));
     };
     
     
     
     
     void points_for_ransac(){
-        sift_point_3d.resize(sift_keypoints_2d.size());
-        sift_point_2d_norm.resize(sift_keypoints_2d.size());
+        brisk_point_3d.resize(brisk_keypoints_2d.size());
+        brisk_point_2d_norm.resize(brisk_keypoints_2d.size());
         vector<uchar> status;
-        status.resize(sift_keypoints_2d.size());
+        status.resize(brisk_keypoints_2d.size());
         #pragma omp parallel for num_threads(NUM_THREADS)
 
-        for(int i = 0; i < sift_keypoints_2d.size(); i++){
-            int row_index = (int)sift_keypoints_2d[i].y;
-            int col_index = (int)sift_keypoints_2d[i].x;
+        for(int i = 0; i < brisk_keypoints_2d.size(); i++){
+            int row_index = (int)brisk_keypoints_2d[i].y;
+            int col_index = (int)brisk_keypoints_2d[i].x;
             int index = row_index*IMAGE_WIDTH + col_index;
             PointType *pi = &cloud->points[index];
 
@@ -133,8 +133,8 @@ class SIFT
             }
         }
         
-        trimVector(sift_point_3d,status);
-        trimVector(sift_point_2d_norm,status);
+        trimVector(brisk_point_3d,status);
+        trimVector(brisk_point_2d_norm,status);
     }
 
     

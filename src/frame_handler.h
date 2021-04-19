@@ -46,12 +46,13 @@ class Framehandler{
         for (size_t i = 0; i < matches.size(); i++)
         {
             good_matches.push_back(matches[i]);
-            if(matches[i].distance > matches[0].distance * 3)
-            break;
+            // if(matches[i].distance > matches[0].distance * 3)
+            // break;
         }
+
         matches.clear();
-        std::vector<cv::Point2f> sorted_2d_cur, sorted_2d_prev, sorted_2d_norm_prev;
-        std::vector<cv::Point3f> sorted_3d_cur;
+        std::vector<cv::Point2d> sorted_2d_cur, sorted_2d_prev, sorted_2d_projected_prev;
+        std::vector<cv::Point3d> sorted_3d_cur;
         //pair the keypoints up and thus also the matches:
         for (size_t i = 0; i < good_matches.size(); i++)
         {
@@ -61,38 +62,30 @@ class Framehandler{
             sorted_3d_cur.push_back(cur_orb->orb_point_3d[cur_index]);
             sorted_2d_cur.push_back(cur_orb->orb_keypoints_2d[cur_index]);
             sorted_2d_prev.push_back(prev_orb->orb_keypoints_2d[prev_index]);
-            sorted_2d_norm_prev.push_back(prev_orb->orb_point_2d_norm[prev_index]);
+            sorted_2d_projected_prev.push_back(prev_orb->orb_point_projected[prev_index]);
         }
         good_matches.clear();
 
         publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
-        
         //here comes the RANSAC part
-        // cv::Mat r, rvec, tvec, D, inliers;
-        // cv::Mat K = (cv::Mat_<double>(3, 3) << 1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0);
-        // //get the filtered keypoint vectors via inliers
-        // ROS_INFO("length 3d: %i", sorted_3d_cur.size());
-        // ROS_INFO("length 2d: %i", sorted_2d_norm_prev.size());
-        // solvePnPRansac(sorted_3d_cur, sorted_2d_norm_prev, K, D, rvec, tvec, false, 100, 0.025, 0.99, inliers);
-        // //create the status vector for the flags
-        // std::vector<uchar> status;
-        // status.resize(sorted_2d_norm_prev.size(), 1);
-        // for( int i = 0; i < inliers.rows; i++)
-        // {
-        //     int n = inliers.at<int>(i);
-        //     status[n] = 1;
-        // }
+
+        cv::Mat MASK;
+        cv::Mat H = cv::findHomography(sorted_2d_cur,sorted_2d_prev,cv::RANSAC,3.0,MASK);
+        std::vector<uchar> status(MASK.rows,0);
+        for(int i = 0; i < MASK.rows;i++)
+        status[i] = MASK.at<uchar>(i);
+        
 
 
-        // trim_vector(sorted_2d_cur,status);  
-        // trim_vector(sorted_2d_prev,status);
+        trim_vector(sorted_2d_cur,status);  
+        trim_vector(sorted_2d_prev,status);
 
         publish_matches(&filtered_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
     }
 
 
 
-    void publish_matches(const ros::Publisher* this_pub, std::vector<cv::Point2f>& sorted_KP_cur, std::vector<cv::Point2f>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
+    void publish_matches(const ros::Publisher* this_pub, std::vector<cv::Point2d>& sorted_KP_cur, std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
     cv::Mat color_img,gray_img;
     const cv::Mat old_img = prev_orb->input_image;
     const cv::Mat new_img = cur_orb->input_image;
@@ -106,13 +99,13 @@ class Framehandler{
     //indicate features in new image
     for(int i = 0; i< (int)sorted_KP_cur.size(); i++)
     {
-        cv::Point2f cur_pt = sorted_KP_cur[i] * MATCH_IMAGE_SCALE;
+        cv::Point2d cur_pt = sorted_KP_cur[i] * MATCH_IMAGE_SCALE;
         cv::circle(color_img, cur_pt, circle_size*MATCH_IMAGE_SCALE, line_color, MATCH_IMAGE_SCALE*2);
     }
     //indicate features in old image
     for(int i = 0; i< (int)sorted_KP_prev.size(); i++)
     {
-        cv::Point2f old_pt = sorted_KP_prev[i] * MATCH_IMAGE_SCALE;
+        cv::Point2d old_pt = sorted_KP_prev[i] * MATCH_IMAGE_SCALE;
         old_pt.y += new_img.size().height + gap;
         cv::circle(color_img, old_pt, circle_size*MATCH_IMAGE_SCALE, line_color, MATCH_IMAGE_SCALE*2);
     }
@@ -120,17 +113,17 @@ class Framehandler{
     if(draw_lines){
         for (int i = 0; i< (int)sorted_KP_cur.size(); i++)
         {
-            cv::Point2f old_pt = sorted_KP_prev[i] * MATCH_IMAGE_SCALE;
+            cv::Point2d old_pt = sorted_KP_prev[i] * MATCH_IMAGE_SCALE;
             old_pt.y += new_img.size().height + gap;
             cv::line(color_img, sorted_KP_cur[i] * MATCH_IMAGE_SCALE, old_pt, line_color, MATCH_IMAGE_SCALE*2, 8, 0);
         }
     }
     if(mode == 1)
-    cv::putText(color_img, "Intensity",   cv::Point2f(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    cv::putText(color_img, "Intensity",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
     else if (mode == 2)
-    cv::putText(color_img, "Range",   cv::Point2f(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    cv::putText(color_img, "Range",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
     else
-    cv::putText(color_img, "Ambient",   cv::Point2f(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    cv::putText(color_img, "Ambient",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
 
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", color_img).toImageMsg();
     this_pub->publish(msg);

@@ -13,7 +13,7 @@ int IMAGE_CROP;
 int NUM_THREADS;
 int NUM_ORB_FEATURES;
 int NUM_SIFT_FEATURES;
-int NUM_BRIEF_FEATURES;
+int NUM_BRISK_FEATURES;
 int MIN_LOOP_FEATURE_NUM;
 int MODE;
 double MATCH_IMAGE_SCALE;
@@ -46,7 +46,7 @@ void updateParams (ros::NodeHandle& n){
     fsSettings["match_image_scale"] >> MATCH_IMAGE_SCALE;
     fsSettings["num_orb_features"] >> NUM_ORB_FEATURES;
     fsSettings["num_sift_features"] >> NUM_SIFT_FEATURES;
-    fsSettings["num_brief_features"] >> NUM_BRIEF_FEATURES;
+    fsSettings["num_brisk_features"] >> NUM_BRISK_FEATURES;
     fsSettings["min_loop_feature_num"] >> MIN_LOOP_FEATURE_NUM;
     fsSettings["mode"] >> MODE;
     

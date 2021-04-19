@@ -77,7 +77,7 @@ extern int IMAGE_HEIGHT;
 extern int IMAGE_CROP;
 extern int NUM_ORB_FEATURES;
 extern int NUM_SIFT_FEATURES;
-extern int NUM_BRIEF_FEATURES;
+extern int NUM_BRISK_FEATURES;
 extern int MIN_LOOP_FEATURE_NUM;
 extern double SKIP_TIME;
 extern int NUM_THREADS;
