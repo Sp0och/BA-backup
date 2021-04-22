@@ -1,4 +1,26 @@
 #include "parameters.h"
+
+struct PointOuster {
+    PCL_ADD_POINT4D;
+    float intensity;
+    float time;
+    uint8_t noise;
+    uint16_t ring;
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+}EIGEN_ALIGN16;
+
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+    PointOuster,
+    (float, x, x)
+    (float, y, y)
+    (float, z, z)
+    (float, intensity, intensity)
+    (float, time, time)
+    (std::uint8_t, noise, noise)
+    (std::uint16_t, ring, ring)
+)
+
+
 //Create images from the laserscan
 class ImageHandler
 {

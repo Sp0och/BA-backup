@@ -4,7 +4,7 @@
 
 template <typename Derived>
 
-void trim_vector(vector<Derived> &v, vector<uchar>& status){
+void trim_vector(vector<Derived> &v, vector<bool>& status){
     int j = 0;
     for (int i = 0; i < int(v.size()); i++)
         if (status[i])
@@ -21,7 +21,12 @@ class Framehandler{
         cur_orb = nullptr;
         prev_orb = nullptr;
         match_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
-        filtered_publisher = n_frame.advertise<sensor_msgs::Image>("filtered_matches", 1);
+        // if(mode == 1)
+        filtered_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
+        // else if(mode == 2)
+        // range_publisher = n_frame.advertise<sensor_msgs::Image>("range_matches", 1);
+        // else
+        // ambient_publisher = n_frame.advertise<sensor_msgs::Image>("ambient_matches", 1);
     }
 
     void newIteration(std::shared_ptr<ORB> new_frame){
@@ -59,28 +64,50 @@ class Framehandler{
             int cur_index = good_matches[i].queryIdx;
             int prev_index = good_matches[i].trainIdx;
 
-            sorted_3d_cur.push_back(cur_orb->orb_point_3d[cur_index]);
+            // sorted_3d_cur.push_back(cur_orb->orb_point_3d[cur_index]);
             sorted_2d_cur.push_back(cur_orb->orb_keypoints_2d[cur_index]);
             sorted_2d_prev.push_back(prev_orb->orb_keypoints_2d[prev_index]);
-            sorted_2d_projected_prev.push_back(prev_orb->orb_point_projected[prev_index]);
+            // sorted_2d_projected_prev.push_back(prev_orb->orb_point_projected[prev_index]);
         }
         good_matches.clear();
 
         publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
-        //here comes the RANSAC part
 
+        //Homography RANSAC
         cv::Mat MASK;
         cv::Mat H = cv::findHomography(sorted_2d_cur,sorted_2d_prev,cv::RANSAC,3.0,MASK);
-        std::vector<uchar> status(MASK.rows,0);
+        std::vector<bool> status(MASK.rows,0);
         for(int i = 0; i < MASK.rows;i++)
-        status[i] = MASK.at<uchar>(i);
+        status[i] = MASK.at<bool>(i);
+
+        //PNP RANSAC
+        // cv::Mat r, rvec, tvec, D, inliers;
+        // cv::Mat K = (cv::Mat_<double>(3, 3) << 1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0);
+        // //get the filtered keypoint vectors via inliers
+        // //both the input_vectors are of size 500!
+        // solvePnPRansac(sorted_3d_cur, sorted_2d_projected_prev, K, D, rvec, tvec, false, 100, 0.025, 0.99, inliers);
         
+        // // PROBLEM: so far the size of inliers is 0!
+
+        // std::vector<bool> status;
+        // status.resize(sorted_2d_projected_prev.size(), 0);
+        // for( int i = 0; i < inliers.rows; i++)
+        // {
+        //     // int n = inliers.at<int>(i);
+        //     // status[n] = 1;
+        //     status[inliers.at<int>(i)] = 1;
+        // }
 
 
         trim_vector(sorted_2d_cur,status);  
         trim_vector(sorted_2d_prev,status);
 
+        // if(mode == 1)
         publish_matches(&filtered_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        // else if(mode == 2)
+        // publish_matches(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        // else
+        // publish_matches(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
     }
 
 

@@ -2,6 +2,7 @@
 #include "parameters.h"
 #include "ORB.h"
 #include "frame_handler.h"
+#include "KLT.h"
 
 std::string PROJECT_NAME;
 std::string CLOUD_TOPIC;
@@ -22,7 +23,10 @@ pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
 
 
 ImageHandler *image_handler;
-Framehandler *frame_handler;
+// Framehandler *frame_handler;
+//to compare the matches of the different image sources
+// Framehandler *frame_handler2;
+// Framehandler *frame_handler3;
 
 void updateParams (ros::NodeHandle& n){
     // Load params from parameter server
@@ -57,7 +61,7 @@ cv::Mat create_mask(){
     MASK = cv::Mat(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC1, cv::Scalar(255));
     for (int i = 0; i < IMAGE_HEIGHT; ++i)
         for (int j = 0; j < IMAGE_WIDTH; ++j)
-            if (j < IMAGE_CROP || j > IMAGE_WIDTH - IMAGE_CROP/4)
+            if (j < IMAGE_CROP || j > IMAGE_WIDTH - IMAGE_CROP/2)
                 MASK.at<uchar>(i,j) = 0;
     return MASK;
 }
@@ -82,27 +86,35 @@ class cloud_displayer{
 
         MASK = create_mask();
         assert(MODE == 1 || MODE == 2 || MODE == 3);
-        //choose image source for keypoint detection
         
-        cv::Mat& input_image = image_handler->image_intensity;
         // image_intensity 
-        if(MODE == 1);
+    cv::Mat& input_image = image_handler->image_intensity;
+    if(MODE == 1);
         // image_range 
         else if(MODE == 2)
-        input_image = image_handler->image_range;
+    input_image = image_handler->image_range;
         // image_ambient (noise) 
         else
-        input_image = image_handler->image_noise;
+    input_image = image_handler->image_noise;
+
+    //KLT:
+
+    std::shared_ptr<KLT> klt = std::make_shared<KLT>(input_image);
+
+
+    //ORB:
 
         // ORB* orb = new ORB(input_image, image_handler->cloud_track,MODE);
-        std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
-        // ORB* orb = new ORB(image_handler->image_range, image_handler->cloud_track,MODE);
-        // ORB* orb = new ORB(image_handler->image_noise, image_handler->cloud_track,MODE);
+    // std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
+        // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
+        // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
         
 
 
-        //frame pipeline
-        frame_handler->newIteration(orb);
+    //ORB Matches
+    // frame_handler->newIteration(orb);
+        // frame_handler2->newIteration(orb2);
+        // frame_handler3->newIteration(orb3);
     }
 
     
@@ -135,9 +147,10 @@ ros::NodeHandle n;
 
     updateParams(n);
 
-
     image_handler = new ImageHandler();
-    frame_handler = new Framehandler(MODE);
+    // frame_handler = new Framehandler(1);
+    // frame_handler2 = new Framehandler(2);
+    // frame_handler3 = new Framehandler(3);
     cloud_displayer cloudDisplayer;
 
   
