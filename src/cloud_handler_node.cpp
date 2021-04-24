@@ -23,8 +23,7 @@ pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
 
 
 ImageHandler *image_handler;
-// Framehandler *frame_handler;
-//to compare the matches of the different image sources
+Framehandler *frame_handler;
 // Framehandler *frame_handler2;
 // Framehandler *frame_handler3;
 
@@ -91,28 +90,27 @@ class cloud_displayer{
     cv::Mat& input_image = image_handler->image_intensity;
     if(MODE == 1);
         // image_range 
-        else if(MODE == 2)
+    else if(MODE == 2)
     input_image = image_handler->image_range;
         // image_ambient (noise) 
-        else
+    else
     input_image = image_handler->image_noise;
 
     //KLT:
 
-    std::shared_ptr<KLT> klt = std::make_shared<KLT>(input_image);
+    // std::shared_ptr<KLT> klt = std::make_shared<KLT>(input_image);
 
 
     //ORB:
 
-        // ORB* orb = new ORB(input_image, image_handler->cloud_track,MODE);
-    // std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
-        // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
-        // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
+    std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
+    // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
+    // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
         
 
 
-    //ORB Matches
-    // frame_handler->newIteration(orb);
+    // //ORB Matches
+        frame_handler->newIteration(orb);
         // frame_handler2->newIteration(orb2);
         // frame_handler3->newIteration(orb3);
     }
@@ -148,7 +146,7 @@ ros::NodeHandle n;
     updateParams(n);
 
     image_handler = new ImageHandler();
-    // frame_handler = new Framehandler(1);
+    frame_handler = new Framehandler(MODE);
     // frame_handler2 = new Framehandler(2);
     // frame_handler3 = new Framehandler(3);
     cloud_displayer cloudDisplayer;

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "parameters.h"
 
 struct PointOuster {

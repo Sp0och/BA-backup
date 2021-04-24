@@ -21,12 +21,12 @@ class Framehandler{
         cur_orb = nullptr;
         prev_orb = nullptr;
         match_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
-        // if(mode == 1)
+        if(mode == 1)
         filtered_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
-        // else if(mode == 2)
-        // range_publisher = n_frame.advertise<sensor_msgs::Image>("range_matches", 1);
-        // else
-        // ambient_publisher = n_frame.advertise<sensor_msgs::Image>("ambient_matches", 1);
+        else if(mode == 2)
+        range_publisher = n_frame.advertise<sensor_msgs::Image>("range_matches", 1);
+        else
+        ambient_publisher = n_frame.advertise<sensor_msgs::Image>("ambient_matches", 1);
     }
 
     void newIteration(std::shared_ptr<ORB> new_frame){
@@ -71,7 +71,7 @@ class Framehandler{
         }
         good_matches.clear();
 
-        publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        // publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
 
         //Homography RANSAC
         cv::Mat MASK;
@@ -102,12 +102,12 @@ class Framehandler{
         trim_vector(sorted_2d_cur,status);  
         trim_vector(sorted_2d_prev,status);
 
-        // if(mode == 1)
+        if(mode == 1)
         publish_matches(&filtered_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
-        // else if(mode == 2)
-        // publish_matches(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
-        // else
-        // publish_matches(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        else if(mode == 2)
+        publish_matches(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        else
+        publish_matches(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
     }
 
 
@@ -146,7 +146,7 @@ class Framehandler{
         }
     }
     if(mode == 1)
-    cv::putText(color_img, "Intensity",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    cv::putText(color_img, "Intensity",   cv::Point2d(300, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
     else if (mode == 2)
     cv::putText(color_img, "Range",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
     else
