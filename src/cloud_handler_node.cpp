@@ -23,7 +23,7 @@ pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
 
 
 ImageHandler *image_handler;
-Framehandler *frame_handler;
+// Framehandler *frame_handler;
 // Framehandler *frame_handler2;
 // Framehandler *frame_handler3;
 
@@ -98,7 +98,7 @@ class cloud_displayer{
 
     //KLT:
 
-    // std::shared_ptr<KLT> klt = std::make_shared<KLT>(input_image);
+    // std::shared_ptr<KLT> klt = std::make_shared<KLT>(input_image,MODE);
 
 
     //ORB:
@@ -110,7 +110,7 @@ class cloud_displayer{
 
 
     // //ORB Matches
-        frame_handler->newIteration(orb);
+        // frame_handler->newIteration(orb);
         // frame_handler2->newIteration(orb2);
         // frame_handler3->newIteration(orb3);
     }
@@ -146,7 +146,7 @@ ros::NodeHandle n;
     updateParams(n);
 
     image_handler = new ImageHandler();
-    frame_handler = new Framehandler(MODE);
+    // frame_handler = new Framehandler(MODE);
     // frame_handler2 = new Framehandler(2);
     // frame_handler3 = new Framehandler(3);
     cloud_displayer cloudDisplayer;
