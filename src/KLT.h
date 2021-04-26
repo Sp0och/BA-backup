@@ -2,26 +2,17 @@
 
 #include "parameters.h"
 
-void publish_tracked_points (ros::Publisher* publisher, cv::Mat& image, const vector<cv::Point2d>& keypoints, int circle_size){
+void publish_tracked_points (ros::Publisher* publisher, cv::Mat& image, const vector<cv::Point2d>& keypoints,cv::Scalar line_color, int circle_size){
     cv::cvtColor(image, image, CV_GRAY2RGB);
-
     for(int i = 0; i < (int)keypoints.size(); i++){
-        // int r = rand()%256;
-        // int g = rand()%256;
-        // int b = rand()%256;
-        // cv::Scalar line_color = cv::Scalar(r,g,b);
-        cv::Point2d cur_pt = keypoints[i] * MATCH_IMAGE_SCALE;
-        cv::circle(image,cur_pt,circle_size,cv::Scalar(0,255,0));
+        cv::Point2d cur_pt = keypoints[i];
+        cv::circle(image,cur_pt,circle_size,line_color);
+        cv::circle(image,cur_pt,2,line_color);
     }
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
     publisher->publish(msg);
 }
 
-void publish (ros::Publisher* publisher, cv::Mat& image, int circle_size){
-    cv::cvtColor(image, image, CV_GRAY2RGB);
-    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
-    publisher->publish(msg);
-}
 
 class KLT {
     public:
@@ -52,15 +43,15 @@ class KLT {
         cur_corners.resize(50);
         
         // prev_corners = cur_corners;
-        // cv::goodFeaturesToTrack(cur_image,cur_corners,50,0.3,7,MASK,7,true,0.04);
-        // publish_tracked_points(&pub_KLT,cur_image,cur_corners,5);
+        cv::goodFeaturesToTrack(cur_image,cur_corners,50,0.3,7,MASK,7,false,0.04);
+        
         
         if(mode == 1)
-        publish(&pub_KLT_int,cur_image,5); 
+        publish_tracked_points(&pub_KLT_int,cur_image,cur_corners, cv::Scalar(0,255,0), 5); 
         else if(mode == 2)
-        publish(&pub_KLT_ran,cur_image,5);         
+        publish_tracked_points(&pub_KLT_ran,cur_image,cur_corners, cv::Scalar(0,255,0), 5);        
         else
-        publish(&pub_KLT_amb,cur_image,5);         
+        publish_tracked_points(&pub_KLT_amb,cur_image,cur_corners, cv::Scalar(0,255,0), 5);        
         cur_corners.clear();
     }
 
@@ -68,6 +59,7 @@ class KLT {
     cv::Mat cur_image;
     cv::Mat prev_image;
 
+    std::vector<cv::Scalar> color_vector;
 
     std::vector<cv::Point2d> cur_corners;
     std::vector<cv::Point2d> prev_corners;

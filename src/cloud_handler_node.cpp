@@ -19,6 +19,7 @@ int MIN_LOOP_FEATURE_NUM;
 int MODE;
 double MATCH_IMAGE_SCALE;
 cv::Mat MASK;
+std::vector<cv::Scalar> color_vector(0);
 pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
 
 
@@ -65,6 +66,7 @@ cv::Mat create_mask(){
     return MASK;
 }
 
+    
 
 /**
  * Class cloud_displayer: create a subscriber that subscribes to the topic of the raw PC and via callback function projects that
@@ -76,7 +78,6 @@ class cloud_displayer{
     cloud_displayer(){
     //create subscriber subscribing to topic "points_raw"
     CSub = nps.subscribe(CLOUD_TOPIC, 1000, &cloud_displayer::callback_c, this);
-    PSub = nps.subscribe(PATH_TOPIC, 1000, &cloud_displayer::callback_p, this);
     }
     //callback fct for the cloud.
     void callback_c(const sensor_msgs::PointCloud2::ConstPtr&  cloud_message){
@@ -96,14 +97,17 @@ class cloud_displayer{
     else
     input_image = image_handler->image_noise;
 
+    //create color_vector for tracking
+    
+
     //KLT:
 
     // std::shared_ptr<KLT> klt = std::make_shared<KLT>(input_image,MODE);
+    KLT* klt = new KLT(input_image,MODE);
 
 
     //ORB:
-
-    std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
+    // std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
     // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
     // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
         
@@ -116,26 +120,10 @@ class cloud_displayer{
     }
 
     
-    //callback function for the path
-    void callback_p(const nav_msgs::PathConstPtr& path_msg)
-    {
-    cloud_traj->clear();
-
-    for (size_t i = 0; i < path_msg->poses.size(); ++i)
-    {
-        PointType p;
-        p.x = path_msg->poses[i].pose.position.x;
-        p.y = path_msg->poses[i].pose.position.y;
-        p.z = path_msg->poses[i].pose.position.z;
-        cloud_traj->push_back(p);
-    }
-    }
-    
     private:
   //predeclaration of subscribers and nodehandle
     ros::NodeHandle nps;
     ros::Subscriber CSub;
-    ros::Subscriber PSub;
   };
 
 int main(int argc, char **argv){

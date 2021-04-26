@@ -11,14 +11,12 @@ void keypointTransition(vector<cv::KeyPoint>& keypoints_in, vector<cv::Point2d>&
     }
 }
 
-
 void publish_keypoints (ros::Publisher* publisher, cv::Mat& image, const vector<cv::Point2d>& keypoints, const int circle_size,const cv::Scalar line_color){
     cv::cvtColor(image, image, CV_GRAY2RGB);
     for(int i = 0; i < (int)keypoints.size(); i++){
         cv::Point2d cur_pt = keypoints[i] * MATCH_IMAGE_SCALE;
         cv::circle(image,cur_pt,circle_size,line_color);
     }
-    cv::putText(image, "Intensity",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
     publisher->publish(msg);
 }
@@ -77,18 +75,19 @@ class ORB
         cv::Ptr<cv::ORB> detector = cv::ORB::create(NUM_ORB_FEATURES, 1.2f, 8, 1);
         //store keypoints in orb_keypoints
         detector->detect(image,orb_keypoints,MASK);
-        detector->compute(image,orb_keypoints,orb_descriptors);
         keypointTransition(orb_keypoints,orb_keypoints_2d);
+        detector->compute(image,orb_keypoints,orb_descriptors);
 
 
         // points_for_ransac();
 
-        if(mode == 1)
+        // if(mode == 1)
+        // publish_keypoints(&KP_pub_intensity, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
         publish_keypoints(&KP_pub_intensity, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
-        else if(mode == 2)
-        publish_keypoints(&KP_pub_range, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
-        else
-        publish_keypoints(&KP_pub_ambient, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
+        // else if(mode == 2)
+        // publish_keypoints(&KP_pub_range, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
+        // else
+        // publish_keypoints(&KP_pub_ambient, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
     };
     
     
