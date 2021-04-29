@@ -114,8 +114,8 @@ class Framehandler{
 
     void publish_matches(const ros::Publisher* this_pub, std::vector<cv::Point2d>& sorted_KP_cur, std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
     cv::Mat color_img,gray_img;
-    const cv::Mat old_img = prev_orb->input_image;
-    const cv::Mat new_img = cur_orb->input_image;
+    const cv::Mat old_img = prev_orb->input_image.clone();
+    const cv::Mat new_img = cur_orb->input_image.clone();
     int gap = 1;
     cv::Mat gap_img(gap, new_img.size().width, CV_8UC1, cv::Scalar(255, 255, 255));
     //create colored concatenated image with gap inbetween

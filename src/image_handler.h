@@ -101,7 +101,7 @@ public:
             }
         }
         if(pub_intensity.getNumSubscribers()!=0){
-            // option 1: display intensity image
+            
             cv::Mat intensity_visualization = image_intensity.clone();
             cv::cvtColor(intensity_visualization, intensity_visualization, CV_GRAY2RGB);
             pubImage(&pub_intensity, intensity_visualization, cloud_msg->header, "bgr8");

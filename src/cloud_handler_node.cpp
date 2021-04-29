@@ -19,7 +19,6 @@ int MIN_LOOP_FEATURE_NUM;
 int MODE;
 double MATCH_IMAGE_SCALE;
 cv::Mat MASK;
-std::vector<cv::Scalar> color_vector(0);
 pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
 
 
@@ -27,6 +26,7 @@ ImageHandler *image_handler;
 // Framehandler *frame_handler;
 // Framehandler *frame_handler2;
 // Framehandler *frame_handler3;
+KLT *klt;
 
 void updateParams (ros::NodeHandle& n){
     // Load params from parameter server
@@ -66,6 +66,9 @@ cv::Mat create_mask(){
     return MASK;
 }
 
+
+    
+
     
 
 /**
@@ -97,13 +100,11 @@ class cloud_displayer{
     else
     input_image = image_handler->image_noise;
 
-    //create color_vector for tracking
-    
 
     //KLT:
 
     // std::shared_ptr<KLT> klt = std::make_shared<KLT>(input_image,MODE);
-    KLT* klt = new KLT(input_image,MODE);
+    klt->KLT_Iteration(input_image);
 
 
     //ORB:
@@ -132,11 +133,12 @@ ros::init(argc, argv, "cloud_projection");
 ros::NodeHandle n;
 
     updateParams(n);
-
+    //create color_vector for tracking
     image_handler = new ImageHandler();
     // frame_handler = new Framehandler(MODE);
     // frame_handler2 = new Framehandler(2);
     // frame_handler3 = new Framehandler(3);
+    klt = new KLT(MODE);
     cloud_displayer cloudDisplayer;
 
   
