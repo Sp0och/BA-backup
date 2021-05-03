@@ -103,9 +103,7 @@ class cloud_displayer{
 
     //KLT:
 
-    // std::shared_ptr<KLT> klt = std::make_shared<KLT>(input_image,MODE);
     klt->KLT_Iteration(input_image);
-
 
     //ORB:
     // std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
@@ -138,9 +136,8 @@ ros::NodeHandle n;
     // frame_handler = new Framehandler(MODE);
     // frame_handler2 = new Framehandler(2);
     // frame_handler3 = new Framehandler(3);
-    klt = new KLT(MODE);
     cloud_displayer cloudDisplayer;
-
+    klt = new KLT(MODE);
   
     ros::spin();
 

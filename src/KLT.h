@@ -21,8 +21,8 @@ class KLT {
     
     KLT(int _mode){
         mode = _mode;
-        cur_corners.resize(50);
-        prev_corners.resize(50);
+        cur_corners.resize(300);
+        prev_corners.resize(300);
         
         for(int i = 0; i < 100; i++){
             int r = rand()%256;
@@ -41,13 +41,13 @@ class KLT {
     }
 
     void KLT_Iteration(const cv::Mat& input_image){
-        if(prev_image.rows == 0){
+        if(prev_image.rows == 0 || prev_corners.size()==0){
             prev_image = input_image.clone();
             //create the previous features
-            cv::goodFeaturesToTrack(prev_image,prev_corners,50,0.3,7,MASK,7,true,0.04);
+            cv::goodFeaturesToTrack(prev_image,prev_corners,300,0.3,7,MASK,7,true,0.04);
         }
         
-        else{
+        else {
             //Update Keypoints and Optical Flow Iteration
             cur_image = input_image.clone();
             std::vector<uchar> status;
@@ -55,6 +55,7 @@ class KLT {
             //Create Termination criteria for the KLT method
             cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
             //create the new features from the old ones
+            assert(prev_corners.size()>0);
             cv::calcOpticalFlowPyrLK(prev_image,cur_image,prev_corners,cur_corners,status,err,
             cv::Size(15,15),2,criteria);
             //Publish and adapt prev_corners
@@ -66,7 +67,9 @@ class KLT {
             publish_KLT(&pub_KLT_amb,cur_image,cur_corners,prev_corners,status,5);
             
             prev_image = cur_image.clone();
-
+            if(prev_corners.size()<20){
+                cv::goodFeaturesToTrack(prev_image,prev_corners,300,0.3,7,MASK,7,true,0.04);
+            }
         }
     }
 
@@ -78,7 +81,7 @@ class KLT {
         cv::cvtColor(image,image,CV_GRAY2RGB);
         std::vector<cv::Point2f> good_new;
         for(int i = 0; i < cur_corners.size();i++){
-            if(status.at(i) == 1){
+            if(status.at(i) == 1 && cur_corners[i].x > IMAGE_CROP && cur_corners[i].x < IMAGE_WIDTH-IMAGE_CROP/2){
                 good_new.push_back(cur_corners[i]);
                 cv::Scalar line_color = color_vector.at(i);
                 cv::circle(image,cur_corners[i],circle_size,line_color,1,8,0);

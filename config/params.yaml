@@ -13,7 +13,7 @@ image_crop: 200                 # mask for blocking feature extraction; indoor/h
 path_topic: "lio_sam/mapping/path"
 
 #picture mode
-mode: 1
+mode: 3
 
 # Feature matching
 min_loop_feature_num: 15        # the minimum number of features to plot
