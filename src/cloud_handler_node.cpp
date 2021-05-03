@@ -3,6 +3,7 @@
 #include "ORB.h"
 #include "frame_handler.h"
 #include "KLT.h"
+#include "BRISK.h"
 
 std::string PROJECT_NAME;
 std::string CLOUD_TOPIC;
@@ -23,7 +24,7 @@ pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
 
 
 ImageHandler *image_handler;
-// Framehandler *frame_handler;
+Framehandler *frame_handler;
 // Framehandler *frame_handler2;
 // Framehandler *frame_handler3;
 KLT *klt;
@@ -103,17 +104,21 @@ class cloud_displayer{
 
     //KLT:
 
-    klt->KLT_Iteration(input_image);
+    // klt->KLT_Iteration(input_image);
 
     //ORB:
-    // std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
+    std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
     // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
     // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
         
 
+    //BRISK:
+
+    // std::shared_ptr<BRISK> brisk = std::make_shared<BRISK>(input_image,image_handler->cloud_track,MODE);
+
 
     // //ORB Matches
-        // frame_handler->newIteration(orb);
+        frame_handler->newIteration(orb);
         // frame_handler2->newIteration(orb2);
         // frame_handler3->newIteration(orb3);
     }
@@ -133,7 +138,7 @@ ros::NodeHandle n;
     updateParams(n);
     //create color_vector for tracking
     image_handler = new ImageHandler();
-    // frame_handler = new Framehandler(MODE);
+    frame_handler = new Framehandler(MODE);
     // frame_handler2 = new Framehandler(2);
     // frame_handler3 = new Framehandler(3);
     cloud_displayer cloudDisplayer;
