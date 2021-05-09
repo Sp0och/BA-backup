@@ -199,7 +199,7 @@ class ORB
     pcl::PointCloud<PointType>::Ptr cloud;
 
     vector<cv::Point2d> orb_keypoints_2d;
-    vector<cv::Point3d> orb_point_3d;
+    vector<cv::Point3d> orb_points_3d;
     vector<cv::Point2d> orb_point_projected;
     vector<cv::KeyPoint> orb_keypoints;
     cv::Mat orb_descriptors;
@@ -255,7 +255,7 @@ class ORB
      * Changed up version for 3D points for ICP
      * */
     void points_for_ransac(){
-        orb_point_3d.resize(orb_keypoints_2d.size());
+        orb_points_3d.resize(orb_keypoints_2d.size());
         // orb_point_projected.resize(orb_keypoints_2d.size());
         vector<bool> status;
         status.resize(orb_keypoints_2d.size());
@@ -277,14 +277,14 @@ class ORB
             //     status[i] = 0;
             // } 
             //consider half
-            if (pi->x < 0.01 || pi->y < 0.01 || IMAGE_WIDTH - pi->x < 0.1 || IMAGE_HEIGHT - pi->y < 0.1)
-            {
-                status[i] = 0;
-            } 
+            // if (pi->x < 0.01 || pi->y < 0.01 || IMAGE_WIDTH - pi->x < 0.1 || IMAGE_HEIGHT - pi->y < 0.1)
+            // {
+            //     status[i] = 0;
+            // } 
             //the following points are the actual coordinates of the points in space
-            else 
-            {
-                status[i] = 1;
+            // else 
+            // {
+            //     status[i] = 1;
                 // lidar -> camera
                 p_3d.x = pi->x;
                 p_3d.y = pi->y;
@@ -292,13 +292,13 @@ class ORB
                 // normalize to projection plane with focal length 1
                 // p_2d_n.x = p_3d.x / p_3d.z;
                 // p_2d_n.y = p_3d.y / p_3d.z;
-            }
+            // }
             //fill our 3d and normed 2d pointcloud vectors.
-            orb_point_3d[i] = p_3d;
+            orb_points_3d[i] = p_3d;
             // orb_point_projected[i] = p_2d_n;
         }
         
-        trimVector(orb_point_3d,status);
+        // trimVector(orb_point_3d,status);
         // trimVector(orb_point_projected,status);
     }
     
