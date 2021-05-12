@@ -52,7 +52,7 @@ class BRISK
     pcl::PointCloud<PointType>::Ptr cloud;
 
     vector<cv::Point2f> brisk_keypoints_2d;
-    vector<cv::Point3f> brisk_point_3d;
+    vector<cv::Point3f> brisk_points_3d;
     vector<cv::Point2f> brisk_point_2d_norm;
     vector<cv::KeyPoint> brisk_keypoints;
     cv::Mat brisk_descriptors;
@@ -84,7 +84,7 @@ class BRISK
  * @param brisk_keypoints_2d is then the vector containing the keypoints
  * */
     void create_descriptors(){
-        cv::Ptr<cv::BRISK> detector = cv::BRISK::create(30,3,1.0f);
+        static cv::Ptr<cv::BRISK> detector = cv::BRISK::create(30,3,1.0f);
         detector->detect(image,brisk_keypoints,MASK);
         detector->compute(image,brisk_keypoints,brisk_descriptors);
         keypointTransition(brisk_keypoints,brisk_keypoints_2d);
@@ -103,7 +103,7 @@ class BRISK
     
     
     void points_for_ransac(){
-        brisk_point_3d.resize(brisk_keypoints_2d.size());
+        brisk_points_3d.resize(brisk_keypoints_2d.size());
         brisk_point_2d_norm.resize(brisk_keypoints_2d.size());
         vector<uchar> status;
         status.resize(brisk_keypoints_2d.size());
@@ -136,7 +136,7 @@ class BRISK
             }
         }
         
-        trimVector(brisk_point_3d,status);
+        trimVector(brisk_points_3d,status);
         trimVector(brisk_point_2d_norm,status);
     }
 
@@ -151,3 +151,6 @@ class BRISK
 
 
 };
+
+
+

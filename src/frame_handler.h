@@ -35,6 +35,7 @@ class Framehandler{
 
     Framehandler(int _mode){
         mode = _mode;
+        comp_sum = comp_count = 0;
         cur_orb = nullptr;
         prev_orb = nullptr;
         // match_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
@@ -91,16 +92,13 @@ class Framehandler{
             cur_ICP(0,i) = cur_orb->orb_points_3d.at(cur_index).x;
             cur_ICP(1,i) = cur_orb->orb_points_3d.at(cur_index).y;
             cur_ICP(2,i) = cur_orb->orb_points_3d.at(cur_index).z;
-            //Print tests:
-            // std::cout << "Cur 2D coord: " << cur_orb->orb_keypoints_2d[cur_index] << std::endl;
-            // std::cout << "Prev 2D coord: " << prev_orb->orb_keypoints_2d[prev_index] << std::endl;
-            // std::cout << "Prev 3D coord: " << prev_orb->orb_points_3d.at(prev_index) << std::endl;
-            // std::cout << "Cur 3D coord: " << cur_orb->orb_points_3d.at(cur_index) << std::endl;
-            // std::cout << "Prev 3D matrix coord: " << prev_ICP(0,i) << " " << prev_ICP(1,i) << " " << prev_ICP(2,i) << std::endl;
-            // std::cout << "Cur 3D matrix coord: " << cur_ICP(0,i) << " " << cur_ICP(1,i) << " " << cur_ICP(2,i) << std::endl;
         }
         good_matches.clear();
-        
+
+        //Before for the feature quality comparison
+        // unsigned int before = sorted_2d_cur.size();
+
+
         // publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
         //Homography RANSAC
         cv::Mat MASK;
@@ -115,12 +113,28 @@ class Framehandler{
         trim_vector(sorted_2d_prev,status);
         trim_matrix(prev_ICP,status);
         trim_matrix(cur_ICP,status);
-        // for(size_t i = 0; i < 100; i += 10){
-        //     // std::cout << "Cur Keypoints after sorting: " << sorted_2d_cur.at(i) << std::endl << "Previous Keypoints after sorting: " << sorted_2d_prev.at(i) << std::endl;
-        //     std::cout << "Cur 3D points after sorting: " << cur_ICP(0,i) << " " << cur_ICP(1,i) << " " << cur_ICP(2,i) << std::endl;
-        //     std::cout << "Prev 3D points after sorting: " << prev_ICP(0,i) << " " << prev_ICP(1,i) << " " << prev_ICP(2,i) << std::endl;
+
+        //Second filtering for edge values
+        std::vector<bool> zero_filtering(prev_ICP.cols(),1);
+        for(int i = 0; i < prev_ICP.cols();i++){
+            if((prev_ICP(0,i) == 0 && prev_ICP(1,i) == 0 && prev_ICP(2,i) == 0)||(cur_ICP(0,i) == 0 && cur_ICP(1,i) == 0 && cur_ICP(2,i) == 0)){
+                zero_filtering.at(i) = 0;
+            }
+        }
+        trim_matrix(prev_ICP,zero_filtering);
+        trim_matrix(cur_ICP,zero_filtering);
+
+
+        //Feature quality comparison
+        // unsigned int after = sorted_2d_cur.size();
+        // comp_sum += (100*after)/before;
+        // comp_count++;
+        // if(comp_count == 1000){
+        //     std::cout << "True positive rate is: " << comp_sum/comp_count << "  " << std::endl;
+        //     comp_sum = comp_count = 0;
         // }
-        //ICP CALL
+
+        //ICP Here
         if(cur_ICP.size() == prev_ICP.size() && cur_ICP.size() != 0)
             ICP(cur_ICP,prev_ICP);
         else    
@@ -194,7 +208,7 @@ class Framehandler{
     std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, bool draw_lines){
         cv::Mat image = cur_orb->input_image.clone();
         cv::cvtColor(image,image,CV_GRAY2RGB);
-        #pragma omp parallel for num_threads(NUM_THREADS)
+
         for (int i = 0; i< (int)sorted_KP_cur.size(); i++)
         {
             cv::Point2d old_pt = sorted_KP_prev[i] * MATCH_IMAGE_SCALE;
@@ -216,7 +230,7 @@ class Framehandler{
     void ICP(MatrixXd& cur_ICP,MatrixXd& prev_ICP){
         Vector3d sum_prev(0,0,0);
         Vector3d sum_cur(0,0,0);
-        // #pragma omp parallel for num_threads(NUM_THREADS)
+
         for(int i = 0;i < prev_ICP.cols();i++){
             sum_prev(0) += prev_ICP(0,i);
             sum_prev(1) += prev_ICP(1,i);
@@ -227,10 +241,8 @@ class Framehandler{
         }
         //create the mean for subtraction
         Vector3d mean_prev = sum_prev/prev_ICP.cols();
-        Vector3d mean_cur = sum_cur/cur_ICP.cols();     
-        // std::cout << mean_cur << std::endl;   
-        // std::cout << std::endl << "Before averaging: " << cur_ICP << std::endl;
-        // #pragma omp parallel for num_threads(NUM_THREADS)
+        Vector3d mean_cur = sum_cur/cur_ICP.cols();  
+
         for(int i = 0; i < prev_ICP.cols();i++){
             prev_ICP(0,i) -= mean_prev(0);
             prev_ICP(1,i) -= mean_prev(1);
@@ -240,24 +252,12 @@ class Framehandler{
             cur_ICP(2,i) -= mean_cur(2);
         }
 
-        // Vector3d sum_prev_2(0,0,0);
-        // for(int i = 0;i < prev_ICP.cols();i++){
-        //     sum_prev_2(0) += prev_ICP(0,i);
-        //     sum_prev_2(1) += prev_ICP(1,i);
-        //     sum_prev_2(2) += prev_ICP(2,i);
-        // }
-        // //create the mean for subtraction
-        // Vector3d mean_prev_2 = sum_prev_2/prev_ICP.cols(); 
-        // std::cout << std::endl << "After averaging: " << mean_prev_2 << std::endl;
-
-        // std::cout << "After Averaging: " << cur_ICP << std::endl;
-        // std::cout << "Prev: " << prev_ICP << std::endl;
         MatrixXd W;
-        W = cur_ICP*prev_ICP.transpose();
+        W = cur_ICP*cur_ICP.transpose();
         std::cout << "W:  " << std::endl << W << std::endl;
         JacobiSVD<MatrixXd> svd(W, ComputeThinU | ComputeThinV);
         MatrixXd R = svd.matrixU()*svd.matrixV().transpose();
-        MatrixXd t = mean_cur - R*mean_prev;
+        MatrixXd t = mean_prev - R*mean_cur;
         std::cout << "The rotation matrix is: " << std::endl << R << std::endl;
         std::cout << "The translation vector is: " << std::endl << t << std::endl;
     }
@@ -269,6 +269,8 @@ class Framehandler{
     std::shared_ptr<ORB> prev_orb;
     vector<cv::DMatch> matches, good_matches; 
     int mode;
+    unsigned int comp_sum;
+    unsigned int comp_count;
 
 
 
