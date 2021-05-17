@@ -25,6 +25,7 @@
 // #include <opencv2/xfeatures2d.hpp>
 
 #include <pcl/point_cloud.h>
+#include <pcl_ros/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/range_image/range_image.h>
 #include <pcl/kdtree/kdtree_flann.h>
@@ -79,9 +80,11 @@ extern int NUM_ORB_FEATURES;
 extern int NUM_SIFT_FEATURES;
 extern int NUM_BRISK_FEATURES;
 extern int MIN_LOOP_FEATURE_NUM;
-extern double SKIP_TIME;
 extern int NUM_THREADS;
 extern int DEBUG_IMAGE;
+extern int DUPLICATE_FILTERING_SIZE;
+extern float DISTANCE_THRESHOLD;
+extern double SKIP_TIME;
 extern double MATCH_IMAGE_SCALE;
 extern cv::Mat MASK;
 extern pcl::PointCloud<PointType>::Ptr cloud_traj;

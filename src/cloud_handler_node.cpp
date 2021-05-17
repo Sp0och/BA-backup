@@ -18,6 +18,8 @@ int NUM_SIFT_FEATURES;
 int NUM_BRISK_FEATURES;
 int MIN_LOOP_FEATURE_NUM;
 int MODE;
+int DUPLICATE_FILTERING_SIZE;
+float DISTANCE_THRESHOLD;
 double MATCH_IMAGE_SCALE;
 cv::Mat MASK;
 pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
@@ -53,12 +55,13 @@ void updateParams (ros::NodeHandle& n){
     fsSettings["num_sift_features"] >> NUM_SIFT_FEATURES;
     fsSettings["num_brisk_features"] >> NUM_BRISK_FEATURES;
     fsSettings["min_loop_feature_num"] >> MIN_LOOP_FEATURE_NUM;
+    fsSettings["distance_threshold"] >> DISTANCE_THRESHOLD;
     fsSettings["mode"] >> MODE;
-    
+    fsSettings["duplicate_filtering_size"] >> DUPLICATE_FILTERING_SIZE;
 }
 
 cv::Mat create_mask(){
-    // create a mask for blocking feature extraction
+    // block left and right edge of FoW
     MASK = cv::Mat(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC1, cv::Scalar(255));
     for (int i = 0; i < IMAGE_HEIGHT; ++i)
         for (int j = 0; j < IMAGE_WIDTH; ++j)
@@ -107,6 +110,9 @@ class cloud_displayer{
     // klt->KLT_Iteration(input_image);
 
     //ORB:
+    //test ORB alone:
+    // ORB* orb = new ORB(input_image,image_handler->cloud_track,MODE);
+
     std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
     // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
     // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);

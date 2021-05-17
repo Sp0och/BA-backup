@@ -2,7 +2,9 @@
 #pragma once
 
 #include "parameters.h"
-
+/**
+ * Create a Point2d vector from a KeyPoint Vector
+ * */
 void keypointTransition(vector<cv::KeyPoint>& keypoints_in, vector<cv::Point2d>& points_in)
 {
     points_in.resize(keypoints_in.size());
@@ -16,12 +18,16 @@ void publish_keypoints (ros::Publisher* publisher, cv::Mat& image, const vector<
     cv::cvtColor(image, image, CV_GRAY2RGB);
     for(int i = 0; i < (int)keypoints.size(); i++){
         cv::Point2d cur_pt = keypoints[i] * MATCH_IMAGE_SCALE;
-        cv::circle(image,cur_pt,circle_size,line_color);
+        cv::circle(image,cur_pt,circle_size,line_color,2);
     }
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
     publisher->publish(msg);
 }
+
 template <typename Derived>
+/**
+ * Filter out the bad points according to a flag vector status
+ * */
 static void trimVector(vector<Derived> &v, vector<bool>& status)
 {
     int j = 0;
@@ -30,6 +36,8 @@ static void trimVector(vector<Derived> &v, vector<bool>& status)
             v[j++] = v[i];
     v.resize(j);
 }
+
+
 
 
 class ORB
@@ -54,6 +62,7 @@ class ORB
 
             input_image = _input_image.clone();
             cv::resize(input_image, image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
+            //input_image used for framehandler to have a non-altered image to draw the matches on
             cv::resize(input_image, input_image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
             cloud = _cloud;
 
@@ -63,7 +72,6 @@ class ORB
             KP_pub_range = n.advertise<sensor_msgs::Image>("orb_keypoints_range", 1);
             else
             KP_pub_ambient = n.advertise<sensor_msgs::Image>("orb_keypoints_ambient", 1);
-
             create_descriptors();
         }
 
@@ -73,24 +81,42 @@ class ORB
  * @param orb_keypoints_2d is then the vector containing the keypoints
  * */
     void create_descriptors(){
-        cv::Ptr<cv::ORB> detector = cv::ORB::create(NUM_ORB_FEATURES, 1.2f, 8, 1);
+        cv::Ptr<cv::ORB> detector = cv::ORB::create(NUM_ORB_FEATURES, 1.2f, 8, 31);
         //store keypoints in orb_keypoints
         detector->detect(image,orb_keypoints,MASK);
         keypointTransition(orb_keypoints,orb_keypoints_2d);
+        // std::cout<< "right after detection: " << orb_keypoints_2d.size() << " " << std::endl;
+        duplicate_filtering();
+        //Create descriptors
         detector->compute(image,orb_keypoints,orb_descriptors);
-
 
         points_for_ransac();
 
         if(mode == 1)
-        publish_keypoints(&KP_pub_intensity, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
+        publish_keypoints(&KP_pub_intensity, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
         else if(mode == 2)
-        publish_keypoints(&KP_pub_range, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
+        publish_keypoints(&KP_pub_range, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
         else
-        publish_keypoints(&KP_pub_ambient, image,orb_keypoints_2d,5,cv::Scalar(0,255,0));
+        publish_keypoints(&KP_pub_ambient, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
     };
     
-    
+    void duplicate_filtering(){
+    std::vector<bool> duplicate_status;
+    cv::Mat dubplicate_mask = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
+    for(int i = 0; i < orb_keypoints_2d.size();i++){
+        cv::Point2d pt = orb_keypoints_2d.at(i);
+        cv::Scalar color = dubplicate_mask.at<uchar>(pt);
+        if(color == cv::Scalar(0)){
+            cv::circle(dubplicate_mask,pt,0,cv::Scalar(255),DUPLICATE_FILTERING_SIZE);
+            duplicate_status.push_back(1);
+        }   
+        else{
+            duplicate_status.push_back(0);
+        }
+    }
+    trimVector(orb_keypoints_2d,duplicate_status);
+    trimVector(orb_keypoints,duplicate_status);
+}
     
     /**
      * Changed up version for 3D points for ICP
@@ -152,7 +178,6 @@ class ORB
     ros::Publisher KP_pub_range;
     ros::Publisher KP_pub_ambient;
     int mode;
-
 
 
 };

@@ -21,6 +21,7 @@ class KLT {
     
     KLT(int _mode){
         mode = _mode;
+        comparison = true;
         cur_corners.resize(300);
         prev_corners.resize(300);
         
@@ -44,7 +45,7 @@ class KLT {
         if(prev_image.rows == 0 || prev_corners.size()==0){
             prev_image = input_image.clone();
             //create the previous features
-            cv::goodFeaturesToTrack(prev_image,prev_corners,300,0.3,7,MASK,7,true,0.04);
+            cv::goodFeaturesToTrack(prev_image,prev_corners,300,0.2,7,MASK,7,true,0.04);
         }
         
         else {
@@ -56,6 +57,7 @@ class KLT {
             cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
             //create the new features from the old ones
             assert(prev_corners.size()>0);
+            int before = prev_corners.size();
             cv::calcOpticalFlowPyrLK(prev_image,cur_image,prev_corners,cur_corners,status,err,
             cv::Size(15,15),2,criteria);
             //Publish and adapt prev_corners
@@ -65,10 +67,21 @@ class KLT {
             publish_KLT(&pub_KLT_ran,cur_image,cur_corners,prev_corners,status,5);
             else
             publish_KLT(&pub_KLT_amb,cur_image,cur_corners,prev_corners,status,5);
+            //after number from the prev_corners after the change into the filtered cur_corners
+            int after = prev_corners.size();
+            if(comparison){
+                std::cout << "true positive rate this iteration: " << (100*after)/before << " " << std::endl;
+                comparison = 0;
+            }
             
             prev_image = cur_image.clone();
             if(prev_corners.size()<20){
-                cv::goodFeaturesToTrack(prev_image,prev_corners,300,0.3,7,MASK,7,true,0.04);
+                // std::cout << "GET NEW CORNERS" << std::endl;
+                cv::goodFeaturesToTrack(prev_image,prev_corners,300,0.2,7,MASK,7,true,0.04);
+                comparison = 1;
+            }
+            else{
+                // std::cout << "All Goodie" << std::endl;
             }
         }
     }
@@ -105,6 +118,7 @@ class KLT {
     std::vector<cv::Scalar> color_vector;
 
     int mode;
+    bool comparison;
 
     ros::NodeHandle n_KLT;
 

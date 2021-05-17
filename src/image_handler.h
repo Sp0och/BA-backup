@@ -45,7 +45,7 @@ public:
         cloud_track->resize(IMAGE_HEIGHT * IMAGE_WIDTH);
         //creates the publisher publishing the image
         pub_image  = nh.advertise<sensor_msgs::Image>("image_stack", 1);
-        pub_intensity  = nh.advertise<sensor_msgs::Image>("intensity_image", 1);
+        // pub_intensity  = nh.advertise<sensor_msgs::Image>("intensity_image", 1);
     }
 
     void cloud_handler(const sensor_msgs::PointCloud2ConstPtr &cloud_msg)
@@ -55,7 +55,7 @@ public:
         //create the laser_cloud pointcloud from cloud_msg 
         pcl::fromROSMsg(*cloud_msg, *laser_cloud);
         //make sure the size of the laser_cloud is scalable with the image size
-        assert((int)laser_cloud->size() % IMAGE_HEIGHT * IMAGE_WIDTH == 0);
+        assert((int)laser_cloud->size() % IMAGE_HEIGHT * IMAGE_WIDTH == 0 && (int)laser_cloud->points.size() / (IMAGE_HEIGHT * IMAGE_WIDTH) == 1);
 
         // reset images -> three images of the same size and type, all empty i suppose
         image_range = cv::Mat(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC1, cv::Scalar(0));
@@ -79,7 +79,7 @@ public:
                 noise = std::min(noise, 255.0f);
                 intensity = std::min(intensity, 255.0f);
 
-                // update all images
+                // update points in all images
                 image_range.at<uint8_t>(u, v) = std::min(range * 20, 255.0f);
                 image_noise.at<uint8_t>(u, v) = noise;
                 image_intensity.at<uint8_t>(u, v) = intensity;
@@ -87,25 +87,26 @@ public:
                 // fill our pointcloud
                 PointType* p = &cloud_track->points[u * IMAGE_WIDTH + v];
 
-                if (range >= 0.1)
-                {
+                // if (range >= 0.1)
+                // {
                     p->x = pt.x;
                     p->y = pt.y;
                     p->z = pt.z;
                     p->intensity = intensity;
-                }
-                else
-                {
-                    p->x = p->y = p->z = p->intensity = 0;
-                }
+                // }
+                // else
+                // {
+                //     p->x = p->y = p->z = p->intensity = 0;
+                // }
             }
         }
-        if(pub_intensity.getNumSubscribers()!=0){
+        //Publish intensity image seperately
+        // if(pub_intensity.getNumSubscribers()!=0){
             
-            cv::Mat intensity_visualization = image_intensity.clone();
-            cv::cvtColor(intensity_visualization, intensity_visualization, CV_GRAY2RGB);
-            pubImage(&pub_intensity, intensity_visualization, cloud_msg->header, "bgr8");
-        }
+        //     cv::Mat intensity_visualization = image_intensity.clone();
+        //     cv::cvtColor(intensity_visualization, intensity_visualization, CV_GRAY2RGB);
+        //     pubImage(&pub_intensity, intensity_visualization, cloud_msg->header, "bgr8");
+        // }
         if (pub_image.getNumSubscribers() != 0)
         {
 

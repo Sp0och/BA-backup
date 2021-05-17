@@ -7,21 +7,23 @@ project_name: "descriptor_and_image"
 cloud_topic: "points_raw"       # point cloud input topic
 image_width: 1024               # image horitontal resolution
 image_height: 128               # image vertical resolution
-image_crop: 200                 # mask for blocking feature extraction; indoor/handheld=196-256; jackal=0 
+image_crop: 225                 # mask for blocking feature extraction; indoor/handheld=196-256; jackal=0 
 
 # Registered path
 path_topic: "lio_sam/mapping/path"
 
 #picture mode
-mode: 3
+mode: 1
 
 # Feature matching
 min_loop_feature_num: 15        # the minimum number of features to plot
-num_orb_features: 500           # feature num for ORB
+num_orb_features: 1000           # feature num for ORB
 num_sift_features: 500          # feature num for SIFT
 num_brisk_features: 500         # feature num for BRISK
 
-
+#feature filtering
+duplicate_filtering_size: 3     # the circle patch size in which another point can not be located
+distance_threshold: 10          # percentage a 3D difference in a direciton can be with respect to the actual coordinate to still be ok
 # CPU
 num_threads: 4                  # CPU thread number
 
