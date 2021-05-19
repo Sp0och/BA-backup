@@ -65,6 +65,9 @@ void distance_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
     trim_matrix(cur_ICP,distance_flag);
 }
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
+
+
+
 /**
  * Framehandler: creates matches between two consecutive frames, publishes these matches 
  * and uses them to indicate the points to use for ICP, also implements ICP
@@ -84,8 +87,11 @@ class Framehandler{
         cur_orb = nullptr;
         prev_orb = nullptr;
         // match_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
-        kp_pc_publisher_cur = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1000);
-        kp_pc_publisher_prev = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1000);
+
+        kp_pc_publisher_cur = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1);
+        kp_pc_publisher_prev = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1);
+
+        odom_publisher = n_frame.advertise<nav_msgs::Odometry>("Odometry", 1);
         if(mode == 1)
         intensity_publisher = n_frame.advertise<sensor_msgs::Image>("intensity_matches", 1);
         else if(mode == 2)
@@ -191,6 +197,25 @@ class Framehandler{
         // else
         // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,true);
     
+    }
+
+
+    void publish_odom(Matrix4d& RT){
+        nav_msgs::Odometry odom;
+        ros::Time current_time, last_time;
+        current_time = last_time = ros::Time::now();
+        odom.header.stamp = current_time;
+        odom.header.frame_id = "odom";
+        geometry_msgs::Quaternion odom_quat;
+        geometry_msgs::PoseWithCovariance odom_pose_w;
+        geometry_msgs::Pose odom_pose;
+        cv::Point3d pt = cv::Point3d(RT(0,3),RT(1,3),RT(2,3)); 
+        odom_pose.position.x = pt.x;
+        odom_pose.position.y = pt.y;
+        odom_pose.position.z = pt.z;
+        odom_pose_w.pose = odom_pose;
+        odom.pose = odom_pose_w;
+        odom_publisher.publish(odom);
     }
 
     void publish_keypoint_pc(MatrixXd& cur_ICP, ros::Publisher* kp_pc_publisher){
@@ -304,7 +329,7 @@ class Framehandler{
         }
 
         MatrixXd W;
-        //W is of rank 3 that I checked.
+        //W is of rank 3, that I checked.
         W = prev_ICP*cur_ICP.transpose();
         // std::cout << "W:  " << std::endl << W << std::endl;
         JacobiSVD<MatrixXd> svd(W, ComputeThinU | ComputeThinV);
@@ -316,10 +341,11 @@ class Framehandler{
         RT = H*RT;
         // std::cout << "The rotation matrix is: " << std::endl << R << std::endl;
         // std::cout << "The translation vector is: " << std::endl << t << std::endl;
-        coord_H = RT*coord_H;
-        std::cout << "The current coordinates are: " << std::endl << coord_H << std::endl;
+        // coord_H = RT*coord_H;
+        // std::cout << "The current coordinates are: " << std::endl << RT << std::endl;
+        //Call Odom publisher
+        publish_odom(RT);
     }
-
     
     private:
 
@@ -333,7 +359,8 @@ class Framehandler{
     Matrix4d RT;
 
     ros::NodeHandle n_frame;
-    ros::Publisher match_publisher, range_publisher, ambient_publisher, intensity_publisher, kp_pc_publisher_cur, kp_pc_publisher_prev;
+    ros::Publisher match_publisher, range_publisher, ambient_publisher, intensity_publisher, 
+    kp_pc_publisher_cur, kp_pc_publisher_prev, odom_publisher;
     
 
 
