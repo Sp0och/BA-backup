@@ -31,7 +31,7 @@ catkin_package(
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
-  ${PCL_LIBRSRY_DIRS}
+  ${PCL_LIBRARY_DIRS}
   ${OpenCV_LIBRARY_DIRS}
 )
 # add_library(xfeatures

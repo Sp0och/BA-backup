@@ -22,8 +22,9 @@ num_sift_features: 500          # feature num for SIFT
 num_brisk_features: 500         # feature num for BRISK
 
 #feature filtering
-duplicate_filtering_size: 3     # the circle patch size in which another point can not be located
-distance_threshold: 10          # percentage a 3D difference in a direciton can be with respect to the actual coordinate to still be ok
+duplicate_filtering_size: 1     # the circle patch size in which another point can not be located
+max_feature_distance: 2          # max distance from the sensor that a feature must have
+min_feature_distance: 0.1        #minimum distance to sensor that a feature must have
 # CPU
 num_threads: 4                  # CPU thread number
 

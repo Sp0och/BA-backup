@@ -83,12 +83,13 @@ extern int MIN_LOOP_FEATURE_NUM;
 extern int NUM_THREADS;
 extern int DEBUG_IMAGE;
 extern int DUPLICATE_FILTERING_SIZE;
-extern float DISTANCE_THRESHOLD;
+extern float MAX_FEATURE_DISTANCE;
+extern float MIN_FEATURE_DISTANCE;
 extern double SKIP_TIME;
 extern double MATCH_IMAGE_SCALE;
 extern cv::Mat MASK;
+extern ofstream outfile;
 extern pcl::PointCloud<PointType>::Ptr cloud_traj;
-
 
 
 

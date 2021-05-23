@@ -19,11 +19,21 @@ int NUM_BRISK_FEATURES;
 int MIN_LOOP_FEATURE_NUM;
 int MODE;
 int DUPLICATE_FILTERING_SIZE;
-float DISTANCE_THRESHOLD;
+float MAX_FEATURE_DISTANCE;
+float MIN_FEATURE_DISTANCE;
 double MATCH_IMAGE_SCALE;
+
+ofstream outfile;
+void open_stream(){
+    outfile.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/coordinates.txt",ios_base::app);
+}
+void close_stream(){
+    outfile.close();
+}
+
+
 cv::Mat MASK;
 pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
-
 
 ImageHandler *image_handler;
 Framehandler *frame_handler;
@@ -55,7 +65,8 @@ void updateParams (ros::NodeHandle& n){
     fsSettings["num_sift_features"] >> NUM_SIFT_FEATURES;
     fsSettings["num_brisk_features"] >> NUM_BRISK_FEATURES;
     fsSettings["min_loop_feature_num"] >> MIN_LOOP_FEATURE_NUM;
-    fsSettings["distance_threshold"] >> DISTANCE_THRESHOLD;
+    fsSettings["max_feature_distance"] >> MAX_FEATURE_DISTANCE;
+    fsSettings["min_feature_distance"] >> MIN_FEATURE_DISTANCE;
     fsSettings["mode"] >> MODE;
     fsSettings["duplicate_filtering_size"] >> DUPLICATE_FILTERING_SIZE;
 }
@@ -71,9 +82,6 @@ cv::Mat create_mask(){
 }
 
 
-    
-
-    
 
 /**
  * Class cloud_displayer: create a subscriber that subscribes to the topic of the raw PC and via callback function projects that
@@ -90,43 +98,43 @@ class cloud_displayer{
     void callback_c(const sensor_msgs::PointCloud2::ConstPtr&  cloud_message){
         //Image handler part: project and visualize the pointcloud
         image_handler->cloud_handler(cloud_message);
-
+        auto raw_time = cloud_message->header.stamp;
         MASK = create_mask();
         assert(MODE == 1 || MODE == 2 || MODE == 3);
         
         // image_intensity 
-    cv::Mat& input_image = image_handler->image_intensity;
-    if(MODE == 1);
-        // image_range 
-    else if(MODE == 2)
-    input_image = image_handler->image_range;
-        // image_ambient (noise) 
-    else
-    input_image = image_handler->image_noise;
+        cv::Mat& input_image = image_handler->image_intensity;
+        if(MODE == 1);
+            // image_range 
+        else if(MODE == 2)
+        input_image = image_handler->image_range;
+            // image_ambient (noise) 
+        else
+        input_image = image_handler->image_noise;
 
 
-    //KLT:
+        //KLT:
 
-    // klt->KLT_Iteration(input_image);
+        // klt->KLT_Iteration(input_image);
 
-    //ORB:
-    //test ORB alone:
-    // ORB* orb = new ORB(input_image,image_handler->cloud_track,MODE);
+        //ORB:
+        //test ORB alone:
+        // ORB* orb = new ORB(input_image,image_handler->cloud_track,MODE);
 
-    std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
-    // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
-    // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
-        
+        std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
+        // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
+        // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
+            
 
-    //BRISK:
+        //BRISK:
 
-    // std::shared_ptr<BRISK> brisk = std::make_shared<BRISK>(input_image,image_handler->cloud_track,MODE);
+        // std::shared_ptr<BRISK> brisk = std::make_shared<BRISK>(input_image,image_handler->cloud_track,MODE);
 
 
-    // //ORB Matches
-        frame_handler->newIteration(orb);
-        // frame_handler2->newIteration(orb2);
-        // frame_handler3->newIteration(orb3);
+        // //ORB Matches
+            frame_handler->newIteration(orb,raw_time);
+            // frame_handler2->newIteration(orb2);
+            // frame_handler3->newIteration(orb3);
     }
 
     
@@ -140,9 +148,7 @@ int main(int argc, char **argv){
 
 ros::init(argc, argv, "cloud_projection");
 ros::NodeHandle n;
-
     updateParams(n);
-    //create color_vector for tracking
     image_handler = new ImageHandler();
     frame_handler = new Framehandler(MODE);
     // frame_handler2 = new Framehandler(2);
@@ -151,6 +157,5 @@ ros::NodeHandle n;
     klt = new KLT(MODE);
   
     ros::spin();
-
     return 0;
 }

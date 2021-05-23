@@ -48,18 +48,30 @@ void zero_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
     trim_matrix(prev_ICP,zero_filtering);
     trim_matrix(cur_ICP,zero_filtering);
 }
+
+
 /**
- * Filter out all points whoose difference in a coordinate dirction is more than half its effective value
+ * Filter out all points whoose difference in a coordinate dirction is more than half its effective value as well as points that are too close to the origin
  * */
 void distance_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
     std::vector<bool> distance_flag(prev_ICP.cols(),1);
     for(int i = 0; i < prev_ICP.cols();i++){
-        float dist_x = fabs(cur_ICP(0,i)-prev_ICP(0,i));
-        float dist_y = fabs(cur_ICP(1,i)-prev_ICP(1,i));
-        float dist_z = fabs(cur_ICP(2,i)-prev_ICP(2,i));
-        if((dist_x*100)/cur_ICP(0,i) > DISTANCE_THRESHOLD || (dist_y*100)/cur_ICP(1,i) > DISTANCE_THRESHOLD || (dist_z*100)/cur_ICP(2,i) > DISTANCE_THRESHOLD){
+        float p_c_x = cur_ICP(0,i);
+        float p_c_y = cur_ICP(1,i);
+        float p_c_z = cur_ICP(2,i);
+        float p_p_x = prev_ICP(0,i);
+        float p_p_y = prev_ICP(1,i);
+        float p_p_z = prev_ICP(2,i);
+        float dist_x = p_c_x - p_p_x;
+        float dist_y = p_c_y - p_p_y;
+        float dist_z = p_c_z - p_p_z;
+
+        float mdif = sqrt(dist_x*dist_x + dist_y*dist_y + dist_z*dist_z);
+        float dist_c = sqrt(p_c_x*p_c_x + p_c_y*p_c_y + p_c_z*p_c_z);
+        float dist_p = sqrt(p_p_x*p_p_x + p_p_y*p_p_y + p_p_z*p_p_z);
+
+        if(mdif > MAX_FEATURE_DISTANCE || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
             distance_flag.at(i) = 0;
-        }
     }
     trim_matrix(prev_ICP,distance_flag);
     trim_matrix(cur_ICP,distance_flag);
@@ -90,7 +102,7 @@ class Framehandler{
 
         kp_pc_publisher_cur = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1);
         kp_pc_publisher_prev = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1);
-
+        // raw_sub = n_frame.subscribe(CLOUD_TOPIC,1000,&Framehandler::publish_tf);
         odom_publisher = n_frame.advertise<nav_msgs::Odometry>("Odometry", 1);
         if(mode == 1)
         intensity_publisher = n_frame.advertise<sensor_msgs::Image>("intensity_matches", 1);
@@ -100,7 +112,8 @@ class Framehandler{
         ambient_publisher = n_frame.advertise<sensor_msgs::Image>("ambient_matches", 1);
     }
 
-    void newIteration(std::shared_ptr<ORB> new_frame){
+    void newIteration(std::shared_ptr<ORB> new_frame, ros::Time _raw_time){
+        raw_time = _raw_time;
         if(cur_orb == nullptr){
             cur_orb = new_frame;
         }
@@ -113,21 +126,39 @@ class Framehandler{
 
     void matches_filtering_motion(){
         static cv::Ptr<cv::BFMatcher> matcher = cv::BFMatcher::create(cv::NORM_HAMMING);
+
         //create matches
-        matcher->match(cur_orb->orb_descriptors,prev_orb->orb_descriptors,matches);
+        //choose correct order
+        bool cur_first = false;
+        if(cur_orb->orb_keypoints_2d.size() < prev_orb->orb_keypoints_2d.size()){
+            cur_first = true;
+            matcher->match(cur_orb->orb_descriptors,prev_orb->orb_descriptors,matches);
+        }
+        else
+            matcher->match(prev_orb->orb_descriptors,cur_orb->orb_descriptors,matches);
+
         //sort matches in ascending order (concerning distance)
         std::sort(matches.begin(),matches.end());
         std::vector<cv::Point2d> sorted_2d_cur, sorted_2d_prev;
         MatrixXd prev_ICP(3,matches.size()),cur_ICP(3,matches.size());
-        std::cout << "cur keypoints size: " << cur_orb->orb_keypoints_2d.size() << " " << std::endl;
-        std::cout << "prev keypoints size: " << prev_orb->orb_keypoints_2d.size() << " " << std::endl;
-        std::cout << "match size: " << matches.size() << " " << std::endl;
+        // std::cout << "cur keypoints size right before matching: " << cur_orb->orb_keypoints_2d.size() << " " << std::endl;
+        // std::cout << "prev keypoints size right before matching: " << prev_orb->orb_keypoints_2d.size() << " " << std::endl;
+        // std::cout << "match size: " << matches.size() << " " << std::endl;
         //pair the keypoints up according to the matches:
         for (size_t i = 0; i < matches.size(); i++)
         {
             //the match indexes for point association
-            int cur_index = matches[i].queryIdx;
-            int prev_index = matches[i].trainIdx;
+            int cur_index;
+            int prev_index;
+            if(cur_first){
+                cur_index = matches[i].queryIdx;
+                prev_index = matches[i].trainIdx;
+            }
+            else{
+                cur_index = matches[i].trainIdx;
+                prev_index = matches[i].queryIdx;
+            }
+            
             //create sorted keypoint vectors
             sorted_2d_cur.push_back(cur_orb->orb_keypoints_2d[cur_index]);
             sorted_2d_prev.push_back(prev_orb->orb_keypoints_2d[prev_index]);
@@ -140,8 +171,8 @@ class Framehandler{
             prev_ICP(2,i) = prev_orb->orb_points_3d.at(prev_index).z;
         }
         matches.clear();
-        //Before for the feature quality comparison:
-        // unsigned int before = sorted_2d_cur.size();
+
+
 
         //Publish matches before RANSAC filtering:
         // publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
@@ -152,32 +183,33 @@ class Framehandler{
         
         // //Second filtering for edge values if values beneath a certain range norm were neglected in the image handler
         // zero_filtering(cur_ICP,prev_ICP);
-        
+        // std::cout << "cur keypoints size after ransac: " << cur_ICP.cols() << " " << std::endl;
+        // std::cout << "prev keypoints size after ransac: " << prev_ICP.cols() << " " << std::endl;
         //Filter out 3D mistakes which look right on 2D:
         distance_filtering(cur_ICP,prev_ICP);
         // std::cout << "size after distance: " << cur_ICP.cols() << " " << std::endl;
         
-
+        // std::cout << "cur keypoints size after distance filtering: " << cur_ICP.cols() << " " << std::endl;
+        // std::cout << "prev keypoints size after distance filtering: " << prev_ICP.cols() << " " << std::endl;
         //Visualize key point point cloud:
         publish_keypoint_pc(cur_ICP, &kp_pc_publisher_cur);
         publish_keypoint_pc(prev_ICP, &kp_pc_publisher_prev);
-
-        //Feature quality comparison:
-
-        // unsigned int after = sorted_2d_cur.size();
-        // comp_sum += (100*after)/before;
-        // comp_count++;
-        // if(comp_count == 1000){
-        //     std::cout << "True positive rate is: " << comp_sum/comp_count << "  " << std::endl;
-        //     comp_sum = comp_count = 0;
-        // }
-
 
         //ICP Here
         if(cur_ICP.size() == prev_ICP.size() && cur_ICP.size() != 0)
             ICP(cur_ICP,prev_ICP);
         else    
             std::cout << "ERROR: 3D Vectors weren't initialized properly" << std::endl;
+
+        //publish my estimated transform in between odom and velodyne
+        // publish_tf();
+
+        //store the coordinates in a csv file
+        store_coordinates();
+
+
+        //publish odometry message
+        // publish_odom();
 
         //First match display option
         
@@ -200,21 +232,53 @@ class Framehandler{
     }
 
 
-    void publish_odom(Matrix4d& RT){
+    void store_coordinates(){
+        outfile.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/coordinates.csv",ios_base::app);
+        outfile << RT << ",";
+        outfile.close();
+    }
+
+    void publish_tf(){
+        tf::TransformBroadcaster odom_t_velo_b;
+        //Create Eigen Quaternion
+        Matrix3d R = RT.topLeftCorner(3,3);
+        Quaterniond q(R);
+        tfScalar xq = q.x();
+        tfScalar yq = q.y();
+        tfScalar zq = q.z();
+        tfScalar wq = q.w();
+        //Create tf Quaternion
+        tf::Quaternion qtf;
+        qtf.setX(xq);
+        qtf.setY(yq);
+        qtf.setZ(zq);
+        qtf.setW(wq);
+
+        //Create translational part of transform
+        tfScalar x = RT(0,3);
+        tfScalar y = RT(1,3);
+        tfScalar z = RT(2,3);
+        tf::Vector3 t = tf::Vector3(x,y,z);
+        // std::cout << "translation: [" << t.getX() << ", " << t.getY() << ", " << t.getZ() << "]" << std::endl;
+        // std::cout << "rotation tf: [" << qtf.x() << ", " << qtf.y() << ", " << qtf.z() <<  ", " << qtf.w() << "]" << std::endl;
+        tf::Transform odom_t_velo = tf::Transform(qtf,t);
+        odom_t_velo_b.sendTransform(tf::StampedTransform(odom_t_velo,raw_time,"odom","my_velo"));
+    }
+
+    void publish_odom(){
         nav_msgs::Odometry odom;
-        ros::Time current_time, last_time;
-        current_time = last_time = ros::Time::now();
-        odom.header.stamp = current_time;
+        //translation
+        odom.pose.pose.position.x = RT(0,3);
+        odom.pose.pose.position.y = RT(1,3);
+        odom.pose.pose.position.z = RT(2,3);
+        //Quaternions (rotation)
+        Matrix3d R = RT.topLeftCorner(3,3);
+        Quaterniond q(R);
+        odom.pose.pose.orientation.x = q.x();
+        odom.pose.pose.orientation.y = q.y();
+        odom.pose.pose.orientation.z = q.z();
+        odom.pose.pose.orientation.w = q.w();
         odom.header.frame_id = "odom";
-        geometry_msgs::Quaternion odom_quat;
-        geometry_msgs::PoseWithCovariance odom_pose_w;
-        geometry_msgs::Pose odom_pose;
-        cv::Point3d pt = cv::Point3d(RT(0,3),RT(1,3),RT(2,3)); 
-        odom_pose.position.x = pt.x;
-        odom_pose.position.y = pt.y;
-        odom_pose.position.z = pt.z;
-        odom_pose_w.pose = odom_pose;
-        odom.pose = odom_pose_w;
         odom_publisher.publish(odom);
     }
 
@@ -226,7 +290,7 @@ class Framehandler{
         for(size_t i = 0; i < cur_ICP.cols();i++){
             msg->points.push_back(pcl::PointXYZ(cur_ICP(0,i),cur_ICP(1,i),cur_ICP(2,i)));
         }
-        pcl_conversions::toPCL(ros::Time::now(), msg->header.stamp);
+        pcl_conversions::toPCL(raw_time, msg->header.stamp);
         kp_pc_publisher->publish(msg);
     }
 
@@ -342,9 +406,7 @@ class Framehandler{
         // std::cout << "The rotation matrix is: " << std::endl << R << std::endl;
         // std::cout << "The translation vector is: " << std::endl << t << std::endl;
         // coord_H = RT*coord_H;
-        // std::cout << "The current coordinates are: " << std::endl << RT << std::endl;
-        //Call Odom publisher
-        publish_odom(RT);
+        std::cout << "The current coordinates are: " << std::endl << RT << std::endl;
     }
     
     private:
@@ -358,7 +420,10 @@ class Framehandler{
     Vector4d coord_H;
     Matrix4d RT;
 
+    ros::Time raw_time;
+
     ros::NodeHandle n_frame;
+    ros::Subscriber raw_sub;
     ros::Publisher match_publisher, range_publisher, ambient_publisher, intensity_publisher, 
     kp_pc_publisher_cur, kp_pc_publisher_prev, odom_publisher;
     

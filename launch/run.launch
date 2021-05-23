@@ -2,7 +2,7 @@
 
     <arg name="project" default="descriptor_and_image"/>
     <arg name="bag_path" default="/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/imaging_lidar_place_recognition/launch/handheld_registered.bag"/>
-    
+    <param name="use_sim_time" value="true" />
     <!--- Param file-->
     <param name="lio_loop_config_file" type="string" value="$(find descriptor_and_image)/config/params.yaml" />
 

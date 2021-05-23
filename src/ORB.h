@@ -85,8 +85,9 @@ class ORB
         //store keypoints in orb_keypoints
         detector->detect(image,orb_keypoints,MASK);
         keypointTransition(orb_keypoints,orb_keypoints_2d);
-        // std::cout<< "right after detection: " << orb_keypoints_2d.size() << " " << std::endl;
+        std::cout<< "right after detection: " << orb_keypoints_2d.size() << " " << std::endl;
         duplicate_filtering();
+        std::cout<< "after duplicate filtering: " << orb_keypoints_2d.size() << " " << std::endl;
         //Create descriptors
         detector->compute(image,orb_keypoints,orb_descriptors);
 
