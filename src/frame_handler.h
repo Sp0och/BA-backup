@@ -76,6 +76,9 @@ void distance_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
     trim_matrix(prev_ICP,distance_flag);
     trim_matrix(cur_ICP,distance_flag);
 }
+
+
+
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
 
@@ -181,16 +184,18 @@ class Framehandler{
         RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_ICP,prev_ICP);
         // std::cout << "size after ransac: " << sorted_2d_cur.size() << " " << std::endl;
         
+
         // //Second filtering for edge values if values beneath a certain range norm were neglected in the image handler
         // zero_filtering(cur_ICP,prev_ICP);
-        // std::cout << "cur keypoints size after ransac: " << cur_ICP.cols() << " " << std::endl;
-        // std::cout << "prev keypoints size after ransac: " << prev_ICP.cols() << " " << std::endl;
+
         //Filter out 3D mistakes which look right on 2D:
         distance_filtering(cur_ICP,prev_ICP);
         // std::cout << "size after distance: " << cur_ICP.cols() << " " << std::endl;
         
-        // std::cout << "cur keypoints size after distance filtering: " << cur_ICP.cols() << " " << std::endl;
-        // std::cout << "prev keypoints size after distance filtering: " << prev_ICP.cols() << " " << std::endl;
+        // std::cout << "cur keypoints cols after distance filtering: " << cur_ICP.cols() << " " << std::endl;
+        // std::cout << "prev keypoints cols after distance filtering: " << prev_ICP.cols() << " " << std::endl;
+        // std::cout << "cur keypoints rows after distance filtering: " << cur_ICP.rows() << " " << std::endl;
+        // std::cout << "prev keypoints rows after distance filtering: " << prev_ICP.rows() << " " << std::endl;
         //Visualize key point point cloud:
         publish_keypoint_pc(cur_ICP, &kp_pc_publisher_cur);
         publish_keypoint_pc(prev_ICP, &kp_pc_publisher_prev);
@@ -204,8 +209,8 @@ class Framehandler{
         //publish my estimated transform in between odom and velodyne
         // publish_tf();
 
-        //store the coordinates in a csv file
-        store_coordinates();
+        //their solution
+        // their_solution();
 
 
         //publish odometry message
@@ -213,12 +218,12 @@ class Framehandler{
 
         //First match display option
         
-        if(mode == 1)
-        publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
-        else if(mode == 2)
-        publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
-        else
-        publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        // if(mode == 1)
+        // publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        // else if(mode == 2)
+        // publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        // else
+        // publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
         
         //Second match display option
 
@@ -231,11 +236,41 @@ class Framehandler{
     
     }
 
+    void their_solution(){
+        tf::TransformListener listener;
+        tf::StampedTransform transform;
+        try{
+            listener.lookupTransform("base_link","odom",raw_time,transform);
+            cout << "translation solution: " << "(" << transform.getOrigin().getX() << ", " << transform.getOrigin().getY() << ", " << transform.getOrigin().getZ() << ") " << endl;
+            cout << "rotation solution: " << "(" << transform.getRotation().getX() << ", " << transform.getRotation().getY() << ", " << transform.getRotation().getZ() << ", " << transform.getRotation().getW() << ") " << endl;
+        }
+        catch(tf2::LookupException){
+            cout << "ye boi didn't work" << endl;
+        }
+    }
 
-    void store_coordinates(){
-        outfile.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/coordinates.csv",ios_base::app);
-        outfile << RT << ",";
-        outfile.close();
+    void store_coordinates(const Vector3d& t, const Matrix3d& R){
+        t_x.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_x.csv",ios_base::app);
+        t_x << t(0) << ",";
+        t_x.close();
+        t_y.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_y.csv",ios_base::app);
+        t_y << t(1) << ",";
+        t_y.close();
+        t_z.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_z.csv",ios_base::app);
+        t_z << t(2) << ",";
+        t_z.close();
+
+        Vector3d ea = R.eulerAngles(0,1,2);
+        r_yaw.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/rotation_yaw.csv",ios_base::app);
+        r_yaw << ea(0) << ",";
+        r_yaw.close();
+        r_pitch.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/rotation_pitch.csv",ios_base::app);
+        r_pitch << ea(1) << ",";
+        r_pitch.close();
+        r_roll.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/rotation_roll.csv",ios_base::app);
+        r_roll << ea(2) << ",";
+        r_roll.close();
+
     }
 
     void publish_tf(){
@@ -262,6 +297,9 @@ class Framehandler{
         // std::cout << "translation: [" << t.getX() << ", " << t.getY() << ", " << t.getZ() << "]" << std::endl;
         // std::cout << "rotation tf: [" << qtf.x() << ", " << qtf.y() << ", " << qtf.z() <<  ", " << qtf.w() << "]" << std::endl;
         tf::Transform odom_t_velo = tf::Transform(qtf,t);
+        // cout << "my translation: " << COUNT << "(" << odom_t_velo.getOrigin().getX() << ", " << odom_t_velo.getOrigin().getY() << ", " << odom_t_velo.getOrigin().getZ() << ") " << endl;
+        // cout << "my rotation: " << COUNT << "(" << odom_t_velo.getRotation().getX() << ", " << odom_t_velo.getRotation().getY() << ", " << odom_t_velo.getRotation().getZ() << ", " << odom_t_velo.getRotation().getW() << ") " << endl;
+        // COUNT++;
         odom_t_velo_b.sendTransform(tf::StampedTransform(odom_t_velo,raw_time,"odom","my_velo"));
     }
 
@@ -393,20 +431,30 @@ class Framehandler{
         }
 
         MatrixXd W;
+        W.resize(3,3);
+        W.setZero();
         //W is of rank 3, that I checked.
-        W = prev_ICP*cur_ICP.transpose();
-        // std::cout << "W:  " << std::endl << W << std::endl;
+        for(int i = 0; i < prev_ICP.cols();i++){
+            Vector3d prev(prev_ICP(0,i),prev_ICP(1,i),prev_ICP(2,i));
+            Vector3d cur(cur_ICP(0,i),cur_ICP(1,i),cur_ICP(2,i));
+            W += prev*cur.transpose();
+        }
+        // W = prev_ICP*cur_ICP.transpose();
         JacobiSVD<MatrixXd> svd(W, ComputeThinU | ComputeThinV);
         auto VT = svd.matrixV().transpose();
-        MatrixXd R = svd.matrixU()*VT;
-        MatrixXd t = mean_prev - R*mean_cur;
+        Matrix3d R = svd.matrixU()*VT;
+        Vector3d t = mean_prev - R*mean_cur;
+
         Matrix4d H;
         H << R,t,0,0,0,1;
         RT = H*RT;
+        
+        Matrix3d RI = RT.topLeftCorner(3,3);
+        Vector3d tI = RT.topRightCorner(3,1);
+        store_coordinates(tI,RI);
         // std::cout << "The rotation matrix is: " << std::endl << R << std::endl;
         // std::cout << "The translation vector is: " << std::endl << t << std::endl;
-        // coord_H = RT*coord_H;
-        std::cout << "The current coordinates are: " << std::endl << RT << std::endl;
+        // std::cout << "The current coordinates are: " << std::endl << RT << std::endl;
     }
     
     private:

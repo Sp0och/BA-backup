@@ -42,13 +42,21 @@ int main(int argc, char **argv){
         }
         // std::cout << std::endl << mean_prev << std::endl;
         // std::cout << std::endl << prev << std::endl;
-        MatrixXd W;
-        W = cur*prev.transpose();
+        Matrix3d W;
+        // W.resize(3,3);
+        // W.setZero();
+        //W is of rank 3, that I checked.
+        for(int i = 0; i < prev.cols();i++){
+            Vector3d prevp(prev(0,i),prev(1,i),prev(2,i));
+            Vector3d curp(cur(0,i),cur(1,i),cur(2,i));
+            W += prevp*curp.transpose();
+        }
+        // W = cur*prev.transpose();
         // std::cout << std::endl << W << std::endl;
-        JacobiSVD<MatrixXd> svd(W, ComputeThinU | ComputeThinV);
+        JacobiSVD<Matrix3d> svd(W, ComputeThinU | ComputeThinV);
         auto VT = svd.matrixV().transpose();
-        MatrixXd R = svd.matrixU()*VT;
-        MatrixXd t = mean_cur - R*mean_prev;
+        Matrix3d R = svd.matrixU()*VT;
+        Vector3d t = mean_cur - R*mean_prev;
         std::cout << "The rotation matrix is: " << std::endl << R << std::endl;
         std::cout << "The translation vector is: " << std::endl << t << std::endl;
         // std::cout << svd.singularValues() << std::endl;

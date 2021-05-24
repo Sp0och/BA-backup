@@ -22,14 +22,13 @@ int DUPLICATE_FILTERING_SIZE;
 float MAX_FEATURE_DISTANCE;
 float MIN_FEATURE_DISTANCE;
 double MATCH_IMAGE_SCALE;
-
-ofstream outfile;
-void open_stream(){
-    outfile.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/coordinates.txt",ios_base::app);
-}
-void close_stream(){
-    outfile.close();
-}
+int COUNT = 0;
+ofstream t_x;
+ofstream t_y;
+ofstream t_z;
+ofstream r_yaw;
+ofstream r_pitch;
+ofstream r_roll;
 
 
 cv::Mat MASK;
