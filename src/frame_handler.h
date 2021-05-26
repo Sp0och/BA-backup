@@ -105,6 +105,7 @@ class Framehandler{
 
         kp_pc_publisher_cur = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1);
         kp_pc_publisher_prev = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1);
+        midpoint_publisher = n_frame.advertise<PointCloud>("KP_PC_Midpoints", 1);
         // raw_sub = n_frame.subscribe(CLOUD_TOPIC,1000,&Framehandler::publish_tf);
         odom_publisher = n_frame.advertise<nav_msgs::Odometry>("Odometry", 1);
         if(mode == 1)
@@ -196,9 +197,12 @@ class Framehandler{
         // std::cout << "prev keypoints cols after distance filtering: " << prev_ICP.cols() << " " << std::endl;
         // std::cout << "cur keypoints rows after distance filtering: " << cur_ICP.rows() << " " << std::endl;
         // std::cout << "prev keypoints rows after distance filtering: " << prev_ICP.rows() << " " << std::endl;
+       
         //Visualize key point point cloud:
-        publish_keypoint_pc(cur_ICP, &kp_pc_publisher_cur);
-        publish_keypoint_pc(prev_ICP, &kp_pc_publisher_prev);
+        // MatrixXd mid_points = get_midpoints(cur_ICP,prev_ICP);
+        // publish_keypoint_pc(cur_ICP, &kp_pc_publisher_cur);
+        // publish_keypoint_pc(prev_ICP, &kp_pc_publisher_prev);
+        // publish_keypoint_pc(mid_points, &midpoint_publisher);
 
         //ICP Here
         if(cur_ICP.size() == prev_ICP.size() && cur_ICP.size() != 0)
@@ -209,23 +213,20 @@ class Framehandler{
         //publish my estimated transform in between odom and velodyne
         // publish_tf();
 
-        //their solution
-        // their_solution();
-
 
         //publish odometry message
         // publish_odom();
 
-        //First match display option
+        //First 2D match display option
         
-        // if(mode == 1)
-        // publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
-        // else if(mode == 2)
-        // publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
-        // else
-        // publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        if(mode == 1)
+        publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        else if(mode == 2)
+        publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        else
+        publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
         
-        //Second match display option
+        //Second 2D match display option
 
         // if(mode == 1)
         // publish_matches_1F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,5,true);
@@ -236,40 +237,51 @@ class Framehandler{
     
     }
 
-    void their_solution(){
-        tf::TransformListener listener;
-        tf::StampedTransform transform;
-        try{
-            listener.lookupTransform("base_link","odom",raw_time,transform);
-            cout << "translation solution: " << "(" << transform.getOrigin().getX() << ", " << transform.getOrigin().getY() << ", " << transform.getOrigin().getZ() << ") " << endl;
-            cout << "rotation solution: " << "(" << transform.getRotation().getX() << ", " << transform.getRotation().getY() << ", " << transform.getRotation().getZ() << ", " << transform.getRotation().getW() << ") " << endl;
-        }
-        catch(tf2::LookupException){
-            cout << "ye boi didn't work" << endl;
-        }
-    }
 
     void store_coordinates(const Vector3d& t, const Matrix3d& R){
-        t_x.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_x.csv",ios_base::app);
-        t_x << t(0) << ",";
-        t_x.close();
-        t_y.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_y.csv",ios_base::app);
-        t_y << t(1) << ",";
-        t_y.close();
-        t_z.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_z.csv",ios_base::app);
-        t_z << t(2) << ",";
-        t_z.close();
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_x.csv",ios_base::app);
+        OUT << t(0) << "\n";
+        OUT.close();
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_y.csv",ios_base::app);
+        OUT << t(1) << "\n";
+        OUT.close();
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_z.csv",ios_base::app);
+        OUT << t(2) << "\n";
+        OUT.close();
 
-        Vector3d ea = R.eulerAngles(0,1,2);
-        r_yaw.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/rotation_yaw.csv",ios_base::app);
-        r_yaw << ea(0) << ",";
-        r_yaw.close();
-        r_pitch.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/rotation_pitch.csv",ios_base::app);
-        r_pitch << ea(1) << ",";
-        r_pitch.close();
-        r_roll.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/rotation_roll.csv",ios_base::app);
-        r_roll << ea(2) << ",";
-        r_roll.close();
+        Quaterniond q(R);
+        tfScalar xq = q.x();
+        tfScalar yq = q.y();
+        tfScalar zq = q.z();
+        tfScalar wq = q.w();
+        //Create tf Quaternion
+        tf::Quaternion qtf;
+        qtf.setX(xq);
+        qtf.setY(yq);
+        qtf.setZ(zq);
+        qtf.setW(wq);
+        tf::Vector3 t_fill = tf::Vector3(t(0),t(1),t(2));
+        tf::Transform odom_t_velo = tf::Transform(qtf,t_fill);
+        Eigen::Vector3d e1, e2;
+        odom_t_velo.getBasis().getRPY(e1[0], e1[1], e1[2]);  //XYZ
+        odom_t_velo.getBasis().getRPY(e2[0], e2[1], e2[2], 2);
+        //Set smaller rotation solution
+        Vector3d ea/*  = R.eulerAngles(0,1,2) */;
+        if (e1.norm() < e2.norm())
+            ea = e1;
+        else
+            ea = e2;
+
+
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/rotation_roll.csv",ios_base::app);
+        OUT << ea(0) << "\n";
+        OUT.close();
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/rotation_pitch.csv",ios_base::app);
+        OUT << ea(1) << "\n";
+        OUT.close();
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/rotation_yaw.csv",ios_base::app);
+        OUT << ea(2) << "\n";
+        OUT.close();
 
     }
 
@@ -320,7 +332,18 @@ class Framehandler{
         odom_publisher.publish(odom);
     }
 
-    void publish_keypoint_pc(MatrixXd& cur_ICP, ros::Publisher* kp_pc_publisher){
+
+    MatrixXd get_midpoints(MatrixXd& cur_ICP,MatrixXd& prev_ICP){
+        MatrixXd midpoints(3,cur_ICP.cols());
+        for(int i = 0; i < cur_ICP.cols();i++){
+            midpoints(0,i) = 0.5*(cur_ICP(0,i) + prev_ICP(0,i));
+            midpoints(1,i) = 0.5*(cur_ICP(1,i) + prev_ICP(1,i));
+            midpoints(2,i) = 0.5*(cur_ICP(2,i) + prev_ICP(2,i));
+        }
+        return midpoints;
+    }
+
+    void publish_keypoint_pc(const MatrixXd& cur_ICP,const  ros::Publisher* kp_pc_publisher){
         PointCloud::Ptr msg (new PointCloud);
         msg->header.frame_id = "velodyne";
         msg->width = cur_ICP.cols();
@@ -332,8 +355,8 @@ class Framehandler{
         kp_pc_publisher->publish(msg);
     }
 
-    void publish_matches_2F(const ros::Publisher* this_pub, std::vector<cv::Point2d>& sorted_KP_cur, 
-    std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
+    void publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
+    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
     cv::Mat color_img,gray_img;
     const cv::Mat old_img = prev_orb->input_image.clone();
     const cv::Mat new_img = cur_orb->input_image.clone();
@@ -378,8 +401,8 @@ class Framehandler{
 
 }
 
-    void publish_matches_1F(const ros::Publisher* this_pub, std::vector<cv::Point2d>& sorted_KP_cur, 
-    std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, bool draw_lines){
+    void publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
+    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, bool draw_lines){
         cv::Mat image = cur_orb->input_image.clone();
         cv::cvtColor(image,image,CV_GRAY2RGB);
 
@@ -437,13 +460,13 @@ class Framehandler{
         for(int i = 0; i < prev_ICP.cols();i++){
             Vector3d prev(prev_ICP(0,i),prev_ICP(1,i),prev_ICP(2,i));
             Vector3d cur(cur_ICP(0,i),cur_ICP(1,i),cur_ICP(2,i));
-            W += prev*cur.transpose();
+            W += cur*prev.transpose();
         }
         // W = prev_ICP*cur_ICP.transpose();
         JacobiSVD<MatrixXd> svd(W, ComputeThinU | ComputeThinV);
         auto VT = svd.matrixV().transpose();
         Matrix3d R = svd.matrixU()*VT;
-        Vector3d t = mean_prev - R*mean_cur;
+        Vector3d t = mean_cur - R*mean_prev;
 
         Matrix4d H;
         H << R,t,0,0,0,1;
@@ -452,7 +475,7 @@ class Framehandler{
         Matrix3d RI = RT.topLeftCorner(3,3);
         Vector3d tI = RT.topRightCorner(3,1);
         store_coordinates(tI,RI);
-        // std::cout << "The rotation matrix is: " << std::endl << R << std::endl;
+        // std::cout << "The rotation matrix is: " << COUNT++ << "  " << std::endl << R << std::endl;
         // std::cout << "The translation vector is: " << std::endl << t << std::endl;
         // std::cout << "The current coordinates are: " << std::endl << RT << std::endl;
     }
@@ -473,7 +496,7 @@ class Framehandler{
     ros::NodeHandle n_frame;
     ros::Subscriber raw_sub;
     ros::Publisher match_publisher, range_publisher, ambient_publisher, intensity_publisher, 
-    kp_pc_publisher_cur, kp_pc_publisher_prev, odom_publisher;
+    kp_pc_publisher_cur, kp_pc_publisher_prev, midpoint_publisher, odom_publisher;
     
 
 

@@ -23,12 +23,7 @@ float MAX_FEATURE_DISTANCE;
 float MIN_FEATURE_DISTANCE;
 double MATCH_IMAGE_SCALE;
 int COUNT = 0;
-ofstream t_x;
-ofstream t_y;
-ofstream t_z;
-ofstream r_yaw;
-ofstream r_pitch;
-ofstream r_roll;
+ofstream OUT;
 
 
 cv::Mat MASK;

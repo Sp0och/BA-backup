@@ -88,12 +88,7 @@ extern float MIN_FEATURE_DISTANCE;
 extern double SKIP_TIME;
 extern double MATCH_IMAGE_SCALE;
 extern cv::Mat MASK;
-extern ofstream t_x;
-extern ofstream t_y;
-extern ofstream t_z;
-extern ofstream r_yaw;
-extern ofstream r_pitch;
-extern ofstream r_roll;
+extern ofstream OUT;
 extern int COUNT;
 extern pcl::PointCloud<PointType>::Ptr cloud_traj;
 
