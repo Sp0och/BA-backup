@@ -1,20 +1,16 @@
+#include "Framehandler.h"
 
-#pragma once
-#include "parameters.h"
-#include "ORB.h"
-
-using namespace Eigen;
 
 template <typename Derived>
 
-void trim_vector(vector<Derived> &v, vector<bool>& status){
+static void trim_vector(vector<Derived> &v, vector<bool>& status){
     int j = 0;
     for (int i = 0; i < int(v.size()); i++)
         if (status[i])
             v[j++] = v[i];
     v.resize(j);
 }
-void trim_matrix(MatrixXd& m, vector<bool>& status){
+static void trim_matrix(MatrixXd& m, vector<bool>& status){
     int j = 0;
     for (int i = 0; i < int(m.cols()); i++)
         if (status[i]){
@@ -24,7 +20,7 @@ void trim_matrix(MatrixXd& m, vector<bool>& status){
         }
     m.conservativeResize(3,j);
 }
-void RANSAC_filtering(std::vector<cv::Point2d>& sorted_2d_cur, std::vector<cv::Point2d>& sorted_2d_prev, MatrixXd& cur_ICP, MatrixXd& prev_ICP){
+static void RANSAC_filtering(std::vector<cv::Point2d>& sorted_2d_cur, std::vector<cv::Point2d>& sorted_2d_prev, MatrixXd& cur_ICP, MatrixXd& prev_ICP){
         cv::Mat MASK;
         cv::Mat H = cv::findHomography(sorted_2d_cur,sorted_2d_prev,cv::RANSAC,3.0,MASK);
         std::vector<bool> status(MASK.rows,0);
@@ -38,7 +34,7 @@ void RANSAC_filtering(std::vector<cv::Point2d>& sorted_2d_cur, std::vector<cv::P
         trim_matrix(prev_ICP,status);
         trim_matrix(cur_ICP,status);
 }
-void zero_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
+static void zero_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
     std::vector<bool> zero_filtering(prev_ICP.cols(),1);
     for(int i = 0; i < prev_ICP.cols();i++){
         if((prev_ICP(0,i) == 0 && prev_ICP(1,i) == 0 && prev_ICP(2,i) == 0)||(cur_ICP(0,i) == 0 && cur_ICP(1,i) == 0 && cur_ICP(2,i) == 0)){
@@ -48,12 +44,10 @@ void zero_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
     trim_matrix(prev_ICP,zero_filtering);
     trim_matrix(cur_ICP,zero_filtering);
 }
-
-
 /**
  * Filter out all points whoose difference in a coordinate dirction is more than half its effective value as well as points that are too close to the origin
  * */
-void distance_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
+static void distance_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
     std::vector<bool> distance_flag(prev_ICP.cols(),1);
     for(int i = 0; i < prev_ICP.cols();i++){
         float p_c_x = cur_ICP(0,i);
@@ -78,20 +72,9 @@ void distance_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
 }
 
 
-
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
-
-
-/**
- * Framehandler: creates matches between two consecutive frames, publishes these matches 
- * and uses them to indicate the points to use for ICP, also implements ICP
- */
-class Framehandler{
-
-    public:
-    //Constructor
-    Framehandler(int _mode){
+Framehandler::Framehandler(int _mode){
         mode = _mode;
         comp_sum = comp_count = 0;
         coord_H = Vector4d(0,0,0,1);
@@ -120,7 +103,7 @@ class Framehandler{
         ambient_publisher = n_frame.advertise<sensor_msgs::Image>("ambient_matches", 1);
     }
 
-    void newIteration(std::shared_ptr<ORB> new_frame, ros::Time _raw_time){
+void Framehandler::newIteration(std::shared_ptr<ORB> new_frame, ros::Time _raw_time){
         raw_time = _raw_time;
         if(cur_orb == nullptr){
             cur_orb = new_frame;
@@ -132,7 +115,8 @@ class Framehandler{
         }
     }
 
-    void matches_filtering_motion(){
+
+void Framehandler::matches_filtering_motion(){
         static cv::Ptr<cv::BFMatcher> matcher = cv::BFMatcher::create(cv::NORM_HAMMING);
 
         //create matches
@@ -241,8 +225,7 @@ class Framehandler{
     
     }
 
-
-    void store_coordinates(const Vector3d& t, const Matrix3d& R){
+void Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
         OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_x.csv",ios_base::app);
         OUT << t(0) << "\n";
         OUT.close();
@@ -289,7 +272,7 @@ class Framehandler{
 
     }
 
-    void publish_tf(){
+void Framehandler::publish_tf(){
         tf::TransformBroadcaster odom_t_velo_b;
         //Create Eigen Quaternion
         Matrix3d R = w_T_w0.topLeftCorner(3,3);
@@ -322,7 +305,7 @@ class Framehandler{
         odom_t_velo_b.sendTransform(tf::StampedTransform(odom_t_velo,raw_time,"odom","my_velo"));
     }
 
-    void publish_odom(){
+void Framehandler::publish_odom(){
         nav_msgs::Odometry odom;
         //translation
         odom.pose.pose.position.x = w_T_w0(0,3);
@@ -339,8 +322,7 @@ class Framehandler{
         odom_publisher.publish(odom);
     }
 
-
-    MatrixXd get_midpoints(MatrixXd& cur_ICP,MatrixXd& prev_ICP){
+MatrixXd Framehandler::get_midpoints(MatrixXd& cur_ICP,MatrixXd& prev_ICP){
         MatrixXd midpoints(3,cur_ICP.cols());
         for(int i = 0; i < cur_ICP.cols();i++){
             midpoints(0,i) = 0.5*(cur_ICP(0,i) + prev_ICP(0,i));
@@ -350,7 +332,7 @@ class Framehandler{
         return midpoints;
     }
 
-    void publish_keypoint_pc(const MatrixXd& cur_ICP,const  ros::Publisher* kp_pc_publisher){
+void Framehandler::publish_keypoint_pc(const MatrixXd& cur_ICP,const  ros::Publisher* kp_pc_publisher){
         PointCloud::Ptr msg (new PointCloud);
         msg->header.frame_id = "velodyne";
         msg->width = cur_ICP.cols();
@@ -362,8 +344,8 @@ class Framehandler{
         kp_pc_publisher->publish(msg);
     }
 
-    void publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
-    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
+void Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
+const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
     cv::Mat color_img,gray_img;
     const cv::Mat old_img = prev_orb->input_image.clone();
     const cv::Mat new_img = cur_orb->input_image.clone();
@@ -408,7 +390,7 @@ class Framehandler{
 
 }
 
-    void publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
+void Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
     const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, bool draw_lines){
         cv::Mat image = cur_orb->input_image.clone();
         cv::cvtColor(image,image,CV_GRAY2RGB);
@@ -435,7 +417,8 @@ class Framehandler{
         this_pub->publish(msg);
     }
 
-    void ICP(MatrixXd& cur_ICP,MatrixXd& prev_ICP){
+
+void Framehandler::ICP(MatrixXd& cur_ICP,MatrixXd& prev_ICP){
         Vector3d sum_prev(0,0,0);
         Vector3d sum_cur(0,0,0);
 
@@ -488,25 +471,4 @@ class Framehandler{
         // std::cout << "The translation vector is: " << std::endl << t << std::endl;
         std::cout << "The current coordinates are: " << std::endl << w_T_w0 << std::endl;
     }
-    
-    private:
 
-    std::shared_ptr<ORB> cur_orb, prev_orb;
-    vector<cv::DMatch> matches; 
-    int mode;
-    unsigned int comp_sum;
-    unsigned int comp_count;
-
-    Vector4d coord_H;
-    Matrix4d w_T_w0;
-
-    ros::Time raw_time;
-
-    ros::NodeHandle n_frame;
-    ros::Subscriber raw_sub;
-    ros::Publisher match_publisher, range_publisher, ambient_publisher, intensity_publisher, 
-    kp_pc_publisher_cur, kp_pc_publisher_prev, midpoint_publisher, odom_publisher;
-    
-
-
-};

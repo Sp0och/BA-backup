@@ -70,22 +70,17 @@ using namespace std;
 
 typedef pcl::PointXYZI PointType;
 
-extern string PROJECT_NAME;
 extern string CLOUD_TOPIC;
-extern string PATH_TOPIC;
 extern int IMAGE_WIDTH;
 extern int IMAGE_HEIGHT;
 extern int IMAGE_CROP;
 extern int NUM_ORB_FEATURES;
-extern int NUM_SIFT_FEATURES;
-extern int NUM_BRISK_FEATURES;
 extern int MIN_LOOP_FEATURE_NUM;
 extern int NUM_THREADS;
 extern int DEBUG_IMAGE;
 extern int DUPLICATE_FILTERING_SIZE;
 extern float MAX_FEATURE_DISTANCE;
 extern float MIN_FEATURE_DISTANCE;
-extern double SKIP_TIME;
 extern double MATCH_IMAGE_SCALE;
 extern cv::Mat MASK;
 extern ofstream OUT;

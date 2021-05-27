@@ -1,21 +1,20 @@
 #include "image_handler.h"
 #include "parameters.h"
 #include "ORB.h"
-#include "frame_handler.h"
+#include "ORB.cpp"
+#include "Framehandler.h"
+#include "Framehandler.cpp"
 #include "KLT.h"
+#include "KLT.cpp"
 #include "BRISK.h"
+#include "BRISK.cpp"
 
-std::string PROJECT_NAME;
 std::string CLOUD_TOPIC;
-std::string PATH_TOPIC;
-std::string ORB_TOPIC;
 int IMAGE_WIDTH;
 int IMAGE_HEIGHT;
 int IMAGE_CROP;
 int NUM_THREADS;
 int NUM_ORB_FEATURES;
-int NUM_SIFT_FEATURES;
-int NUM_BRISK_FEATURES;
 int MIN_LOOP_FEATURE_NUM;
 int MODE;
 int DUPLICATE_FILTERING_SIZE;
@@ -46,18 +45,13 @@ void updateParams (ros::NodeHandle& n){
     usleep(100);
 
     //set the parameters using parameter server
-    fsSettings["project_name"] >> PROJECT_NAME;
     fsSettings["cloud_topic"]  >> CLOUD_TOPIC;
-    fsSettings["path_topic"]   >> PATH_TOPIC;
-    fsSettings["orb_topic"]   >> ORB_TOPIC;
     fsSettings["image_width"]  >> IMAGE_WIDTH;
     fsSettings["image_height"] >> IMAGE_HEIGHT;
     fsSettings["image_crop"]   >> IMAGE_CROP;
     fsSettings["num_threads"]  >> NUM_THREADS;
     fsSettings["match_image_scale"] >> MATCH_IMAGE_SCALE;
     fsSettings["num_orb_features"] >> NUM_ORB_FEATURES;
-    fsSettings["num_sift_features"] >> NUM_SIFT_FEATURES;
-    fsSettings["num_brisk_features"] >> NUM_BRISK_FEATURES;
     fsSettings["min_loop_feature_num"] >> MIN_LOOP_FEATURE_NUM;
     fsSettings["max_feature_distance"] >> MAX_FEATURE_DISTANCE;
     fsSettings["min_feature_distance"] >> MIN_FEATURE_DISTANCE;
