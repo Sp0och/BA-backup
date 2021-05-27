@@ -47,7 +47,7 @@ if __name__ == "__main__":
                 set_inverse = 1
             # print("R: ", R)
             # print("R inverted: ", RINV)
-            R_adjusted = np.matmul(R, RINV)
+            R_adjusted = np.matmul(RINV, R)
             # print("Adjusted: ", adjusted)
             euler = euler_from_matrix(R_adjusted, 'sxyz')
 
