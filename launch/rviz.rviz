@@ -5,9 +5,6 @@ Panels:
     Property Tree Widget:
       Expanded:
         - /Global Options1
-        - /ORB_keypoints1
-        - /Match image1
-        - /Image1
       Splitter Ratio: 0.5600000023841858
     Tree Height: 191
   - Class: rviz/Selection
@@ -257,18 +254,18 @@ Visualization Manager:
       Use rainbow: true
       Value: true
     - Class: jsk_rviz_plugin/TFTrajectory
-      Enabled: false
+      Enabled: true
       Name: My_velo_trajectory
-      Value: false
-      color: 25; 255; 240
+      Value: true
+      color: 255; 0; 0
       duration: 10
       frame: my_velo
       line_width: 0.10000000149011612
     - Class: jsk_rviz_plugin/TFTrajectory
-      Enabled: false
+      Enabled: true
       Name: Paper_Trajectory
-      Value: false
-      color: 255; 0; 0
+      Value: true
+      color: 0; 0; 255
       duration: 10
       frame: velodyne
       line_width: 0.10000000149011612
@@ -323,7 +320,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 1.9383114576339722
+      Distance: 58.67202377319336
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -331,17 +328,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: -5.339960098266602
-        Y: 0.5114151239395142
-        Z: 10.287429809570312
+        X: -3.1184096336364746
+        Y: 10.77097225189209
+        Z: -11.652580261230469
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.9147960543632507
+      Pitch: 0.9747961759567261
       Target Frame: velodyne
-      Yaw: 2.538590669631958
+      Yaw: 4.446774005889893
     Saved:
       - Class: rviz/Orbit
         Distance: 20.824064254760742

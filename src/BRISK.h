@@ -34,7 +34,7 @@ void publish_keypoints (ros::Publisher* publisher, cv::Mat& image, const vector<
     publisher->publish(msg);
 }
 template <typename Derived>
-static void trimVector(vector<Derived> &v, vector<uchar> status)
+void trimVector_brisk(vector<Derived> &v, vector<bool> status)
 {
     int j = 0;
     for (int i = 0; i < int(v.size()); i++)
@@ -86,6 +86,7 @@ class BRISK
     void create_descriptors(){
         static cv::Ptr<cv::BRISK> detector = cv::BRISK::create(30,3,1.0f);
         detector->detect(image,brisk_keypoints,MASK);
+        duplicate_filtering();
         detector->compute(image,brisk_keypoints,brisk_descriptors);
         keypointTransition(brisk_keypoints,brisk_keypoints_2d);
         //put keypoints into vector and create descriptors.
@@ -105,7 +106,7 @@ class BRISK
     void points_for_ransac(){
         brisk_points_3d.resize(brisk_keypoints_2d.size());
         brisk_point_2d_norm.resize(brisk_keypoints_2d.size());
-        vector<uchar> status;
+        vector<bool> status;
         status.resize(brisk_keypoints_2d.size());
         #pragma omp parallel for num_threads(NUM_THREADS)
 
@@ -136,10 +137,26 @@ class BRISK
             }
         }
         
-        trimVector(brisk_points_3d,status);
-        trimVector(brisk_point_2d_norm,status);
+        trimVector_brisk(brisk_points_3d,status);
+        trimVector_brisk(brisk_point_2d_norm,status);
     }
-
+    void duplicate_filtering(){
+        std::vector<bool> duplicate_status;
+        cv::Mat dubplicate_mask = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
+        for(int i = 0; i < brisk_keypoints_2d.size();i++){
+            cv::Point2d pt = brisk_keypoints_2d.at(i);
+            cv::Scalar color = dubplicate_mask.at<uchar>(pt);
+            if(color == cv::Scalar(0)){
+                cv::circle(dubplicate_mask,pt,0,cv::Scalar(255),DUPLICATE_FILTERING_SIZE);
+                duplicate_status.push_back(1);
+            }   
+            else{
+                duplicate_status.push_back(0);
+            }
+        }
+        trimVector_brisk(brisk_keypoints_2d,duplicate_status);
+        trimVector_brisk(brisk_keypoints,duplicate_status);
+    }
     
     private:
     ros::NodeHandle n;

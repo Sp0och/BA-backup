@@ -95,6 +95,10 @@ class Framehandler{
         mode = _mode;
         comp_sum = comp_count = 0;
         coord_H = Vector4d(0,0,0,1);
+        // RT << 0.35182179,0.93259485,0.08054986,0.0,
+        //       -0.92905796,0.33738143,0.15174015,0.0,
+        //       0.09793255,-0.21981933,0.97061253,0.0,
+        //       0,0,0,1;
         RT << 1,0,0,0,
               0,1,0,0,
               0,0,1,0,
@@ -199,10 +203,10 @@ class Framehandler{
         // std::cout << "prev keypoints rows after distance filtering: " << prev_ICP.rows() << " " << std::endl;
        
         //Visualize key point point cloud:
-        // MatrixXd mid_points = get_midpoints(cur_ICP,prev_ICP);
-        // publish_keypoint_pc(cur_ICP, &kp_pc_publisher_cur);
-        // publish_keypoint_pc(prev_ICP, &kp_pc_publisher_prev);
-        // publish_keypoint_pc(mid_points, &midpoint_publisher);
+        MatrixXd mid_points = get_midpoints(cur_ICP,prev_ICP);
+        publish_keypoint_pc(cur_ICP, &kp_pc_publisher_cur);
+        publish_keypoint_pc(prev_ICP, &kp_pc_publisher_prev);
+        publish_keypoint_pc(mid_points, &midpoint_publisher);
 
         //ICP Here
         if(cur_ICP.size() == prev_ICP.size() && cur_ICP.size() != 0)
@@ -210,9 +214,9 @@ class Framehandler{
         else    
             std::cout << "ERROR: 3D Vectors weren't initialized properly" << std::endl;
 
-        //publish my estimated transform in between odom and velodyne
-        // publish_tf();
 
+        //publish my estimated transform in between odom and velodyne
+        publish_tf();
 
         //publish odometry message
         // publish_odom();
@@ -309,6 +313,9 @@ class Framehandler{
         // std::cout << "translation: [" << t.getX() << ", " << t.getY() << ", " << t.getZ() << "]" << std::endl;
         // std::cout << "rotation tf: [" << qtf.x() << ", " << qtf.y() << ", " << qtf.z() <<  ", " << qtf.w() << "]" << std::endl;
         tf::Transform odom_t_velo = tf::Transform(qtf,t);
+        cout << "t: " << t.getX() << ", "<< t.getY() << ", "<< t.getZ() << " " << endl;
+        // ros::Duration delay(252940.892);
+        // ros::Time now_p_delay = raw_time + delay;
         // cout << "my translation: " << COUNT << "(" << odom_t_velo.getOrigin().getX() << ", " << odom_t_velo.getOrigin().getY() << ", " << odom_t_velo.getOrigin().getZ() << ") " << endl;
         // cout << "my rotation: " << COUNT << "(" << odom_t_velo.getRotation().getX() << ", " << odom_t_velo.getRotation().getY() << ", " << odom_t_velo.getRotation().getZ() << ", " << odom_t_velo.getRotation().getW() << ") " << endl;
         // COUNT++;
@@ -472,9 +479,9 @@ class Framehandler{
         H << R,t,0,0,0,1;
         RT = H*RT;
         
-        Matrix3d RI = RT.topLeftCorner(3,3);
-        Vector3d tI = RT.topRightCorner(3,1);
-        store_coordinates(tI,RI);
+        // Matrix3d RI = RT.topLeftCorner(3,3);
+        // Vector3d tI = RT.topRightCorner(3,1);
+        // store_coordinates(tI,RI);
         // std::cout << "The rotation matrix is: " << COUNT++ << "  " << std::endl << R << std::endl;
         // std::cout << "The translation vector is: " << std::endl << t << std::endl;
         // std::cout << "The current coordinates are: " << std::endl << RT << std::endl;

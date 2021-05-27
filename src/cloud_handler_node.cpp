@@ -123,7 +123,8 @@ class cloud_displayer{
         //BRISK:
 
         // std::shared_ptr<BRISK> brisk = std::make_shared<BRISK>(input_image,image_handler->cloud_track,MODE);
-
+        //Brisk alone
+        // BRISK* brisk = new BRISK(input_image,image_handler->cloud_track,MODE);
 
         // //ORB Matches
             frame_handler->newIteration(orb,raw_time);

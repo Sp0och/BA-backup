@@ -28,7 +28,7 @@ template <typename Derived>
 /**
  * Filter out the bad points according to a flag vector status
  * */
-static void trimVector(vector<Derived> &v, vector<bool>& status)
+void trimVector_orb(vector<Derived> &v, vector<bool>& status)
 {
     int j = 0;
     for (int i = 0; i < int(v.size()); i++)
@@ -115,8 +115,8 @@ class ORB
             duplicate_status.push_back(0);
         }
     }
-    trimVector(orb_keypoints_2d,duplicate_status);
-    trimVector(orb_keypoints,duplicate_status);
+    trimVector_orb(orb_keypoints_2d,duplicate_status);
+    trimVector_orb(orb_keypoints,duplicate_status);
 }
     
     /**
@@ -166,8 +166,8 @@ class ORB
             // orb_point_projected[i] = p_2d_n;
         }
         
-        // trimVector(orb_point_3d,status);
-        // trimVector(orb_point_projected,status);
+        // trimVector_orb(orb_point_3d,status);
+        // trimVector_orb(orb_point_projected,status);
     }
     
 
