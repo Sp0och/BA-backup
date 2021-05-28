@@ -1,8 +1,10 @@
-#include "Framehandler.h"
+#include "../include/Framehandler.h"
 
 
 template <typename Derived>
-
+/**
+ * Trim vector according to flag vector
+ * */
 static void trim_vector(vector<Derived> &v, vector<bool>& status){
     int j = 0;
     for (int i = 0; i < int(v.size()); i++)
@@ -10,6 +12,9 @@ static void trim_vector(vector<Derived> &v, vector<bool>& status){
             v[j++] = v[i];
     v.resize(j);
 }
+/**
+ * Trim Eigen Matrix according to flag vector
+ * */
 static void trim_matrix(MatrixXd& m, vector<bool>& status){
     int j = 0;
     for (int i = 0; i < int(m.cols()); i++)
@@ -33,16 +38,6 @@ static void RANSAC_filtering(std::vector<cv::Point2d>& sorted_2d_cur, std::vecto
         trim_vector(sorted_2d_prev,status);
         trim_matrix(prev_ICP,status);
         trim_matrix(cur_ICP,status);
-}
-static void zero_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
-    std::vector<bool> zero_filtering(prev_ICP.cols(),1);
-    for(int i = 0; i < prev_ICP.cols();i++){
-        if((prev_ICP(0,i) == 0 && prev_ICP(1,i) == 0 && prev_ICP(2,i) == 0)||(cur_ICP(0,i) == 0 && cur_ICP(1,i) == 0 && cur_ICP(2,i) == 0)){
-            zero_filtering.at(i) = 0;
-        }
-    }
-    trim_matrix(prev_ICP,zero_filtering);
-    trim_matrix(cur_ICP,zero_filtering);
 }
 /**
  * Filter out all points whoose difference in a coordinate dirction is more than half its effective value as well as points that are too close to the origin
@@ -73,16 +68,14 @@ static void distance_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
 
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
-
+//Set up constructor
 Framehandler::Framehandler(int _mode){
         mode = _mode;
         comp_sum = comp_count = 0;
         coord_H = Vector4d(0,0,0,1);
-        // w_T_w0 << 0.35182179,0.93259485,0.08054986,0.0,
-        //       -0.92905796,0.33738143,0.15174015,0.0,
-        //       0.09793255,-0.21981933,0.97061253,0.0,
-        //       0,0,0,1;
-        w_T_w0 << 1,0,0,0,
+        
+        // Take identity as first pose
+        my_pose << 1,0,0,0,
               0,1,0,0,
               0,0,1,0,
               0,0,0,1;
@@ -102,7 +95,7 @@ Framehandler::Framehandler(int _mode){
         else
         ambient_publisher = n_frame.advertise<sensor_msgs::Image>("ambient_matches", 1);
     }
-
+//For the start frame
 void Framehandler::newIteration(std::shared_ptr<ORB> new_frame, ros::Time _raw_time){
         raw_time = _raw_time;
         if(cur_orb == nullptr){
@@ -115,12 +108,13 @@ void Framehandler::newIteration(std::shared_ptr<ORB> new_frame, ros::Time _raw_t
         }
     }
 
-
+/**
+ * Core of this class: creates matches, performs filtering, calls SVD function, publishes matches + transform
+ * */
 void Framehandler::matches_filtering_motion(){
         static cv::Ptr<cv::BFMatcher> matcher = cv::BFMatcher::create(cv::NORM_HAMMING);
 
         //create matches
-        //choose correct order
         bool cur_first = false;
         if(cur_orb->orb_keypoints_2d.size() < prev_orb->orb_keypoints_2d.size()){
             cur_first = true;
@@ -133,9 +127,8 @@ void Framehandler::matches_filtering_motion(){
         std::sort(matches.begin(),matches.end());
         std::vector<cv::Point2d> sorted_2d_cur, sorted_2d_prev;
         MatrixXd prev_ICP(3,matches.size()),cur_ICP(3,matches.size());
-        // std::cout << "cur keypoints size right before matching: " << cur_orb->orb_keypoints_2d.size() << " " << std::endl;
-        // std::cout << "prev keypoints size right before matching: " << prev_orb->orb_keypoints_2d.size() << " " << std::endl;
-        // std::cout << "match size: " << matches.size() << " " << std::endl;
+
+
         //pair the keypoints up according to the matches:
         for (size_t i = 0; i < matches.size(); i++)
         {
@@ -174,19 +167,12 @@ void Framehandler::matches_filtering_motion(){
         // std::cout << "size after ransac: " << sorted_2d_cur.size() << " " << std::endl;
         
 
-        // //Second filtering for edge values if values beneath a certain range norm were neglected in the image handler
-        // zero_filtering(cur_ICP,prev_ICP);
 
         //Filter out 3D mistakes which look right on 2D:
         distance_filtering(cur_ICP,prev_ICP);
-        // std::cout << "size after distance: " << cur_ICP.cols() << " " << std::endl;
         
-        // std::cout << "cur keypoints cols after distance filtering: " << cur_ICP.cols() << " " << std::endl;
-        // std::cout << "prev keypoints cols after distance filtering: " << prev_ICP.cols() << " " << std::endl;
-        // std::cout << "cur keypoints rows after distance filtering: " << cur_ICP.rows() << " " << std::endl;
-        // std::cout << "prev keypoints rows after distance filtering: " << prev_ICP.rows() << " " << std::endl;
        
-        //Visualize key point point cloud:
+        //Visualize key point point cloud with mid points for clearer debugging:
         MatrixXd mid_points = get_midpoints(cur_ICP,prev_ICP);
         publish_keypoint_pc(cur_ICP, &kp_pc_publisher_cur);
         publish_keypoint_pc(prev_ICP, &kp_pc_publisher_prev);
@@ -194,7 +180,7 @@ void Framehandler::matches_filtering_motion(){
 
         //ICP Here
         if(cur_ICP.size() == prev_ICP.size() && cur_ICP.size() != 0)
-            ICP(cur_ICP,prev_ICP);
+            SVD(cur_ICP,prev_ICP);
         else    
             std::cout << "ERROR: 3D Vectors weren't initialized properly" << std::endl;
 
@@ -224,7 +210,9 @@ void Framehandler::matches_filtering_motion(){
         // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,true);
     
     }
-
+/**
+ * Plot the translation and rotation (RPY) in csv files for plotting
+ * */
 void Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
         OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_x.csv",ios_base::app);
         OUT << t(0) << "\n";
@@ -271,11 +259,11 @@ void Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
         OUT.close();
 
     }
-
+//Publish my estimated transformation 
 void Framehandler::publish_tf(){
         tf::TransformBroadcaster odom_t_velo_b;
         //Create Eigen Quaternion
-        Matrix3d R = w_T_w0.topLeftCorner(3,3);
+        Matrix3d R = my_pose.topLeftCorner(3,3);
         Quaterniond q(R);
         tfScalar xq = q.x();
         tfScalar yq = q.y();
@@ -289,9 +277,9 @@ void Framehandler::publish_tf(){
         qtf.setW(wq);
 
         //Create translational part of transform
-        tfScalar x = w_T_w0(0,3);
-        tfScalar y = w_T_w0(1,3);
-        tfScalar z = w_T_w0(2,3);
+        tfScalar x = my_pose(0,3);
+        tfScalar y = my_pose(1,3);
+        tfScalar z = my_pose(2,3);
         tf::Vector3 t = tf::Vector3(x,y,z);
         // std::cout << "translation: [" << t.getX() << ", " << t.getY() << ", " << t.getZ() << "]" << std::endl;
         // std::cout << "rotation tf: [" << qtf.x() << ", " << qtf.y() << ", " << qtf.z() <<  ", " << qtf.w() << "]" << std::endl;
@@ -304,15 +292,15 @@ void Framehandler::publish_tf(){
         // COUNT++;
         odom_t_velo_b.sendTransform(tf::StampedTransform(odom_t_velo,raw_time,"odom","my_velo"));
     }
-
+//so far unfinished odom publisher
 void Framehandler::publish_odom(){
         nav_msgs::Odometry odom;
         //translation
-        odom.pose.pose.position.x = w_T_w0(0,3);
-        odom.pose.pose.position.y = w_T_w0(1,3);
-        odom.pose.pose.position.z = w_T_w0(2,3);
+        odom.pose.pose.position.x = my_pose(0,3);
+        odom.pose.pose.position.y = my_pose(1,3);
+        odom.pose.pose.position.z = my_pose(2,3);
         //Quaternions (rotation)
-        Matrix3d R = w_T_w0.topLeftCorner(3,3);
+        Matrix3d R = my_pose.topLeftCorner(3,3);
         Quaterniond q(R);
         odom.pose.pose.orientation.x = q.x();
         odom.pose.pose.orientation.y = q.y();
@@ -321,7 +309,7 @@ void Framehandler::publish_odom(){
         odom.header.frame_id = "odom";
         odom_publisher.publish(odom);
     }
-
+//Get point in between two correspoinding key points for visualization
 MatrixXd Framehandler::get_midpoints(MatrixXd& cur_ICP,MatrixXd& prev_ICP){
         MatrixXd midpoints(3,cur_ICP.cols());
         for(int i = 0; i < cur_ICP.cols();i++){
@@ -331,7 +319,7 @@ MatrixXd Framehandler::get_midpoints(MatrixXd& cur_ICP,MatrixXd& prev_ICP){
         }
         return midpoints;
     }
-
+//Publish one set of keypoints in the frame velodyne
 void Framehandler::publish_keypoint_pc(const MatrixXd& cur_ICP,const  ros::Publisher* kp_pc_publisher){
         PointCloud::Ptr msg (new PointCloud);
         msg->header.frame_id = "velodyne";
@@ -343,7 +331,9 @@ void Framehandler::publish_keypoint_pc(const MatrixXd& cur_ICP,const  ros::Publi
         pcl_conversions::toPCL(raw_time, msg->header.stamp);
         kp_pc_publisher->publish(msg);
     }
-
+/**
+ * Publish concatenated pictures with keypoints and match indication
+ * */
 void Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
 const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
     cv::Mat color_img,gray_img;
@@ -389,7 +379,9 @@ const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line
     this_pub->publish(msg);
 
 }
-
+/**
+ * A function to  publish the matches by showing current keypoints and only the dash to the last keypoint (only for approximate motion visualization)
+ * */
 void Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
     const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, bool draw_lines){
         cv::Mat image = cur_orb->input_image.clone();
@@ -417,8 +409,12 @@ void Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std:
         this_pub->publish(msg);
     }
 
-
-void Framehandler::ICP(MatrixXd& cur_ICP,MatrixXd& prev_ICP){
+/**
+ * Computes the result of the closed form solution to the motion estimation problem
+ * It also calls the plot data storage function.
+ * @return it's a void function but stores the current pose
+ * */
+void Framehandler::SVD(MatrixXd& cur_ICP,MatrixXd& prev_ICP){
         Vector3d sum_prev(0,0,0);
         Vector3d sum_cur(0,0,0);
 
@@ -446,29 +442,31 @@ void Framehandler::ICP(MatrixXd& cur_ICP,MatrixXd& prev_ICP){
         MatrixXd W;
         W.resize(3,3);
         W.setZero();
-        //W is of rank 3, that I checked.
+        //W is the sum of the products of each corresponding point
         for(int i = 0; i < prev_ICP.cols();i++){
             Vector3d prev(prev_ICP(0,i),prev_ICP(1,i),prev_ICP(2,i));
             Vector3d cur(cur_ICP(0,i),cur_ICP(1,i),cur_ICP(2,i));
-            W += cur*prev.transpose();
+            W += prev*cur.transpose();
         }
-        // W = prev_ICP*cur_ICP.transpose();
+        
         JacobiSVD<MatrixXd> svd(W, ComputeThinU | ComputeThinV);
         auto VT = svd.matrixV().transpose();
         Matrix3d R = svd.matrixU()*VT;
-        Vector3d t = mean_cur - R*mean_prev;
+        Vector3d t = mean_prev - R*mean_cur;
 
-        Matrix4d T_01_02;
-        T_01_02.setIdentity();
-        T_01_02.block<3,3>(0,0) = R;
-        T_01_02.block<3,1>(0,3) = t;
-        w_T_w0 = w_T_w0*T_01_02;
+        Matrix4d current_iteration;
+        current_iteration.setIdentity();
+        current_iteration.block<3,3>(0,0) = R;
+        current_iteration.block<3,1>(0,3) = t;
+        my_pose = my_pose*current_iteration;
         
-        // Matrix3d RI = w_T_w0.topLeftCorner(3,3);
-        // Vector3d tI = w_T_w0.topRightCorner(3,1);
+
+        //This part is for storing the plotting data
+        // Matrix3d RI = my_pose.topLeftCorner(3,3);
+        // Vector3d tI = my_pose.topRightCorner(3,1);
         // store_coordinates(tI,RI);
-        // std::cout << "The rotation matrix is: " << COUNT++ << "  " << std::endl << R << std::endl;
-        // std::cout << "The translation vector is: " << std::endl << t << std::endl;
-        std::cout << "The current coordinates are: " << std::endl << w_T_w0 << std::endl;
+
+        //print to see my pose after this iteration
+        std::cout << "The current coordinates are: " << std::endl << my_pose << std::endl;
     }
 

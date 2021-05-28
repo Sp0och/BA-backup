@@ -37,7 +37,7 @@ class Framehandler{
     void publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
     const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, bool draw_lines);
 
-    void ICP(MatrixXd& cur_ICP,MatrixXd& prev_ICP);
+    void SVD(MatrixXd& cur_ICP,MatrixXd& prev_ICP);
     
     private:
 
@@ -48,7 +48,7 @@ class Framehandler{
     unsigned int comp_count;
 
     Vector4d coord_H;
-    Matrix4d w_T_w0;
+    Matrix4d my_pose;
 
     ros::Time raw_time;
 

@@ -1,4 +1,4 @@
-#include "BRISK.h"
+#include "../include/BRISK.h"
 
 
 static void keypointTransition(vector<cv::KeyPoint>& keypoints_in, vector<cv::Point2f>& points_in)

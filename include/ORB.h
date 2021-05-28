@@ -33,7 +33,7 @@ class ORB
     /**
      * Changed up version for 3D points for ICP
      * */
-    void points_for_ransac();
+    void get_3D_data();
 
     
     private:

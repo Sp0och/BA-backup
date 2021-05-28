@@ -17,3 +17,11 @@ cv::Mat MASK;
         }
         sorted_2d_cur.resize(e);
         sorted_2d_prev.resize(e);
+
+
+
+        //Take same initial pose as they did
+        my_pose << 0.35182179,0.93259485,0.08054986,0.0,
+              -0.92905796,0.33738143,0.15174015,0.0,
+              0.09793255,-0.21981933,0.97061253,0.0,
+              0,0,0,1;

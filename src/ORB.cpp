@@ -1,7 +1,9 @@
-#include "ORB.h"
+#include "../include/ORB.h"
 
 
-
+/**
+ * Transition key points to std::vector
+ * */
 static void keypointTransition(vector<cv::KeyPoint>& keypoints_in, vector<cv::Point2d>& points_in)
 {
     points_in.resize(keypoints_in.size());
@@ -10,7 +12,7 @@ static void keypointTransition(vector<cv::KeyPoint>& keypoints_in, vector<cv::Po
         points_in[i] = keypoints_in[i].pt;
     }
 }
-
+//self explanatory: publish my detected keypoints on the image
 static void publish_keypoints (ros::Publisher* publisher, cv::Mat& image, const vector<cv::Point2d>& keypoints, const int circle_size,const cv::Scalar line_color){
     cv::cvtColor(image, image, CV_GRAY2RGB);
     for(int i = 0; i < (int)keypoints.size(); i++){
@@ -22,6 +24,9 @@ static void publish_keypoints (ros::Publisher* publisher, cv::Mat& image, const 
 }
 
 template <typename Derived>
+/**
+ * Trim vector according to flag vector
+ * */
 static void trimVector_orb(vector<Derived> &v, vector<bool>& status)
 {
     int j = 0;
@@ -31,8 +36,7 @@ static void trimVector_orb(vector<Derived> &v, vector<bool>& status)
     v.resize(j);
 }
 
-//From here onwards only part of class
-
+//Set up Constructor
 ORB::ORB(const cv::Mat &_input_image, 
         const pcl::PointCloud<PointType>::Ptr _cloud,
         int _mode)
@@ -53,20 +57,21 @@ ORB::ORB(const cv::Mat &_input_image,
             KP_pub_ambient = n.advertise<sensor_msgs::Image>("orb_keypoints_ambient", 1);
             create_descriptors();
         }
-
+/**
+ * Core of this class, extracts features, calls duplicate filter function, builds descriptor and calls functions to get 3D data of 2D keypoints as well as print the keypoints
+ * */
 void ORB::create_descriptors(){
         cv::Ptr<cv::ORB> detector = cv::ORB::create(NUM_ORB_FEATURES, 1.2f, 8, 31);
         //store keypoints in orb_keypoints
         detector->detect(image,orb_keypoints,MASK);
         keypointTransition(orb_keypoints,orb_keypoints_2d);
-        // std::cout<< "right after detection: " << orb_keypoints_2d.size() << " " << std::endl;
         duplicate_filtering();
-        // std::cout<< "after duplicate filtering: " << orb_keypoints_2d.size() << " " << std::endl;
         //Create descriptors
         detector->compute(image,orb_keypoints,orb_descriptors);
+        get_3D_data();
 
-        points_for_ransac();
 
+        //publishing the keypoints on whatever image type they are
         // if(mode == 1)
         // publish_keypoints(&KP_pub_intensity, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
         // else if(mode == 2)
@@ -74,7 +79,9 @@ void ORB::create_descriptors(){
         // else
         // publish_keypoints(&KP_pub_ambient, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
     }
-
+/**
+ * Filter out keypoints in a certain radius arond themselves using a cv::Mat marking system
+ * */
 void ORB::duplicate_filtering(){
     std::vector<bool> duplicate_status;
     cv::Mat dubplicate_mask = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
@@ -92,8 +99,10 @@ void ORB::duplicate_filtering(){
     trimVector_orb(orb_keypoints_2d,duplicate_status);
     trimVector_orb(orb_keypoints,duplicate_status);
 }
-
-void ORB::points_for_ransac(){
+/**
+ * store the 3D coordinates of the detected 2D keypoints using the PC
+ * */
+void ORB::get_3D_data(){
         orb_points_3d.resize(orb_keypoints_2d.size());
         // orb_point_projected.resize(orb_keypoints_2d.size());
         vector<bool> status;
