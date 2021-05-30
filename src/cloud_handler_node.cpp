@@ -1,4 +1,5 @@
-#include "../include/image_handler.h"
+#include "../include/ImageHandler.h"
+#include "ImageHandler.cpp"
 #include "../include/parameters.h"
 #include "../include/ORB.h"
 #include "ORB.cpp"

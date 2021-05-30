@@ -1,6 +1,4 @@
-#pragma once
-
-#include "parameters.h"
+#include "../include/ImageHandler.h"
 
 struct PointOuster {
     PCL_ADD_POINT4D;
@@ -22,24 +20,7 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(
     (std::uint16_t, ring, ring)
 )
 
-
-//Create images from the laserscan
-class ImageHandler
-{
-public:
-
-    ros::NodeHandle nh;
-
-    ros::Publisher pub_image;
-    ros::Publisher pub_intensity;
-    //pictures
-    cv::Mat image_range;
-    cv::Mat image_noise;
-    cv::Mat image_intensity;
-    //pointcloud
-    pcl::PointCloud<PointType>::Ptr cloud_track;
-    //class constructor: reset the pointcloud and declare a publisher
-    ImageHandler()
+ImageHandler::ImageHandler()
     {
         cloud_track.reset(new pcl::PointCloud<PointType>());
         cloud_track->resize(IMAGE_HEIGHT * IMAGE_WIDTH);
@@ -48,7 +29,7 @@ public:
         // pub_intensity  = nh.advertise<sensor_msgs::Image>("intensity_image", 1);
     }
 
-    void cloud_handler(const sensor_msgs::PointCloud2ConstPtr &cloud_msg)
+void ImageHandler::cloud_handler(const sensor_msgs::PointCloud2ConstPtr &cloud_msg)
     {
         // convert cloud
         pcl::PointCloud<PointOuster>::Ptr laser_cloud(new pcl::PointCloud<PointOuster>());
@@ -127,7 +108,7 @@ public:
         tf_base_to_lidar.sendTransform(tf::StampedTransform(base_to_lidar, cloud_msg->header.stamp, "base_link", "velodyne"));
     }
 
-    void pubImage(ros::Publisher *this_pub, const cv::Mat& this_image, std_msgs::Header this_header, string image_format)
+    void ImageHandler::pubImage(ros::Publisher *this_pub, const cv::Mat& this_image, std_msgs::Header this_header, string image_format)
     {
         static cv_bridge::CvImage bridge;
         bridge.header = this_header;
@@ -135,4 +116,4 @@ public:
         bridge.image = this_image;
         this_pub->publish(bridge.toImageMsg());
     }
-};
+

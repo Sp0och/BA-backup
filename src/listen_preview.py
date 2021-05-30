@@ -16,17 +16,16 @@ if __name__ == "__main__":
     while not rospy.is_shutdown():
         try:
             (trans, rot) = listener.lookupTransform(
-                'base_link', 'odom', rospy.Time(0))
+                'odom', 'base_link', rospy.Time(0))
 
             # rotation built in two ways, result identical:
+            print("t: ", trans)
             R = quaternion_matrix(rot)
-            print("first R: ")
-            print(R)
-            # if set_inverse == 0:
-            #     RINV = np.linalg.inv(R)
-            #     set_inverse = 1
+            if set_inverse == 0:
+                RINV = np.linalg.inv(R)
+                set_inverse = 1
             # print("R: ", R)
-            # print("R inverted: ", RINV)
+            print("R inverted: ", RINV)
             # R_adjusted = np.matmul(R, RINV)
             # print("Adjusted: ", adjusted)
             # euler = euler_from_matrix(R_adjusted, 'sxyz')

@@ -27,9 +27,10 @@ class Framehandler{
     void publish_odom();
 
 
-    MatrixXd get_midpoints(MatrixXd& cur_ICP,MatrixXd& prev_ICP);
-
-    void publish_keypoint_pc(const MatrixXd& cur_ICP,const  ros::Publisher* kp_pc_publisher);
+    /**
+     * Calls all necessary functions to visualize keypoints and matches in 3D
+     * */
+    void visualizer_3D(const MatrixXd& cur_ICP, const MatrixXd& prev_ICP);
 
     void publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
     const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines);
@@ -44,10 +45,7 @@ class Framehandler{
     std::shared_ptr<ORB> cur_orb, prev_orb;
     vector<cv::DMatch> matches; 
     int mode;
-    unsigned int comp_sum;
-    unsigned int comp_count;
 
-    Vector4d coord_H;
     Matrix4d my_pose;
 
     ros::Time raw_time;
@@ -55,6 +53,6 @@ class Framehandler{
     ros::NodeHandle n_frame;
     ros::Subscriber raw_sub;
     ros::Publisher match_publisher, range_publisher, ambient_publisher, intensity_publisher, 
-    kp_pc_publisher_cur, kp_pc_publisher_prev, midpoint_publisher, odom_publisher;
+    kp_pc_publisher_cur, kp_pc_publisher_prev, midpoint_publisher, odom_publisher, line_publisher;
     
 };
