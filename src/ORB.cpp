@@ -66,7 +66,7 @@ void ORB::create_descriptors(){
         detector->detect(image,orb_keypoints,MASK);
         keypointTransition(orb_keypoints,orb_keypoints_2d);
         // cout << "orb size before: " << orb_keypoints_2d.size() << " " << endl;
-        duplicate_filtering();
+        // duplicate_filtering();
         // cout << "orb size afterwards: " << orb_keypoints_2d.size() << " " << endl;
         //Create descriptors
         detector->compute(image,orb_keypoints,orb_descriptors);

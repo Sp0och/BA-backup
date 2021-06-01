@@ -20,6 +20,8 @@ class Framehandler{
     void matches_filtering_motion();
 
 
+    void set_plotting_columns_and_start_pose();
+
     void store_coordinates(const Vector3d& t, const Matrix3d& R);
 
     void publish_tf();
@@ -45,6 +47,7 @@ class Framehandler{
     std::shared_ptr<ORB> cur_orb, prev_orb;
     vector<cv::DMatch> matches; 
     int mode;
+    bool first_iteration;
 
     Matrix4d my_pose;
 

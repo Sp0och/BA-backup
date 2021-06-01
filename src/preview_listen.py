@@ -19,13 +19,13 @@ if __name__ == "__main__":
                 'odom', 'base_link', rospy.Time(0))
 
             # rotation built in two ways, result identical:
-            print("t: ", trans)
-            R = quaternion_matrix(rot)
             if set_inverse == 0:
+                R = quaternion_matrix(rot)
                 RINV = np.linalg.inv(R)
                 set_inverse = 1
-            # print("R: ", R)
-            print("R inverted: ", RINV)
+                print("R:", R)
+                print("t: ", trans)
+            # print("Timestamp now: ", rospy.Time.now())
             # R_adjusted = np.matmul(R, RINV)
             # print("Adjusted: ", adjusted)
             # euler = euler_from_matrix(R_adjusted, 'sxyz')
