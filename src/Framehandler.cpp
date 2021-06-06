@@ -1,166 +1,25 @@
 #include "../include/Framehandler.h"
-
-//Filter and resize functions:
-
-template <typename Derived>
-/**
- * Trim vector according to flag vector
- * */
-static void trim_vector(vector<Derived> &v, vector<bool>& status){
-    int j = 0;
-    for (int i = 0; i < int(v.size()); i++)
-        if (status[i])
-            v[j++] = v[i];
-    v.resize(j);
-}
-/**
- * Trim Eigen Matrix according to flag vector
- * */
-static void trim_matrix(MatrixXd& m, vector<bool>& status){
-    int j = 0;
-    for (int i = 0; i < int(m.cols()); i++)
-        if (status[i]){
-            m(0,j) = m(0,i);
-            m(1,j) = m(1,i);
-            m(2,j++) = m(2,i);
-        }
-    m.conservativeResize(3,j);
-}
-static void RANSAC_filtering(std::vector<cv::Point2d>& sorted_2d_cur, std::vector<cv::Point2d>& sorted_2d_prev, MatrixXd& cur_ICP, MatrixXd& prev_ICP){
-        cv::Mat MASK;
-        cv::Mat H = cv::findHomography(sorted_2d_cur,sorted_2d_prev,cv::RANSAC,3.0,MASK);
-        std::vector<bool> status(MASK.rows,0);
-        for(int i = 0; i < MASK.rows;i++)
-        status[i] = MASK.at<bool>(i);
+#include "helper.cpp"
 
 
-        //reject the outliers
-        trim_vector(sorted_2d_cur,status);  
-        trim_vector(sorted_2d_prev,status);
-        trim_matrix(prev_ICP,status);
-        trim_matrix(cur_ICP,status);
-}
-/**
- * Filter out all 3D points whoose difference in a coordinate dirction is more than half its effective value as well as points that are too close to the origin
- * */
-static void distance_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP, vector<cv::Point2d>& cur,vector<cv::Point2d>& prev){
-    vector<bool> distance_flag(prev_ICP.cols(),1);
-    for(int i = 0; i < prev_ICP.cols();i++){
-        float p_c_x = cur_ICP(0,i);
-        float p_c_y = cur_ICP(1,i);
-        float p_c_z = cur_ICP(2,i);
-        float p_p_x = prev_ICP(0,i);
-        float p_p_y = prev_ICP(1,i);
-        float p_p_z = prev_ICP(2,i);
-        float dist_x = p_c_x - p_p_x;
-        float dist_y = p_c_y - p_p_y;
-        float dist_z = p_c_z - p_p_z;
+//core member methods:
 
-        float mdif = sqrt(dist_x*dist_x + dist_y*dist_y + dist_z*dist_z);
-        float dist_c = sqrt(p_c_x*p_c_x + p_c_y*p_c_y + p_c_z*p_c_z);
-        float dist_p = sqrt(p_p_x*p_p_x + p_p_y*p_p_y + p_p_z*p_p_z);
-
-        if(mdif > MAX_FEATURE_DISTANCE || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
-            distance_flag.at(i) = 0;
-    }
-    trim_matrix(prev_ICP,distance_flag);
-    trim_matrix(cur_ICP,distance_flag);
-    trim_vector(cur,distance_flag);
-    trim_vector(prev,distance_flag);
-}
-
-static void double_point_filtering(vector<cv::Point2d>& cur, vector<cv::Point2d>& prev,MatrixXd& curM, MatrixXd& prevM){
-    std::vector<bool> duplicate_status;
-    cv::Mat dubplicate_mask_c = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
-    cv::Mat dubplicate_mask_p = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
-    for(int i = 0; i < cur.size();i++){
-        cv::Point2d pt_c = cur.at(i);
-        cv::Point2d pt_p = prev.at(i);
-        cv::Scalar color_c = dubplicate_mask_c.at<uchar>(pt_c);
-        cv::Scalar color_p = dubplicate_mask_p.at<uchar>(pt_p);
-        //check whether a point has already been used if not draw there to indicate usage
-        if(color_c == cv::Scalar(0) && color_p == cv::Scalar(0)){
-            cv::circle(dubplicate_mask_c,pt_c,0,cv::Scalar(255),1);
-            cv::circle(dubplicate_mask_p,pt_p,0,cv::Scalar(255),1);
-            duplicate_status.push_back(1);
-        }   
-        //If one of the points has already been used delete the whole match
-        else{
-            duplicate_status.push_back(0);
-        }
-    }
-    trim_vector(cur,duplicate_status);
-    trim_vector(prev,duplicate_status);
-    trim_matrix(curM,duplicate_status);
-    trim_matrix(prevM,duplicate_status);
-}
-
-//Publish functions:
-
-typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
-
-//Publish one set of keypoints in the frame velodyne
-static void publish_keypoint_pc(const MatrixXd& points,const  ros::Publisher* kp_pc_publisher, ros::Time raw_time){
-        PointCloud::Ptr msg (new PointCloud);
-        msg->header.frame_id = "velodyne";
-        msg->width = points.cols();
-        msg->height = 1;
-        for(size_t i = 0; i < points.cols();i++){
-            msg->points.push_back(pcl::PointXYZ(points(0,i),points(1,i),points(2,i)));
-        }
-        pcl_conversions::toPCL(raw_time, msg->header.stamp);
-        kp_pc_publisher->publish(msg);
-    }
-
-static void publish_lines_3D(const MatrixXd& cur_ICP,const MatrixXd& prev_ICP,const  ros::Publisher* line_publisher, ros::Time raw_time){
-    visualization_msgs::Marker line_list;
-    line_list.header.frame_id = "velodyne";
-    line_list.header.stamp = raw_time;
-    line_list.ns = "connection";
-    line_list.id = 1;
-    line_list.type = visualization_msgs::Marker::LINE_LIST;
-    line_list.action = visualization_msgs::Marker::ADD;
-
-    for(int i = 0; i < cur_ICP.cols(); i ++){
-        geometry_msgs::Point p;
-        p.x = cur_ICP(0,i);
-        p.y = cur_ICP(1,i);
-        p.z = cur_ICP(2,i);
-        line_list.points.push_back(p);
-        p.x = prev_ICP(0,i);
-        p.y = prev_ICP(1,i);
-        p.z = prev_ICP(2,i);
-        line_list.points.push_back(p);
-
-    }
-    line_list.scale.x = 0.01;
-    line_list.scale.y = 0.01;
-    line_list.scale.z = 0.01;
-    line_list.color.g = 1.0f;
-    line_list.color.a = 1.0f;
-
-    // line_list.lifetime = ros::Duration();
-
-    line_publisher->publish(line_list);
-}
-
-
-
-
-//Set up constructor and member functions:
-
-
-Framehandler::Framehandler(int _mode){
+Framehandler::Framehandler(int _mode,bool START_AT_ZERO){
         mode = _mode;
-        // my_pose << 1,0,0,0,
-        //            0,1,0,0,
-        //            0,0,1,0,
-        //            0,0,0,1;
-        // Take their start pose as first pose
-        my_pose << 0.35182179, -0.92905796,  0.11433606,  0.0008456818759441376,
-        0.93259485,  0.33738143, -0.12822098,  0.4183735251426697,
-        0.08054986,  0.15174015,  0.98513281,  0.008259017020463943,
-        0,           0,           0,            1;
+        if(START_AT_ZERO){
+            my_pose << 1,0,0,0,
+                    0,1,0,0,
+                    0,0,1,0,
+                    0,0,0,1;
+        }
+        else{
+            my_pose << 0.35182179, -0.92905796,  0.11433606,  0.0008456818759441376,
+            0.93259485,  0.33738143, -0.12822098,  0.4183735251426697,
+            0.08054986,  0.15174015,  0.98513281,  0.008259017020463943,
+            0,           0,           0,            1;
+        }
+        
+        
         cur_orb = nullptr;
         prev_orb = nullptr;
         first_iteration = 1;
@@ -173,14 +32,14 @@ Framehandler::Framehandler(int _mode){
         // raw_sub = n_frame.subscribe(CLOUD_TOPIC,1000,&Framehandler::publish_tf);
         odom_publisher = n_frame.advertise<nav_msgs::Odometry>("Odometry", 1);
         if(mode == 1)
-        intensity_publisher = n_frame.advertise<sensor_msgs::Image>("intensity_matches", 1);
+            intensity_publisher = n_frame.advertise<sensor_msgs::Image>("intensity_matches", 1);
         else if(mode == 2)
-        range_publisher = n_frame.advertise<sensor_msgs::Image>("range_matches", 1);
+            range_publisher = n_frame.advertise<sensor_msgs::Image>("range_matches", 1);
         else
-        ambient_publisher = n_frame.advertise<sensor_msgs::Image>("ambient_matches", 1);
+            ambient_publisher = n_frame.advertise<sensor_msgs::Image>("ambient_matches", 1);
     }
-//For the start frame
-void Framehandler::newIteration(/* const */ std::shared_ptr<ORB> new_frame, ros::Time _raw_time){
+
+void Framehandler::newIteration(const std::shared_ptr<ORB> new_frame, ros::Time _raw_time){
         raw_time = _raw_time;
         if(cur_orb == nullptr){
             cur_orb = new_frame;
@@ -192,9 +51,6 @@ void Framehandler::newIteration(/* const */ std::shared_ptr<ORB> new_frame, ros:
         }
     }
 
-/**
- * Core of this class: creates matches, performs filtering, calls SVD function, publishes matches + transform
- * */
 void Framehandler::matches_filtering_motion(){
         static cv::Ptr<cv::BFMatcher> matcher = cv::BFMatcher::create(cv::NORM_HAMMING);
 
@@ -207,12 +63,16 @@ void Framehandler::matches_filtering_motion(){
         else{
             matcher->match(prev_orb->orb_descriptors,cur_orb->orb_descriptors,matches);
         }
-
         //sort matches in ascending order (concerning distance)
         std::sort(matches.begin(),matches.end());
         std::vector<cv::Point2d> sorted_2d_cur, sorted_2d_prev;
-        MatrixXd prev_ICP(3,matches.size()),cur_ICP(3,matches.size());
+        MatrixXd prev_SVD(3,matches.size()),cur_SVD(3,matches.size());
 
+        //Set up plot files, for the overall pose store the inital pose and publish the transform of the first frame
+        if(first_iteration){
+            // publish_tf();
+            set_plotting_columns_and_start_pose();
+        }
 
         //pair the keypoints up according to the matches:
         for (size_t i = 0; i < matches.size(); i++)
@@ -233,53 +93,48 @@ void Framehandler::matches_filtering_motion(){
             sorted_2d_cur.push_back(cur_orb->orb_keypoints_2d.at(cur_index));
             sorted_2d_prev.push_back(prev_orb->orb_keypoints_2d.at(prev_index));
             //create sorted 3d keypoint vectors
-            cur_ICP(0,i) = cur_orb->orb_points_3d.at(cur_index).x;
-            cur_ICP(1,i) = cur_orb->orb_points_3d.at(cur_index).y;
-            cur_ICP(2,i) = cur_orb->orb_points_3d.at(cur_index).z;
-            prev_ICP(0,i) = prev_orb->orb_points_3d.at(prev_index).x;
-            prev_ICP(1,i) = prev_orb->orb_points_3d.at(prev_index).y;
-            prev_ICP(2,i) = prev_orb->orb_points_3d.at(prev_index).z;
+            cur_SVD(0,i) = cur_orb->orb_points_3d.at(cur_index).x;
+            cur_SVD(1,i) = cur_orb->orb_points_3d.at(cur_index).y;
+            cur_SVD(2,i) = cur_orb->orb_points_3d.at(cur_index).z;
+            prev_SVD(0,i) = prev_orb->orb_points_3d.at(prev_index).x;
+            prev_SVD(1,i) = prev_orb->orb_points_3d.at(prev_index).y;
+            prev_SVD(2,i) = prev_orb->orb_points_3d.at(prev_index).z;
         }
         matches.clear();
-
         //Publish matches before RANSAC filtering:
         // publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
         
-        //Homography RANSAC
-        RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_ICP,prev_ICP);
+        
+        // cout << "right after matching: " << prev_SVD.cols() << " " << endl;
+        RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
         // std::cout << "size after ransac: " << sorted_2d_cur.size() << " " << std::endl;
+        // cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         
-        //Filter out matches that use a same point
-        double_point_filtering(sorted_2d_cur,sorted_2d_prev,cur_ICP,prev_ICP);
+        double_point_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
+        // cout << "size after double point filtering: " << prev_SVD.cols() << " "<< endl;
+
+        distance_filtering(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
+        if(prev_SVD.cols() < 40)
+            cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
+
+        // store_feature_number(cur_SVD);
+
+        visualizer_3D(cur_SVD,prev_SVD);
 
 
-        //Filter out 3D mistakes which look right on 2D:
-        distance_filtering(cur_ICP,prev_ICP, sorted_2d_cur, sorted_2d_prev);
-
-        // cout << "cur size before double: " << cur_ICP.cols() << " "<< endl;
-        // cout << "prev size before double: " << prev_ICP.cols() << " "<< endl;
-
-        //Visualize key point point cloud with connection lines for clearer debugging:
-        visualizer_3D(cur_ICP,prev_ICP);
-
-
-        //Set up plot files, for the overall pose store the inital pose and publish the transform of the first frame
-        if(first_iteration){
-            publish_tf();
-            // set_plotting_columns_and_start_pose();
-            first_iteration = 0;
-        }
-        
-
-        //ICP Here
-        if(cur_ICP.size() == prev_ICP.size() && cur_ICP.size() != 0)
-            SVD(cur_ICP,prev_ICP);
+        //SVD Here
+        if(cur_SVD.size() == prev_SVD.size() && cur_SVD.size() != 0)
+            SVD(cur_SVD,prev_SVD);
         else    
             std::cout << "ERROR: 3D Vectors weren't initialized properly" << std::endl;
 
 
         //publish my estimated transform in between odom and my_velo
-        publish_tf();
+        if(first_iteration){
+            first_iteration = false;
+        }
+        else
+            publish_tf();
 
         //publish odometry message
         // publish_odom();
@@ -303,6 +158,9 @@ void Framehandler::matches_filtering_motion(){
         // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,true);
     
     }
+
+//plotting functions
+
 void Framehandler::set_plotting_columns_and_start_pose(){
 
     // store the start pose (either their start or identity)
@@ -343,10 +201,12 @@ void Framehandler::set_plotting_columns_and_start_pose(){
     OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps.csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT.close(); 
+    
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv",ios_base::app);
+    OUT << "num_of_features" "," << "time" << endl;
+    OUT.close(); 
 }
-/**
- * Plot the translation and rotation (RPY) in csv files for plotting
- * */
+
 void Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
 
         //step changes:
@@ -355,7 +215,7 @@ void Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
         tfScalar yq = q.y();
         tfScalar zq = q.z();
         tfScalar wq = q.w();
-        //Create tf Quaternion
+
         tf::Quaternion qtf;
         qtf.setX(xq);
         qtf.setY(yq);
@@ -416,7 +276,14 @@ void Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
         OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
         OUT.close();
     }
-//Publish my estimated transformation 
+
+void Framehandler::store_feature_number(const MatrixXd& cur_SVD){
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv",ios_base::app);
+    OUT << cur_SVD.cols() << "," << raw_time <<  endl;
+    OUT.close(); 
+}
+// publishing functions
+
 void Framehandler::publish_tf(){
         tf::TransformBroadcaster odom_t_velo_b;
         //Create Eigen Quaternion
@@ -450,7 +317,7 @@ void Framehandler::publish_tf(){
         // COUNT++;
         odom_t_velo_b.sendTransform(tf::StampedTransform(odom_t_velo,raw_time,"odom","my_velo"));
     }
-//so far unfinished odom publisher
+
 void Framehandler::publish_odom(){
         nav_msgs::Odometry odom;
         //translation
@@ -468,18 +335,16 @@ void Framehandler::publish_odom(){
         odom_publisher.publish(odom);
     }
 
+//member visualization functions
 
-void Framehandler::visualizer_3D(const MatrixXd& cur_ICP, const MatrixXd& prev_ICP){
-        publish_keypoint_pc(cur_ICP, &kp_pc_publisher_cur, raw_time);
-        publish_keypoint_pc(prev_ICP, &kp_pc_publisher_prev, raw_time);
-        publish_lines_3D(cur_ICP, prev_ICP, &line_publisher, raw_time);
+void Framehandler::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD){
+        publish_3D_keypoints(cur_SVD, &kp_pc_publisher_cur, raw_time);
+        publish_3D_keypoints(prev_SVD, &kp_pc_publisher_prev, raw_time);
+        publish_lines_3D(cur_SVD, prev_SVD, &line_publisher, raw_time);
 }
 
-/**
- * Publish concatenated pictures with keypoints and match indication
- * */
 void Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
-const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
+    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
     cv::Mat color_img,gray_img;
     const cv::Mat old_img = prev_orb->input_image.clone();
     const cv::Mat new_img = cur_orb->input_image.clone();
@@ -523,9 +388,7 @@ const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line
     this_pub->publish(msg);
 
 }
-/**
- * A function to  publish the matches by showing current keypoints and only the dash to the last keypoint (only for approximate motion visualization)
- * */
+
 void Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
     const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, bool draw_lines){
         cv::Mat image = cur_orb->input_image.clone();
@@ -553,44 +416,42 @@ void Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std:
         this_pub->publish(msg);
     }
 
-/**
- * Computes the change in position from the previos pose to the current pose
- * It also calls the plot data storage function.
- * @return it's a void function but stores the current pose
- * */
-void Framehandler::SVD(MatrixXd& cur_ICP,MatrixXd& prev_ICP){
+//SVD
+
+void Framehandler::SVD(MatrixXd& cur_SVD,MatrixXd& prev_SVD){
         Vector3d sum_prev(0,0,0);
         Vector3d sum_cur(0,0,0);
 
-        for(int i = 0;i < prev_ICP.cols();i++){
-            sum_prev(0) += prev_ICP(0,i);
-            sum_prev(1) += prev_ICP(1,i);
-            sum_prev(2) += prev_ICP(2,i);
-            sum_cur(0) += cur_ICP(0,i);
-            sum_cur(1) += cur_ICP(1,i);
-            sum_cur(2) += cur_ICP(2,i);
+        for(int i = 0;i < prev_SVD.cols();i++){
+            sum_prev(0) += prev_SVD(0,i);
+            sum_prev(1) += prev_SVD(1,i);
+            sum_prev(2) += prev_SVD(2,i);
+            sum_cur(0) += cur_SVD(0,i);
+            sum_cur(1) += cur_SVD(1,i);
+            sum_cur(2) += cur_SVD(2,i);
         }
         //create the mean for subtraction
-        Vector3d mean_prev = sum_prev/prev_ICP.cols();
-        Vector3d mean_cur = sum_cur/cur_ICP.cols();  
+        Vector3d mean_prev = sum_prev/prev_SVD.cols();
+        Vector3d mean_cur = sum_cur/cur_SVD.cols();  
         //Subtract center of "mass"
-        for(int i = 0; i < prev_ICP.cols();i++){
-            prev_ICP(0,i) -= mean_prev(0);
-            prev_ICP(1,i) -= mean_prev(1);
-            prev_ICP(2,i) -= mean_prev(2);
-            cur_ICP(0,i) -= mean_cur(0);
-            cur_ICP(1,i) -= mean_cur(1);
-            cur_ICP(2,i) -= mean_cur(2);
+        for(int i = 0; i < prev_SVD.cols();i++){
+            prev_SVD(0,i) -= mean_prev(0);
+            prev_SVD(1,i) -= mean_prev(1);
+            prev_SVD(2,i) -= mean_prev(2);
+            cur_SVD(0,i) -= mean_cur(0);
+            cur_SVD(1,i) -= mean_cur(1);
+            cur_SVD(2,i) -= mean_cur(2);
         }
 
         MatrixXd W;
         W.resize(3,3);
         W.setZero();
         //W is the sum of the products of each corresponding point
-        for(int i = 0; i < prev_ICP.cols();i++){
-            Vector3d point_prev(prev_ICP(0,i),prev_ICP(1,i),prev_ICP(2,i));
-            Vector3d point_cur(cur_ICP(0,i),cur_ICP(1,i),cur_ICP(2,i));
-            W += point_prev*point_cur.transpose();
+        for(int i = 0; i < prev_SVD.cols();i++){
+            Vector3d point_prev(prev_SVD(0,i),prev_SVD(1,i),prev_SVD(2,i));
+            Vector3d point_cur(cur_SVD(0,i),cur_SVD(1,i),cur_SVD(2,i));
+            auto PCT = point_cur.transpose();
+            W += point_prev*PCT;
         }
         
         JacobiSVD<MatrixXd> svd(W, ComputeThinU | ComputeThinV);
@@ -608,7 +469,7 @@ void Framehandler::SVD(MatrixXd& cur_ICP,MatrixXd& prev_ICP){
         my_pose = my_pose*current_iteration;
 
         //Storing the plot data
-        // store_coordinates(t,R);
+        store_coordinates(t,R);
 
         //print to see my pose after this iteration
         // std::cout << "The current coordinates are: " << std::endl << my_pose << std::endl;

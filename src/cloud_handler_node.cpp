@@ -3,6 +3,7 @@
 #include "../include/parameters.h"
 #include "../include/ORB.h"
 #include "ORB.cpp"
+// #include "../include/framehandler_old.h"
 #include "../include/Framehandler.h"
 #include "Framehandler.cpp"
 #include "../include/KLT.h"
@@ -16,12 +17,17 @@ int IMAGE_HEIGHT;
 int IMAGE_CROP;
 int NUM_THREADS;
 int NUM_ORB_FEATURES;
+int ORB_ACCURACY;
+int BRISK_THRESHOLD;
 int MIN_LOOP_FEATURE_NUM;
 int MODE;
 int DUPLICATE_FILTERING_SIZE;
+int DOUBLE_FILTERING_SIZE;
+double MAX_COS;
 float MAX_FEATURE_DISTANCE;
 float MIN_FEATURE_DISTANCE;
 double MATCH_IMAGE_SCALE;
+bool START_AT_ZERO;
 int COUNT = 0;
 ofstream OUT;
 
@@ -53,11 +59,16 @@ void updateParams (ros::NodeHandle& n){
     fsSettings["num_threads"]  >> NUM_THREADS;
     fsSettings["match_image_scale"] >> MATCH_IMAGE_SCALE;
     fsSettings["num_orb_features"] >> NUM_ORB_FEATURES;
+    fsSettings["orb_accuracy"] >> ORB_ACCURACY;
+    fsSettings["brisk_threshold"] >> BRISK_THRESHOLD;
     fsSettings["min_loop_feature_num"] >> MIN_LOOP_FEATURE_NUM;
     fsSettings["max_feature_distance"] >> MAX_FEATURE_DISTANCE;
     fsSettings["min_feature_distance"] >> MIN_FEATURE_DISTANCE;
+    fsSettings["max_cos"] >> MAX_COS;
     fsSettings["mode"] >> MODE;
     fsSettings["duplicate_filtering_size"] >> DUPLICATE_FILTERING_SIZE;
+    fsSettings["double_filtering_size"] >> DOUBLE_FILTERING_SIZE;
+    fsSettings["start_at_zero"] >>START_AT_ZERO;
 }
 
 cv::Mat create_mask(){
@@ -101,6 +112,9 @@ class cloud_displayer{
         else
         input_image = image_handler->image_noise;
 
+        // static tf::TransformBroadcaster tf_base_to_lidar;
+        // static tf::Transform base_to_lidar = tf::Transform(tf::createQuaternionFromRPY(0, 0, 0), tf::Vector3(0, 0, 0));
+        // tf_base_to_lidar.sendTransform(tf::StampedTransform(base_to_lidar, cloud_message->header.stamp, "base_link", "velodyne"));
 
         //KLT:
 
@@ -109,7 +123,6 @@ class cloud_displayer{
         //ORB:
         //test ORB alone:
         // ORB* orb = new ORB(input_image,image_handler->cloud_track,MODE);
-
         std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
         // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
         // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
@@ -121,7 +134,9 @@ class cloud_displayer{
         //Brisk alone
         // BRISK* brisk = new BRISK(input_image,image_handler->cloud_track,MODE);
 
-        // //ORB Matches
+
+
+        // Matches
             frame_handler->newIteration(orb,raw_time);
             // frame_handler2->newIteration(orb2);
             // frame_handler3->newIteration(orb3);
@@ -140,7 +155,7 @@ ros::init(argc, argv, "cloud_projection");
 ros::NodeHandle n;
     updateParams(n);
     image_handler = new ImageHandler();
-    frame_handler = new Framehandler(MODE);
+    frame_handler = new Framehandler(MODE,START_AT_ZERO);
     // frame_handler2 = new Framehandler(2);
     // frame_handler3 = new Framehandler(3);
     cloud_displayer cloudDisplayer;

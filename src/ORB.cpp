@@ -1,44 +1,9 @@
 #include "../include/ORB.h"
+#include "helper.cpp"
 
+//Member functions:
 
-/**
- * Transition key points to std::vector
- * */
-static void keypointTransition(vector<cv::KeyPoint>& keypoints_in, vector<cv::Point2d>& points_in)
-{
-    points_in.resize(keypoints_in.size());
-    for(size_t i = 0; i < keypoints_in.size(); i++)
-    {
-        points_in[i] = keypoints_in[i].pt;
-    }
-}
-//self explanatory: publish my detected keypoints on the image
-static void publish_keypoints (ros::Publisher* publisher, cv::Mat& image, const vector<cv::Point2d>& keypoints, const int circle_size,const cv::Scalar line_color){
-    cv::cvtColor(image, image, CV_GRAY2RGB);
-    for(int i = 0; i < (int)keypoints.size(); i++){
-        cv::Point2d cur_pt = keypoints[i] * MATCH_IMAGE_SCALE;
-        cv::circle(image,cur_pt,circle_size,line_color,2);
-    }
-    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
-    publisher->publish(msg);
-}
-
-template <typename Derived>
-/**
- * Trim vector according to flag vector
- * */
-static void trimVector_orb(vector<Derived> &v, vector<bool>& status)
-{
-    int j = 0;
-    for (int i = 0; i < int(v.size()); i++)
-        if (status[i])
-            v[j++] = v[i];
-    v.resize(j);
-}
-
-//Set up Constructor
-ORB::ORB(const cv::Mat &_input_image, 
-        const pcl::PointCloud<PointType>::Ptr _cloud,
+ORB::ORB(const cv::Mat &_input_image, const pcl::PointCloud<PointType>::Ptr _cloud,
         int _mode)
         {
             mode = _mode;
@@ -57,53 +22,27 @@ ORB::ORB(const cv::Mat &_input_image,
             KP_pub_ambient = n.advertise<sensor_msgs::Image>("orb_keypoints_ambient", 1);
             create_descriptors();
         }
-/**
- * Core of this class, extracts features, calls duplicate filter function, builds descriptor and calls functions to get 3D data of 2D keypoints as well as print the keypoints
- * */
 void ORB::create_descriptors(){
-        cv::Ptr<cv::ORB> detector = cv::ORB::create(NUM_ORB_FEATURES, 1.2f, 8, 31);
+        cv::Ptr<cv::ORB> detector = cv::ORB::create(NUM_ORB_FEATURES, 1.2f, 8, ORB_ACCURACY);
         //store keypoints in orb_keypoints
         detector->detect(image,orb_keypoints,MASK);
         keypointTransition(orb_keypoints,orb_keypoints_2d);
         // cout << "orb size before: " << orb_keypoints_2d.size() << " " << endl;
         // duplicate_filtering();
-        // cout << "orb size afterwards: " << orb_keypoints_2d.size() << " " << endl;
+        // cout << "orb size after construction: " << orb_keypoints_2d.size() << " " << endl;
         //Create descriptors
         detector->compute(image,orb_keypoints,orb_descriptors);
         get_3D_data();
 
 
-        //publishing the keypoints on whatever image type they are
-        // if(mode == 1)
-        // publish_keypoints(&KP_pub_intensity, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
-        // else if(mode == 2)
-        // publish_keypoints(&KP_pub_range, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
-        // else
-        // publish_keypoints(&KP_pub_ambient, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
+        // publishing the keypoints on whatever image type they are
+        if(mode == 1)
+        publish_keypoints(&KP_pub_intensity, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
+        else if(mode == 2)
+        publish_keypoints(&KP_pub_range, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
+        else
+        publish_keypoints(&KP_pub_ambient, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
     }
-/**
- * Filter out keypoints in a certain radius arond themselves using a cv::Mat marking system
- * */
-void ORB::duplicate_filtering(){
-    std::vector<bool> duplicate_status;
-    cv::Mat dubplicate_mask = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
-    for(int i = 0; i < orb_keypoints_2d.size();i++){
-        cv::Point2d pt = orb_keypoints_2d.at(i);
-        cv::Scalar color = dubplicate_mask.at<uchar>(pt);
-        if(color == cv::Scalar(0)){
-            cv::circle(dubplicate_mask,pt,0,cv::Scalar(255),DUPLICATE_FILTERING_SIZE);
-            duplicate_status.push_back(1);
-        }   
-        else{
-            duplicate_status.push_back(0);
-        }
-    }
-    trimVector_orb(orb_keypoints_2d,duplicate_status);
-    trimVector_orb(orb_keypoints,duplicate_status);
-}
-/**
- * store the 3D coordinates of the detected 2D keypoints using the PC
- * */
 void ORB::get_3D_data(){
         orb_points_3d.resize(orb_keypoints_2d.size());
         // orb_point_projected.resize(orb_keypoints_2d.size());
@@ -148,8 +87,27 @@ void ORB::get_3D_data(){
             // orb_point_projected[i] = p_2d_n;
         }
         
-        // trimVector_orb(orb_point_3d,status);
-        // trimVector_orb(orb_point_projected,status);
+        // trimVector(orb_point_3d,status);
+        // trimVector(orb_point_projected,status);
     }
 
+//member filtering functions:
+
+void ORB::duplicate_filtering(){
+    std::vector<bool> duplicate_status;
+    cv::Mat dubplicate_mask = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
+    for(int i = 0; i < orb_keypoints_2d.size();i++){
+        cv::Point2d pt = orb_keypoints_2d.at(i);
+        cv::Scalar color = dubplicate_mask.at<uchar>(pt);
+        if(color == cv::Scalar(0)){
+            cv::circle(dubplicate_mask,pt,0,cv::Scalar(255),DUPLICATE_FILTERING_SIZE);
+            duplicate_status.push_back(1);
+        }   
+        else{
+            duplicate_status.push_back(0);
+        }
+    }
+    trimVector(orb_keypoints_2d,duplicate_status);
+    trimVector(orb_keypoints,duplicate_status);
+}
 

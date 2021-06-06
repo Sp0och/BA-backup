@@ -7,7 +7,7 @@ project_name: "descriptor_and_image"
 cloud_topic: "points_raw"       # point cloud input topic
 image_width: 1024               # image horitontal resolution
 image_height: 128               # image vertical resolution
-image_crop: 225                 # mask for blocking feature extraction; indoor/handheld=196-256; jackal=0 
+image_crop: 225                 # normally 225, mask for blocking feature extraction; indoor/handheld=196-256; jackal=0 
 
 # Registered path
 path_topic: "lio_sam/mapping/path"
@@ -18,16 +18,23 @@ mode: 1
 # Feature matching
 min_loop_feature_num: 15        # the minimum number of features to plot
 num_orb_features: 1000           # feature num for ORB
+orb_accuracy: 31                # ORB extractor threshold for letting the points pass
 num_sift_features: 500          # feature num for SIFT
-num_brisk_features: 500         # feature num for BRISK
+brisk_threshold: 60             # threshold for brisk feature acceptance
 
 #feature filtering
-duplicate_filtering_size: 2    # the circle patch size in which another point can not be located
-max_feature_distance: 2         # max feature match distance
-min_feature_distance: 0.1        #minimum distance to sensor that a feature must have
+duplicate_filtering_size: 1    # (pixels) the circle patch size in which another point can not be located
+double_filtering_size: 1      # (pixels) the circle patch size in which another point can not be located
+max_feature_distance: 2        # (meters) max feature match distance
+min_feature_distance: 1.5       #(meters) minimum distance to sensor that a feature must have
+max_cos: 0.2                    #max cos of intermediate angle of matches compared to distance direction
+
 # CPU
 num_threads: 4                  # CPU thread number
 
 # Visualization
 debug_image: 0                  # debug flag (warning: uses massive memory)
 match_image_scale: 1.0          # debug image display size
+
+#pose and SVD:
+start_at_zero: 0                #start with identity pose or use their initial pose

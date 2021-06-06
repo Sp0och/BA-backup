@@ -17,7 +17,7 @@ class ORB
     vector<cv::KeyPoint> orb_keypoints;
     cv::Mat orb_descriptors;
 
-
+    //Set up Constructor
     ORB(const cv::Mat &_input_image, 
         const pcl::PointCloud<PointType>::Ptr _cloud,
         int _mode);
@@ -27,11 +27,13 @@ class ORB
      * @param orb_keypoints_2d is then the vector containing the keypoints
      * */
     void create_descriptors();
-    
+    /**
+     * Filter out keypoints in a certain radius arond themselves using a cv::Mat marking system
+     * */
     void duplicate_filtering();
     
     /**
-     * Changed up version for 3D points for ICP
+     * 3D points for SVD
      * */
     void get_3D_data();
 

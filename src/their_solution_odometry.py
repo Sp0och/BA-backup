@@ -7,7 +7,7 @@ import sys
 
 import pandas as pd
 df = pd.read_csv(
-    '/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/complete_solution.csv')
+    '/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_odometry_data.csv')
 
 # rospy.init_node('odometry_bag_writer')
 #startTime = rospy.Time.now()

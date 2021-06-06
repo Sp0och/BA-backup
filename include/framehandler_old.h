@@ -66,7 +66,31 @@ void distance_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
     trim_matrix(prev_ICP,distance_flag);
     trim_matrix(cur_ICP,distance_flag);
 }
-
+static void double_point_filtering(vector<cv::Point2d>& cur, vector<cv::Point2d>& prev,MatrixXd& curM, MatrixXd& prevM){
+    std::vector<bool> duplicate_status;
+    cv::Mat dubplicate_mask_c = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
+    cv::Mat dubplicate_mask_p = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
+    for(int i = 0; i < cur.size();i++){
+        cv::Point2d pt_c = cur.at(i);
+        cv::Point2d pt_p = prev.at(i);
+        cv::Scalar color_c = dubplicate_mask_c.at<uchar>(pt_c);
+        cv::Scalar color_p = dubplicate_mask_p.at<uchar>(pt_p);
+        //check whether a point has already been used if not draw there to indicate usage
+        if(color_c == cv::Scalar(0) && color_p == cv::Scalar(0)){
+            cv::circle(dubplicate_mask_c,pt_c,0,cv::Scalar(255),1);
+            cv::circle(dubplicate_mask_p,pt_p,0,cv::Scalar(255),1);
+            duplicate_status.push_back(1);
+        }   
+        //If one of the points has already been used delete the whole match
+        else{
+            duplicate_status.push_back(0);
+        }
+    }
+    trim_vector(cur,duplicate_status);
+    trim_vector(prev,duplicate_status);
+    trim_matrix(curM,duplicate_status);
+    trim_matrix(prevM,duplicate_status);
+}
 
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
@@ -81,13 +105,28 @@ class Framehandler{
 
     public:
     //Constructor
-    Framehandler(int _mode){
+    Framehandler(int _mode,bool START_AT_ZERO){
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/OLD_prediction_complete.csv",ios_base::app);
+        OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
+        OUT.close(); 
         mode = _mode;
         comp_sum = comp_count = 0;
-        RT << 1,0,0,0,
+        if(START_AT_ZERO)
+            RT << 1,0,0,0,
               0,1,0,0,
               0,0,1,0,
               0,0,0,1;
+        else{
+            RT << 0.35182179, -0.92905796,  0.11433606,  0.0,
+            0.93259485,  0.33738143, -0.12822098,  0.0,
+            0.08054986,  0.15174015,  0.98513281,  0.0,
+            0,           0,           0,            1;
+        }
+        //Their start position
+        // RT << 0.35182179, -0.92905796,  0.11433606,  0.0,
+        // 0.93259485,  0.33738143, -0.12822098,  0.0,
+        // 0.08054986,  0.15174015,  0.98513281,  0.0,
+        // 0,           0,           0,            1;
         cur_orb = nullptr;
         prev_orb = nullptr;
         // match_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
@@ -176,7 +215,7 @@ class Framehandler{
         
 
         // //Second filtering for edge values if values beneath a certain range norm were neglected in the image handler
-        // zero_filtering(cur_ICP,prev_ICP);
+        double_point_filtering(sorted_2d_cur,sorted_2d_prev,cur_ICP,prev_ICP);
 
         //Filter out 3D mistakes which look right on 2D:
         distance_filtering(cur_ICP,prev_ICP);
@@ -200,7 +239,7 @@ class Framehandler{
             std::cout << "ERROR: 3D Vectors weren't initialized properly" << std::endl;
 
         //publish my estimated transform in between odom and velodyne
-        // publish_tf();
+        publish_tf();
 
 
         //publish odometry message
@@ -228,15 +267,6 @@ class Framehandler{
 
 
     void store_coordinates(const Vector3d& t, const Matrix3d& R){
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_x.csv",ios_base::app);
-        OUT << t(0) << "\n";
-        OUT.close();
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_y.csv",ios_base::app);
-        OUT << t(1) << "\n";
-        OUT.close();
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/translation_z.csv",ios_base::app);
-        OUT << t(2) << "\n";
-        OUT.close();
 
         Quaterniond q(R);
         tfScalar xq = q.x();
@@ -262,14 +292,8 @@ class Framehandler{
             ea = e2;
 
 
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/rotation_roll.csv",ios_base::app);
-        OUT << ea(0) << "\n";
-        OUT.close();
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/rotation_pitch.csv",ios_base::app);
-        OUT << ea(1) << "\n";
-        OUT.close();
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/rotation_yaw.csv",ios_base::app);
-        OUT << ea(2) << "\n";
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/OLD_prediction_complete.csv",ios_base::app);
+        OUT << t(0) << ',' << t(1) << ',' << t(2) << ',' << ea(0) << ',' << ea(1) << ',' << ea(2) << "\n";
         OUT.close();
 
     }
@@ -277,6 +301,7 @@ class Framehandler{
     void publish_tf(){
         tf::TransformBroadcaster odom_t_velo_b;
         //Create Eigen Quaternion
+        // Matrix4d RTINV = RT.inverse();
         Matrix3d R = RT.topLeftCorner(3,3);
         Quaterniond q(R);
         tfScalar xq = q.x();
@@ -461,9 +486,9 @@ class Framehandler{
         H << R,t,0,0,0,1;
         RT = H*RT;
         
-        Matrix3d RI = RT.topLeftCorner(3,3);
-        Vector3d tI = RT.topRightCorner(3,1);
-        store_coordinates(tI,RI);
+        // Matrix3d RI = RT.topLeftCorner(3,3);
+        // Vector3d tI = RT.topRightCorner(3,1);
+        // store_coordinates(tI,RI);
         // std::cout << "The rotation matrix is: " << COUNT++ << "  " << std::endl << R << std::endl;
         // std::cout << "The translation vector is: " << std::endl << t << std::endl;
         // std::cout << "The current coordinates are: " << std::endl << RT << std::endl;
