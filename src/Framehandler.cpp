@@ -22,7 +22,6 @@ Framehandler::Framehandler(int _mode,bool START_AT_ZERO){
         
         cur_orb = nullptr;
         prev_orb = nullptr;
-        first_iteration = 1;
         // match_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
 
         kp_pc_publisher_cur = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1);
@@ -43,6 +42,9 @@ void Framehandler::newIteration(const std::shared_ptr<ORB> new_frame, ros::Time 
         raw_time = _raw_time;
         if(cur_orb == nullptr){
             cur_orb = new_frame;
+            //Set up plot files, for the overall pose store the inital pose and publish the transform of the first frame
+            // publish_tf();
+            set_plotting_columns_and_start_pose();
         }
         else{
             prev_orb = cur_orb;
@@ -67,12 +69,6 @@ void Framehandler::matches_filtering_motion(){
         std::sort(matches.begin(),matches.end());
         std::vector<cv::Point2d> sorted_2d_cur, sorted_2d_prev;
         MatrixXd prev_SVD(3,matches.size()),cur_SVD(3,matches.size());
-
-        //Set up plot files, for the overall pose store the inital pose and publish the transform of the first frame
-        if(first_iteration){
-            // publish_tf();
-            set_plotting_columns_and_start_pose();
-        }
 
         //pair the keypoints up according to the matches:
         for (size_t i = 0; i < matches.size(); i++)
@@ -130,11 +126,7 @@ void Framehandler::matches_filtering_motion(){
 
 
         //publish my estimated transform in between odom and my_velo
-        if(first_iteration){
-            first_iteration = false;
-        }
-        else
-            publish_tf();
+        publish_tf();
 
         //publish odometry message
         // publish_odom();

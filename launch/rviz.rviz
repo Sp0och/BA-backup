@@ -3,9 +3,7 @@ Panels:
     Help Height: 0
     Name: Displays
     Property Tree Widget:
-      Expanded:
-        - /Global Options1
-        - /Keypoints1
+      Expanded: ~
       Splitter Ratio: 0.5600000023841858
     Tree Height: 191
   - Class: rviz/Selection
@@ -222,34 +220,6 @@ Visualization Manager:
       Size (m): 1
       Style: Points
       Topic: /Keypoint_Pointcloud_prev
-      Unreliable: false
-      Use Fixed Frame: true
-      Use rainbow: true
-      Value: true
-    - Alpha: 1
-      Autocompute Intensity Bounds: true
-      Autocompute Value Bounds:
-        Max Value: 3.73471736907959
-        Min Value: -2.0757012367248535
-        Value: true
-      Axis: Z
-      Channel Name: z
-      Class: rviz/PointCloud2
-      Color: 0; 255; 25
-      Color Transformer: FlatColor
-      Decay Time: 0
-      Enabled: true
-      Invert Rainbow: false
-      Max Color: 255; 255; 255
-      Min Color: 0; 0; 0
-      Name: Midpoints
-      Position Transformer: XYZ
-      Queue Size: 10
-      Selectable: true
-      Size (Pixels): 6
-      Size (m): 6
-      Style: Points
-      Topic: /KP_PC_Midpoints
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true

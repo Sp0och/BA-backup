@@ -27,7 +27,7 @@ duplicate_filtering_size: 1    # (pixels) the circle patch size in which another
 double_filtering_size: 1      # (pixels) the circle patch size in which another point can not be located
 max_feature_distance: 2        # (meters) max feature match distance
 min_feature_distance: 1.5       #(meters) minimum distance to sensor that a feature must have
-max_cos: 0.2                    #max cos of intermediate angle of matches compared to distance direction
+max_cos: 0.35                    #max cos of intermediate angle of matches compared to distance direction
 
 # CPU
 num_threads: 4                  # CPU thread number
