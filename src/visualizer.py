@@ -54,167 +54,191 @@ if __name__ == "__main__":
 
     feature_number = pd.DataFrame.to_numpy(
         feature_number_file["num_of_features"])
-    # feature_timestamps = pd.DataFrame.to_numpy(feature_number_file["time"])
-    x = np.linspace(0, 100, 1000)
+    complete_timestamps = pd.DataFrame.to_numpy(
+        prediction_overall["time"])
+    step_timestamps = pd.DataFrame.to_numpy(prediction_step["time"])
 
-    GT_timestamps = pd.DataFrame.to_numpy(GT_steps["time"])
-    prediction_timestamps = pd.DataFrame.to_numpy(
-        prediction_step["time"])
-    prediction_timestamps[0] -= 0.1
-    GT_timestamps = GT_timestamps / 10**9
-    GT_timestamps = GT_timestamps - GT_timestamps[0]
-    GT_timestamps = GT_timestamps + 1
-    prediction_timestamps = prediction_timestamps - prediction_timestamps[0]
+    step_timestamps = step_timestamps - complete_timestamps[0]
+    feature_timestamps = pd.DataFrame.to_numpy(feature_number_file["time"])
+    feature_timestamps = feature_timestamps - complete_timestamps[0]
+    print("feature timestamps: ", feature_timestamps)
+    complete_timestamps = complete_timestamps - complete_timestamps[0]
 
     # create the plots
     plt.figure()
     overall_plot = plt.subplot(4, 2, 1)
-    plt.title("Translation in x")
-    plt.plot(prediction_timestamps, prediction_xc, 'b', label='Prediction')
-    plt.plot(GT_timestamps, GT_xc, 'g', label='Ground Truth')
-    plt.plot(x, prediction_xc-GT_xc, 'r', label='error')
+    plt.title("Total X")
+    # plt.plot(complete_timestamps, prediction_xc, 'b', label='Prediction')
+    # plt.plot(complete_timestamps, GT_xc, 'g', label='Ground Truth')
+    plt.plot(complete_timestamps, prediction_xc-GT_xc, 'r', label='error')
     overall_plot.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('overall change translation in x [m]')
+    plt.xlabel('s')
+    plt.ylabel('Total Transl x [m]')
+    plt.grid(True, 'both')
 
     overall_plot = plt.subplot(4, 2, 3)
-    plt.title("Translation in y")
-    plt.plot(prediction_timestamps, prediction_yc, 'b', label='Prediction')
-    plt.plot(GT_timestamps, GT_yc, 'g', label='Ground Truth')
-    plt.plot(x, prediction_yc-GT_yc, 'r', label='error')
+    plt.title("Total Y")
+    # plt.plot(complete_timestamps, prediction_yc, 'b', label='Prediction')
+    # plt.plot(complete_timestamps, GT_yc, 'g', label='Ground Truth')
+    plt.plot(complete_timestamps, prediction_yc-GT_yc, 'r', label='error')
     overall_plot.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('overall change translation in y [m]')
+    plt.xlabel('s')
+    plt.ylabel('Total Transl y [m]')
+    plt.grid(True, 'both')
 
     overall_plot = plt.subplot(4, 2, 5)
-    plt.title("Translation in z")
-    plt.plot(prediction_timestamps, prediction_zc, 'b', label='Prediction')
-    plt.plot(GT_timestamps, GT_zc, 'g', label='Ground Truth')
-    plt.plot(x, prediction_zc-GT_zc, 'r', label='error')
+    plt.title("Total Z")
+    # plt.plot(complete_timestamps, prediction_zc, 'b', label='Prediction')
+    # plt.plot(complete_timestamps, GT_zc, 'g', label='Ground Truth')
+    plt.plot(complete_timestamps, prediction_zc-GT_zc, 'r', label='error')
     overall_plot.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('overall change translation in z [m]')
+    plt.xlabel('s')
+    plt.ylabel('Total Transl z [m]')
+    plt.grid(True, 'both')
 
     overall_plot = plt.subplot(4, 2, 2)
-    plt.title("rotation roll")
-    plt.plot(prediction_timestamps, 57.2858 *
-             prediction_rollc, 'b', label='Prediction')
-    plt.plot(GT_timestamps, 57.2858*GT_rollc, 'g', label='Ground Truth')
-    plt.plot(x, 57.2858*(prediction_rollc-GT_rollc), 'r', label='error')
+    plt.title("Rot. roll")
+    # plt.plot(complete_timestamps, 57.2858 *
+    #          prediction_rollc, 'b', label='Prediction')
+    # plt.plot(complete_timestamps, 57.2858 *
+    #          GT_rollc, 'g', label='Ground Truth')
+    plt.plot(complete_timestamps, 57.2858 *
+             (prediction_rollc-GT_rollc), 'r', label='error')
     overall_plot.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('overall change row angle [°]')
+    plt.xlabel('s')
+    plt.ylabel('Total row angle [°]')
+    plt.grid(True, 'both')
 
     overall_plot = plt.subplot(4, 2, 4)
-    plt.title("Rotation pitch")
-    plt.plot(prediction_timestamps, 57.2858 *
-             prediction_pitchc, 'b', label='Prediction')
-    plt.plot(GT_timestamps, 57.2858*GT_pitchc, 'g', label='Ground Truth')
-    plt.plot(x, 57.2858*(prediction_pitchc-GT_pitchc), 'r', label='error')
+    plt.title("Rot. pitch")
+    # plt.plot(complete_timestamps, 57.2858 *
+    #          prediction_pitchc, 'b', label='Prediction')
+    # plt.plot(complete_timestamps, 57.2858 *
+    #          GT_pitchc, 'g', label='Ground Truth')
+    plt.plot(complete_timestamps, 57.2858 *
+             (prediction_pitchc-GT_pitchc), 'r', label='error')
     overall_plot.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('overall change pitch angle [°]')
+    plt.xlabel('s')
+    plt.ylabel('Total pitch angle [°]')
+    plt.grid(True, 'both')
 
     overall_plot = plt.subplot(4, 2, 6)
-    plt.title("Rotation yaw")
-    plt.plot(prediction_timestamps, 57.2858 *
-             prediction_yawc, 'b', label='Prediction')
-    plt.plot(GT_timestamps, 57.2858*GT_yawc, 'g', label='Ground Truth')
-    plt.plot(x, 57.2858*(prediction_yawc-GT_yawc), 'r', label='error')
+    plt.title("Rot. yaw")
+    # plt.plot(complete_timestamps, 57.2858 *
+    #          prediction_yawc, 'b', label='Prediction')
+    # plt.plot(complete_timestamps, 57.2858*GT_yawc, 'g', label='Ground Truth')
+    plt.plot(complete_timestamps, 57.2858 *
+             (prediction_yawc-GT_yawc), 'r', label='error')
     overall_plot.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('overall change yaw angle [°]')
+    plt.xlabel('s')
+    plt.ylabel('Total yaw angle [°]')
+    plt.grid(True, 'both')
 
     feature_plot = plt.subplot(4, 2, 7)
-    plt.title("Amount of Features")
-    plt.plot(prediction_timestamps, feature_number,
-             'm', label="Amount of features")
+    plt.title("Features")
+    plt.plot(feature_timestamps, feature_number,
+             'm', label="# of Features per step")
     feature_plot.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('amount of features per step')
+    plt.xlabel('s')
+    plt.ylabel('Feature Number')
+    plt.grid(True, 'both')
 
     feature_plot = plt.subplot(4, 2, 8)
-    plt.title("Amount of Features")
-    plt.plot(prediction_timestamps, feature_number,
-             'm', label="Amount of features")
+    plt.title("Features")
+    plt.plot(feature_timestamps, feature_number,
+             'm', label="# of Features per step")
     feature_plot.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('amount of features per step')
+    plt.xlabel('s')
+    plt.ylabel('Feature Number')
+    plt.grid(True, 'both')
 
     plt.figure()
 
     step_graph = plt.subplot(4, 2, 1)
-    plt.title("Translation in x")
-    plt.plot(prediction_timestamps, prediction_xs, 'b', label='Prediction')
-    plt.plot(GT_timestamps, GT_xs, 'g', label='Ground Truth')
-    plt.plot(x, prediction_xs-GT_xs, 'r', label='error')
+    plt.title("X")
+    # plt.plot(step_timestamps, prediction_xs, 'b', label='Prediction')
+    # plt.plot(step_timestamps, GT_xs, 'g', label='Ground Truth')
+    plt.plot(step_timestamps, prediction_xs-GT_xs, 'r', label='error')
     step_graph.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('step change translation in x [m]')
+    plt.xlabel('s')
+    plt.ylabel('step Transl x [m]')
+    plt.grid(True, 'both')
 
     step_graph = plt.subplot(4, 2, 3)
-    plt.title("Translation in y")
-    plt.plot(prediction_timestamps, prediction_ys, 'b', label='Prediction')
-    plt.plot(GT_timestamps, GT_ys, 'g', label='Ground Truth')
-    plt.plot(x, prediction_ys-GT_ys, 'r', label='error')
+    plt.title("Y")
+    # plt.plot(step_timestamps, prediction_ys, 'b', label='Prediction')
+    # plt.plot(step_timestamps, GT_ys, 'g', label='Ground Truth')
+    plt.plot(step_timestamps, prediction_ys-GT_ys, 'r', label='error')
     step_graph.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('step change translation in y [m]')
+    plt.xlabel('s')
+    plt.ylabel('step Transl y [m]')
+    plt.grid(True, 'both')
 
     step_graph = plt.subplot(4, 2, 5)
-    plt.title("Translation in z")
-    plt.plot(prediction_timestamps, prediction_zs, 'b', label='Prediction')
-    plt.plot(GT_timestamps, GT_zs, 'g', label='Ground Truth')
-    plt.plot(x, prediction_zs-GT_zs, 'r', label='error')
+    plt.title("Z")
+    # plt.plot(step_timestamps, prediction_zs, 'b', label='Prediction')
+    # plt.plot(step_timestamps, GT_zs, 'g', label='Ground Truth')
+    plt.plot(step_timestamps, prediction_zs-GT_zs, 'r', label='error')
     step_graph.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('step change translation in z [m]')
+    plt.xlabel('s')
+    plt.ylabel('step Transl z [m]')
+    plt.grid(True, 'both')
 
     step_graph = plt.subplot(4, 2, 2)
-    plt.title("rotation roll")
-    plt.plot(prediction_timestamps, 57.2858 *
-             prediction_rolls, 'b', label='Prediction')
-    plt.plot(GT_timestamps, 57.2858*GT_rolls, 'g', label='Ground Truth')
-    plt.plot(x, 57.2858*(prediction_rolls-GT_rolls), 'r', label='error')
+    plt.title("Rot. roll")
+    # plt.plot(step_timestamps, 57.2858 *
+    #          prediction_rolls, 'b', label='Prediction')
+    # plt.plot(step_timestamps, 57.2858 *
+    #          GT_rolls, 'g', label='Ground Truth')
+    plt.plot(step_timestamps, 57.2858 *
+             (prediction_rolls-GT_rolls), 'r', label='error')
     step_graph.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('step change row angle [°]')
+    plt.xlabel('s')
+    plt.ylabel('step row angle [°]')
+    plt.grid(True, 'both')
 
     step_graph = plt.subplot(4, 2, 4)
-    plt.title("Rotation pitch")
-    plt.plot(prediction_timestamps, 57.2858 *
-             prediction_pitchs, 'b', label='Prediction')
-    plt.plot(GT_timestamps, 57.2858*GT_pitchs, 'g', label='Ground Truth')
-    plt.plot(x, 57.2858*(prediction_pitchs-GT_pitchs), 'r', label='error')
+    plt.title("Rot. pitch")
+    # plt.plot(step_timestamps, 57.2858 *
+    #          prediction_pitchs, 'b', label='Prediction')
+    # plt.plot(step_timestamps, 57.2858 *
+    #          GT_pitchs, 'g', label='Ground Truth')
+    plt.plot(step_timestamps, 57.2858 *
+             (prediction_pitchs-GT_pitchs), 'r', label='error')
     step_graph.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('step change pitch angle [°]')
+    plt.xlabel('s')
+    plt.ylabel('step pitch angle [°]')
+    plt.grid(True, 'both')
 
     step_graph = plt.subplot(4, 2, 6)
-    plt.title("Rotation yaw")
-    plt.plot(prediction_timestamps, 57.2858 *
-             prediction_yaws, 'b', label='Prediction')
-    plt.plot(GT_timestamps, 57.2858*GT_yaws, 'g', label='Ground Truth')
-    plt.plot(x, 57.2858*(prediction_yaws-GT_yaws), 'r', label='error')
+    plt.title("Rot. yaw")
+    # plt.plot(step_timestamps, 57.2858 *
+    #          prediction_yaws, 'b', label='Prediction')
+    # plt.plot(step_timestamps, 57.2858*GT_yaws, 'g', label='Ground Truth')
+    plt.plot(step_timestamps, 57.2858 *
+             (prediction_yaws-GT_yaws), 'r', label='error')
     step_graph.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('step change yaw angle [°]')
+    plt.xlabel('s')
+    plt.ylabel('step yaw angle [°]')
+    plt.grid(True, 'both')
 
     feature_plot = plt.subplot(4, 2, 7)
-    plt.title("Amount of Features")
-    plt.plot(prediction_timestamps, feature_number,
-             'm', label="Amount of features")
+    plt.title("Features")
+    plt.plot(feature_timestamps, feature_number,
+             'm', label="# of Features per step")
     feature_plot.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('amount of features per step')
+    plt.xlabel('s')
+    plt.ylabel('Feature Number')
+    plt.grid(True, 'both')
 
     feature_plot = plt.subplot(4, 2, 8)
-    plt.title("Amount of Features")
-    plt.plot(prediction_timestamps, feature_number,
-             'm', label="Amount of features")
+    plt.title("Features")
+    plt.plot(feature_timestamps, feature_number,
+             'm', label="# of Features per step")
     feature_plot.legend(shadow=True)
-    plt.xlabel('steps')
-    plt.ylabel('amount of features per step')
+    plt.xlabel('s')
+    plt.ylabel('Feature Number')
+    plt.grid(True, 'both')
 
     plt.show()
 

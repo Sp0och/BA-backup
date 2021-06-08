@@ -13,12 +13,11 @@ Framehandler::Framehandler(int _mode,bool START_AT_ZERO){
                     0,0,0,1;
         }
         else{
-            my_pose << 0.35182179, -0.92905796,  0.11433606,  0.0008456818759441376,
-            0.93259485,  0.33738143, -0.12822098,  0.4183735251426697,
-            0.08054986,  0.15174015,  0.98513281,  0.008259017020463943,
+            my_pose << 0.29824051, -0.94876171,  0.10442136, -0.03153784,
+            0.94640945,  0.27973465, -0.16142391,  0.74966328,
+            0.12394255,  0.14696851,  0.98134525,  0.08621409,
             0,           0,           0,            1;
         }
-        
         
         cur_orb = nullptr;
         prev_orb = nullptr;
@@ -40,10 +39,11 @@ Framehandler::Framehandler(int _mode,bool START_AT_ZERO){
 
 void Framehandler::newIteration(const std::shared_ptr<ORB> new_frame, ros::Time _raw_time){
         raw_time = _raw_time;
+        //if first iteration
         if(cur_orb == nullptr){
             cur_orb = new_frame;
-            //Set up plot files, for the overall pose store the inital pose and publish the transform of the first frame
-            // publish_tf();
+            //Set up plot files, store the inital pose and feature num and publish the transform of the first frame
+            publish_tf();
             set_plotting_columns_and_start_pose();
         }
         else{
@@ -109,11 +109,12 @@ void Framehandler::matches_filtering_motion(){
         double_point_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
         // cout << "size after double point filtering: " << prev_SVD.cols() << " "<< endl;
 
-        distance_filtering(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
-        if(prev_SVD.cols() < 40)
-            cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
+        filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
 
-        // store_feature_number(cur_SVD);
+        if(prev_SVD.cols() < 40)
+            cout << "size after distance filtering: " << prev_SVD.cols() << " at timestamp: " << raw_time << "   " << endl;
+
+        store_feature_number(cur_SVD);
 
         visualizer_3D(cur_SVD,prev_SVD);
 
@@ -126,6 +127,7 @@ void Framehandler::matches_filtering_motion(){
 
 
         //publish my estimated transform in between odom and my_velo
+        // if(raw_time >= ros::Time(1598537680.405615616))
         publish_tf();
 
         //publish odometry message
@@ -461,6 +463,7 @@ void Framehandler::SVD(MatrixXd& cur_SVD,MatrixXd& prev_SVD){
         my_pose = my_pose*current_iteration;
 
         //Storing the plot data
+        // if(raw_time >= ros::Time(1598537680.405615616))
         store_coordinates(t,R);
 
         //print to see my pose after this iteration

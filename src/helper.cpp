@@ -99,7 +99,7 @@ static void double_point_filtering(vector<cv::Point2d>& cur, vector<cv::Point2d>
 /**
  * Filter out all 3D points whoose difference in a coordinate dirction is more than half its effective value as well as points that are too close to the origin
  * */
-static void distance_filtering(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, vector<cv::Point2d>& cur,vector<cv::Point2d>& prev){
+static void filtering_3D(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, vector<cv::Point2d>& cur,vector<cv::Point2d>& prev){
     vector<bool> distance_flag(prev_SVD.cols(),1);
     // for(int i = 0; i < prev_SVD.cols();i++){
     //     float p_c_x = cur_SVD(0,i);
@@ -142,6 +142,8 @@ static void distance_filtering(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_S
 
         if((costheta > MAX_COS && mdif > MAX_FEATURE_DISTANCE) || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
             distance_flag.at(i) = 0;
+        // if((costheta * mdif > MAX_FEATURE_DISTANCE) || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
+        //     distance_flag.at(i) = 0;
     }
 
     trim_matrix(prev_SVD,distance_flag);

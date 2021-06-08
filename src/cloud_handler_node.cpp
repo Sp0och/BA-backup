@@ -119,7 +119,7 @@ class cloud_displayer{
         //KLT:
 
         // klt->KLT_Iteration(input_image);
-
+        if(raw_time >= ros::Time(1598537680.4)){
         //ORB:
         //test ORB alone:
         // ORB* orb = new ORB(input_image,image_handler->cloud_track,MODE);
@@ -140,6 +140,7 @@ class cloud_displayer{
             frame_handler->newIteration(orb,raw_time);
             // frame_handler2->newIteration(orb2);
             // frame_handler3->newIteration(orb3);
+        }
     }
 
     

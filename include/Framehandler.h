@@ -55,7 +55,6 @@ class Framehandler{
     std::shared_ptr<ORB> cur_orb, prev_orb;
     vector<cv::DMatch> matches; 
     int mode;
-
     Matrix4d my_pose;
 
     ros::Time raw_time;
