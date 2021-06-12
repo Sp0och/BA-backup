@@ -384,23 +384,23 @@ class Framehandler{
     //indicate features in new image
     for(int i = 0; i< (int)sorted_KP_cur.size(); i++)
     {
-        cv::Point2d cur_pt = sorted_KP_cur[i] * MATCH_IMAGE_SCALE;
-        cv::circle(color_img, cur_pt, circle_size*MATCH_IMAGE_SCALE, line_color, MATCH_IMAGE_SCALE*2);
+        cv::Point2d cur_pt = sorted_KP_cur[i] * 1;
+        cv::circle(color_img, cur_pt, circle_size*1, line_color, 1*2);
     }
     //indicate features in old image
     for(int i = 0; i< (int)sorted_KP_prev.size(); i++)
     {
-        cv::Point2d old_pt = sorted_KP_prev[i] * MATCH_IMAGE_SCALE;
+        cv::Point2d old_pt = sorted_KP_prev[i] * 1;
         old_pt.y += new_img.size().height + gap;
-        cv::circle(color_img, old_pt, circle_size*MATCH_IMAGE_SCALE, line_color, MATCH_IMAGE_SCALE*2);
+        cv::circle(color_img, old_pt, circle_size*1, line_color, 1*2);
     }
 
     if(draw_lines){
         for (int i = 0; i< (int)sorted_KP_cur.size(); i++)
         {
-            cv::Point2d old_pt = sorted_KP_prev[i] * MATCH_IMAGE_SCALE;
+            cv::Point2d old_pt = sorted_KP_prev[i] * 1;
             old_pt.y += new_img.size().height + gap;
-            cv::line(color_img, sorted_KP_cur[i] * MATCH_IMAGE_SCALE, old_pt, line_color, MATCH_IMAGE_SCALE*2, 8, 0);
+            cv::line(color_img, sorted_KP_cur[i] * 1, old_pt, line_color, 1*2, 8, 0);
         }
     }
     if(mode == 1)
@@ -422,14 +422,14 @@ class Framehandler{
 
         for (int i = 0; i< (int)sorted_KP_cur.size(); i++)
         {
-            cv::Point2d old_pt = sorted_KP_prev[i] * MATCH_IMAGE_SCALE;
-            cv::Point2d cur_pt = sorted_KP_cur[i] * MATCH_IMAGE_SCALE;
+            cv::Point2d old_pt = sorted_KP_prev[i] * 1;
+            cv::Point2d cur_pt = sorted_KP_cur[i] * 1;
             unsigned int r = rand() % 256;
             unsigned int g = rand() % 256;
             unsigned int b = rand() % 256;
             cv::Scalar circle_col = cv::Scalar(r,g,b);
-            cv::circle(image, cur_pt, circle_size*MATCH_IMAGE_SCALE, circle_col, MATCH_IMAGE_SCALE*1);
-            cv::line(image, cur_pt * MATCH_IMAGE_SCALE, old_pt, cv::Scalar(255,0,0), MATCH_IMAGE_SCALE*1, 8, 0);
+            cv::circle(image, cur_pt, circle_size*1, circle_col, 1*1);
+            cv::line(image, cur_pt * 1, old_pt, cv::Scalar(255,0,0), 1*1, 8, 0);
         }
         if(mode == 1)
         cv::putText(image, "Intensity",   cv::Point2d(300, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);

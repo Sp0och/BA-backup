@@ -13,7 +13,7 @@ class Framehandler{
 
     public:
     //Constructor
-    Framehandler(int _mode,bool START_AT_ZERO);
+    Framehandler(int _mode,int START_POSE);
     //Boundary condition for first iteration and then just calling matches_filtering_motion
     void newIteration(std::shared_ptr<ORB> new_frame, ros::Time _raw_time);
     /**
@@ -60,7 +60,6 @@ class Framehandler{
     ros::Time raw_time;
 
     ros::NodeHandle n_frame;
-    ros::Subscriber raw_sub;
     ros::Publisher match_publisher, range_publisher, ambient_publisher, intensity_publisher, 
     kp_pc_publisher_cur, kp_pc_publisher_prev, midpoint_publisher, odom_publisher, line_publisher;
     

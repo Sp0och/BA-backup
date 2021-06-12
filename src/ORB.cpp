@@ -9,9 +9,9 @@ ORB::ORB(const cv::Mat &_input_image, const pcl::PointCloud<PointType>::Ptr _clo
             mode = _mode;
 
             input_image = _input_image.clone();
-            cv::resize(input_image, image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
+            cv::resize(input_image, image, cv::Size(), 1, 1);
             //input_image used for framehandler to have a non-altered image to draw the matches on
-            cv::resize(input_image, input_image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
+            cv::resize(input_image, input_image, cv::Size(), 1, 1);
             cloud = _cloud;
 
             if(mode == 1)
@@ -23,7 +23,7 @@ ORB::ORB(const cv::Mat &_input_image, const pcl::PointCloud<PointType>::Ptr _clo
             create_descriptors();
         }
 void ORB::create_descriptors(){
-        cv::Ptr<cv::ORB> detector = cv::ORB::create(NUM_ORB_FEATURES, 1.2f, 8, ORB_ACCURACY);
+        cv::Ptr<cv::ORB> detector = cv::ORB::create(NUM_ORB_FEATURES, 1.2f, 8, ORB_ACCURACY/* ,0,2,cv::ORB::HARRIS_SCORE,31,20 */);
         //store keypoints in orb_keypoints
         detector->detect(image,orb_keypoints,MASK);
         keypointTransition(orb_keypoints,orb_keypoints_2d);
@@ -33,7 +33,6 @@ void ORB::create_descriptors(){
         //Create descriptors
         detector->compute(image,orb_keypoints,orb_descriptors);
         get_3D_data();
-
 
         // publishing the keypoints on whatever image type they are
         if(mode == 1)
@@ -46,8 +45,6 @@ void ORB::create_descriptors(){
 void ORB::get_3D_data(){
         orb_points_3d.resize(orb_keypoints_2d.size());
         // orb_point_projected.resize(orb_keypoints_2d.size());
-        vector<bool> status;
-        status.resize(orb_keypoints_2d.size());
         
         #pragma omp parallel for num_threads(NUM_THREADS)
         //get the 3D coordinates of the keypoint in the intensity image

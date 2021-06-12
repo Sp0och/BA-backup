@@ -4,19 +4,25 @@
 
 //core member methods:
 
-Framehandler::Framehandler(int _mode,bool START_AT_ZERO){
+Framehandler::Framehandler(int _mode,int START_POSE){
         mode = _mode;
-        if(START_AT_ZERO){
+        if(START_POSE == 0){
             my_pose << 1,0,0,0,
                     0,1,0,0,
                     0,0,1,0,
                     0,0,0,1;
         }
-        else{
+        else if(START_POSE == 1){
             my_pose << 0.29824051, -0.94876171,  0.10442136, -0.03153784,
             0.94640945,  0.27973465, -0.16142391,  0.74966328,
             0.12394255,  0.14696851,  0.98134525,  0.08621409,
             0,           0,           0,            1;
+        }
+        else{
+            my_pose << 0.21383611, -0.97496278, -0.06100574,  0.14088768,
+        0.92808941,  0.22224938, -0.29875621,  1.44032526,
+        0.30483467,  0.00726608,  0.95237757,  0.3799721,
+        0,0,0,1;
         }
         
         cur_orb = nullptr;
@@ -27,7 +33,6 @@ Framehandler::Framehandler(int _mode,bool START_AT_ZERO){
         kp_pc_publisher_prev = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1);
         midpoint_publisher = n_frame.advertise<PointCloud>("KP_PC_Midpoints", 1);
         line_publisher = n_frame.advertise<visualization_msgs::Marker>("connection_lines", 1);
-        // raw_sub = n_frame.subscribe(CLOUD_TOPIC,1000,&Framehandler::publish_tf);
         odom_publisher = n_frame.advertise<nav_msgs::Odometry>("Odometry", 1);
         if(mode == 1)
             intensity_publisher = n_frame.advertise<sensor_msgs::Image>("intensity_matches", 1);
@@ -101,15 +106,17 @@ void Framehandler::matches_filtering_motion(){
         // publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
         
         
-        // cout << "right after matching: " << prev_SVD.cols() << " " << endl;
+        cout << "right after matching: " << prev_SVD.cols() << " " << endl;
         RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
         // std::cout << "size after ransac: " << sorted_2d_cur.size() << " " << std::endl;
-        // cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
+        cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         
         double_point_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
-        // cout << "size after double point filtering: " << prev_SVD.cols() << " "<< endl;
+        cout << "size after double point filtering: " << prev_SVD.cols() << " "<< endl;
 
         filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
+        cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
+        
 
         if(prev_SVD.cols() < 40)
             cout << "size after distance filtering: " << prev_SVD.cols() << " at timestamp: " << raw_time << "   " << endl;
@@ -276,9 +283,11 @@ void Framehandler::store_feature_number(const MatrixXd& cur_SVD){
     OUT << cur_SVD.cols() << "," << raw_time <<  endl;
     OUT.close(); 
 }
+
 // publishing functions
 
 void Framehandler::publish_tf(){
+        cout << "TF Publisher " << endl;
         tf::TransformBroadcaster odom_t_velo_b;
         //Create Eigen Quaternion
         Matrix3d R = my_pose.topLeftCorner(3,3);
@@ -352,23 +361,23 @@ void Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std:
     //indicate features in new image
     for(int i = 0; i< (int)sorted_KP_cur.size(); i++)
     {
-        cv::Point2d cur_pt = sorted_KP_cur[i] * MATCH_IMAGE_SCALE;
-        cv::circle(color_img, cur_pt, circle_size*MATCH_IMAGE_SCALE, line_color, MATCH_IMAGE_SCALE*2);
+        cv::Point2d cur_pt = sorted_KP_cur[i] * 1;
+        cv::circle(color_img, cur_pt, circle_size*1, line_color, 1*2);
     }
     //indicate features in old image
     for(int i = 0; i< (int)sorted_KP_prev.size(); i++)
     {
-        cv::Point2d old_pt = sorted_KP_prev[i] * MATCH_IMAGE_SCALE;
+        cv::Point2d old_pt = sorted_KP_prev[i] * 1;
         old_pt.y += new_img.size().height + gap;
-        cv::circle(color_img, old_pt, circle_size*MATCH_IMAGE_SCALE, line_color, MATCH_IMAGE_SCALE*2);
+        cv::circle(color_img, old_pt, circle_size*1, line_color, 1*2);
     }
 
     if(draw_lines){
         for (int i = 0; i< (int)sorted_KP_cur.size(); i++)
         {
-            cv::Point2d old_pt = sorted_KP_prev[i] * MATCH_IMAGE_SCALE;
+            cv::Point2d old_pt = sorted_KP_prev[i] * 1;
             old_pt.y += new_img.size().height + gap;
-            cv::line(color_img, sorted_KP_cur[i] * MATCH_IMAGE_SCALE, old_pt, line_color, MATCH_IMAGE_SCALE*2, 8, 0);
+            cv::line(color_img, sorted_KP_cur[i] * 1, old_pt, line_color, 1*2, 8, 0);
         }
     }
     if(mode == 1)
@@ -390,14 +399,14 @@ void Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std:
 
         for (int i = 0; i< (int)sorted_KP_cur.size(); i++)
         {
-            cv::Point2d old_pt = sorted_KP_prev[i] * MATCH_IMAGE_SCALE;
-            cv::Point2d cur_pt = sorted_KP_cur[i] * MATCH_IMAGE_SCALE;
+            cv::Point2d old_pt = sorted_KP_prev[i] * 1;
+            cv::Point2d cur_pt = sorted_KP_cur[i] * 1;
             unsigned int r = rand() % 256;
             unsigned int g = rand() % 256;
             unsigned int b = rand() % 256;
             cv::Scalar circle_col = cv::Scalar(r,g,b);
-            cv::circle(image, cur_pt, circle_size*MATCH_IMAGE_SCALE, circle_col, MATCH_IMAGE_SCALE*1);
-            cv::line(image, cur_pt * MATCH_IMAGE_SCALE, old_pt, cv::Scalar(255,0,0), MATCH_IMAGE_SCALE*1, 8, 0);
+            cv::circle(image, cur_pt, circle_size*1, circle_col, 1*1);
+            cv::line(image, cur_pt * 1, old_pt, cv::Scalar(255,0,0), 1*1, 8, 0);
         }
         if(mode == 1)
         cv::putText(image, "Intensity",   cv::Point2d(300, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);

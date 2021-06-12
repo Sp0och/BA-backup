@@ -3,7 +3,7 @@
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
-//transition and trimming: 
+//conversions and trimming: 
 
 /**
  * store keypoints in Point2d vector
@@ -17,11 +17,28 @@ static void keypointTransition(vector<cv::KeyPoint>& keypoints_in, vector<cv::Po
     }
 }
 
-template <typename Derived>
+template <typename Derived1>
+/**
+ * Get the 3d coordinates of the keypoints - used in KLT
+ * */
+static void get_3D_points(const vector<Derived1>& points_2d, Eigen::MatrixXd& points_3d, const pcl::PointCloud<PointType>::Ptr PC){
+    points_3d.resize(3,points_2d.size());
+    for(size_t i = 0; i < points_2d.size(); i++){
+        int row_index = cvRound(points_2d[i].y);
+        int col_index = cvRound(points_2d[i].x);
+        int index = row_index*IMAGE_WIDTH + col_index;
+        PointType *pi = &PC->points[index];
+        points_3d(0,i) = pi->x;
+        points_3d(1,i) = pi->y;
+        points_3d(2,i) = pi->z;
+    }
+}
+
+template <typename Derived2>
 /**
  * Trim a 2D Vector according to a flag vector status
  * */
-static void trimVector(vector<Derived>& v,const vector<bool>& status)
+static void trimVector(vector<Derived2>& v,const vector<bool>& status)
 {
     int j = 0;
     for (int i = 0; i < int(v.size()); i++){
@@ -30,6 +47,7 @@ static void trimVector(vector<Derived>& v,const vector<bool>& status)
     }
     v.resize(j);
 }
+
 
 /**
  * Trim Eigen Matrix according to flag vector
@@ -46,7 +64,6 @@ static void trim_matrix(Eigen::MatrixXd& m, vector<bool>& status){
 }
 
 //Filtering Functions:
-
 /**
  * Apply RANSAC filtering to the point clouds using the find Homography method
  * */
@@ -64,7 +81,6 @@ static void RANSAC_filtering(std::vector<cv::Point2d>& sorted_2d_cur, std::vecto
         trim_matrix(prev_SVD,status);
         trim_matrix(cur_SVD,status);
 }
-
 
 /**
  * Filter out duplicate point usage (one point two matches)
@@ -95,11 +111,88 @@ static void double_point_filtering(vector<cv::Point2d>& cur, vector<cv::Point2d>
     trim_matrix(prevM,duplicate_status);
 }
 
-
 /**
  * Filter out all 3D points whoose difference in a coordinate dirction is more than half its effective value as well as points that are too close to the origin
  * */
 static void filtering_3D(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, vector<cv::Point2d>& cur,vector<cv::Point2d>& prev){
+    vector<bool> distance_flag(prev_SVD.cols(),1);
+    // for(int i = 0; i < prev_SVD.cols();i++){
+    //     float p_c_x = cur_SVD(0,i);
+    //     float p_c_y = cur_SVD(1,i);
+    //     float p_c_z = cur_SVD(2,i);
+    //     float p_p_x = prev_SVD(0,i);
+    //     float p_p_y = prev_SVD(1,i);
+    //     float p_p_z = prev_SVD(2,i);
+    //     float dist_x = p_c_x - p_p_x;
+    //     float dist_y = p_c_y - p_p_y;
+    //     float dist_z = p_c_z - p_p_z;
+
+    //     float mdif = sqrt(dist_x*dist_x + dist_y*dist_y + dist_z*dist_z);
+    //     float dist_c = sqrt(p_c_x*p_c_x + p_c_y*p_c_y + p_c_z*p_c_z);
+    //     float dist_p = sqrt(p_p_x*p_p_x + p_p_y*p_p_y + p_p_z*p_p_z);
+
+    //     if(mdif > MAX_FEATURE_DISTANCE || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
+    //         distance_flag.at(i) = 0;
+    // }
+    //vector product attempt:
+    for(int i = 0; i < prev_SVD.cols();i++){
+        float p_c_x = cur_SVD(0,i);
+        float p_c_y = cur_SVD(1,i);
+        float p_c_z = cur_SVD(2,i);
+        float p_p_x = prev_SVD(0,i);
+        float p_p_y = prev_SVD(1,i);
+        float p_p_z = prev_SVD(2,i);
+        float dist_x = p_c_x - p_p_x;
+        float dist_y = p_c_y - p_p_y;
+        float dist_z = p_c_z - p_p_z;
+
+        Eigen::Vector3d distance(dist_x,dist_y,dist_z);
+        Eigen::Vector3d O_cur(p_c_x,p_c_y,p_c_z);
+        double colinearity = fabs(distance.dot(O_cur));
+        double costheta = colinearity/(distance.norm()*O_cur.norm());
+
+        float mdif = sqrt(dist_x*dist_x + dist_y*dist_y + dist_z*dist_z);
+        float dist_c = sqrt(p_c_x*p_c_x + p_c_y*p_c_y + p_c_z*p_c_z);
+        float dist_p = sqrt(p_p_x*p_p_x + p_p_y*p_p_y + p_p_z*p_p_z);
+
+        if((costheta > MAX_COS && mdif > MAX_FEATURE_DISTANCE) || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
+            distance_flag.at(i) = 0;
+        // if((costheta * mdif > MAX_FEATURE_DISTANCE) || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
+        //     distance_flag.at(i) = 0;
+    }
+
+    trim_matrix(prev_SVD,distance_flag);
+    trim_matrix(cur_SVD,distance_flag);
+    trimVector(cur,distance_flag);
+    trimVector(prev,distance_flag);
+}
+
+
+
+
+/**
+ * Apply RANSAC filtering to the point clouds using the find Homography method
+ * */
+static void RANSAC_filtering_f(std::vector<cv::Point2f>& sorted_fd_cur, std::vector<cv::Point2f>& sorted_fd_prev, Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD){
+        cv::Mat MASK;
+        cv::Mat H = cv::findHomography(sorted_fd_cur,sorted_fd_prev,cv::RANSAC,3.0,MASK);
+        std::vector<bool> status(MASK.rows,0);
+        for(int i = 0; i < MASK.rows;i++)
+        status[i] = MASK.at<bool>(i);
+
+
+        //reject the outliers
+        trimVector(sorted_fd_cur,status);  
+        trimVector(sorted_fd_prev,status);
+        trim_matrix(prev_SVD,status);
+        trim_matrix(cur_SVD,status);
+}
+
+
+/**
+ * Filter out all 3D points whoose difference in a coordinate dirction is more than half its effective value as well as points that are too close to the origin
+ * */
+static void filtering_3D_f(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, vector<cv::Point2f>& cur,vector<cv::Point2f>& prev){
     vector<bool> distance_flag(prev_SVD.cols(),1);
     // for(int i = 0; i < prev_SVD.cols();i++){
     //     float p_c_x = cur_SVD(0,i);
@@ -161,7 +254,7 @@ template <typename Keypoints>
 static void publish_keypoints (ros::Publisher* publisher, cv::Mat& image, const vector<Keypoints>& keypoints, const int circle_size,const cv::Scalar line_color){
     cv::cvtColor(image, image, CV_GRAY2RGB);
     for(int i = 0; i < (int)keypoints.size(); i++){
-        cv::Point2d cur_pt = keypoints[i] * MATCH_IMAGE_SCALE;
+        cv::Point2d cur_pt = keypoints[i];
         cv::circle(image,cur_pt,circle_size,line_color,2);
     }
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();

@@ -81,13 +81,18 @@ void ImageHandler::cloud_handler(const sensor_msgs::PointCloud2ConstPtr &cloud_m
                 // }
             }
         }
+
+        //APPLY BLUR HERE:
+
         //Publish intensity image seperately
-        // if(pub_intensity.getNumSubscribers()!=0){
+        if(pub_intensity.getNumSubscribers()!=0){
             
-        //     cv::Mat intensity_visualization = image_intensity.clone();
-        //     cv::cvtColor(intensity_visualization, intensity_visualization, CV_GRAY2RGB);
-        //     pubImage(&pub_intensity, intensity_visualization, cloud_msg->header, "bgr8");
-        // }
+            cv::Mat intensity_visualization = image_intensity.clone();
+            cv::cvtColor(intensity_visualization, intensity_visualization, CV_GRAY2RGB);
+            pubImage(&pub_intensity, intensity_visualization, cloud_msg->header, "bgr8");
+        }
+        cv::blur(image_intensity,image_intensity,cv::Size(2,2));
+        cv::blur(image_noise,image_noise,cv::Size(2,2));
         if (pub_image.getNumSubscribers() != 0)
         {
 

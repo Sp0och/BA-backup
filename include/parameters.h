@@ -75,6 +75,8 @@ extern int IMAGE_WIDTH;
 extern int IMAGE_HEIGHT;
 extern int IMAGE_CROP;
 extern int NUM_ORB_FEATURES;
+extern int MIN_KLT_FEATURES;
+extern int MAX_KLT_FEATURES;
 extern int ORB_ACCURACY;
 extern int BRISK_THRESHOLD;
 extern int MIN_LOOP_FEATURE_NUM;
@@ -85,11 +87,10 @@ extern int DOUBLE_FILTERING_SIZE;
 extern float MAX_FEATURE_DISTANCE;
 extern float MIN_FEATURE_DISTANCE;
 extern double MAX_COS;
-extern double MATCH_IMAGE_SCALE;
 extern cv::Mat MASK;
 extern ofstream OUT;
 extern int COUNT;
-extern bool START_AT_ZERO;
+extern int START_POSE;
 extern pcl::PointCloud<PointType>::Ptr cloud_traj;
 
 

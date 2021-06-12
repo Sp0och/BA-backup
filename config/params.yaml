@@ -7,27 +7,28 @@ project_name: "descriptor_and_image"
 cloud_topic: "points_raw"       # point cloud input topic
 image_width: 1024               # image horitontal resolution
 image_height: 128               # image vertical resolution
-image_crop: 0                 # normally 225, mask for blocking feature extraction; indoor/handheld=196-256; jackal=0 
+image_crop: 225                 # normally 225, mask for blocking feature extraction; indoor/handheld=196-256; jackal=0 
 
 # Registered path
 path_topic: "lio_sam/mapping/path"
 
 #picture mode
-mode: 1
+mode: 3
 
 # Feature matching
-min_loop_feature_num: 30        # the minimum number of features to plot
 num_orb_features: 1000           # feature num for ORB
-orb_accuracy: 20                # ORB extractor threshold for letting the points pass
+orb_accuracy: 31                # ORB extractor threshold for letting the points pass
 num_sift_features: 500          # feature num for SIFT
 brisk_threshold: 60             # threshold for brisk feature acceptance
+min_klt_features: 50            #min number of features until new ones have to be found
+max_klt_features: 500           #upper level klt feature number
 
 #feature filtering
 duplicate_filtering_size: 1    # (pixels) the circle patch size in which another point can not be located
 double_filtering_size: 1      # (pixels) the circle patch size in which another point can not be located
-max_feature_distance: 0.5        # (meters) max feature match distance
-min_feature_distance: 0.4       #(meters) minimum distance to sensor that a feature must have
-max_cos: 0.4                    #max cos of intermediate angle of matches compared to distance direction
+max_feature_distance: 0.3        # (meters) max feature match distance
+min_feature_distance: 1.5       #(meters) minimum distance to sensor that a feature must have
+max_cos: 0.2                    #max cos of intermediate angle of matches compared to distance direction
 
 # CPU
 num_threads: 4                  # CPU thread number
@@ -37,4 +38,6 @@ debug_image: 0                  # debug flag (warning: uses massive memory)
 match_image_scale: 1.0          # debug image display size
 
 #pose and SVD:
-start_at_zero: 1                #start with identity pose or use their initial pose
+start_pose: 1                #0 for identity, 1 for SP at 2s and 2 for SP at odom
+start_timestamp: 1598537680.4  # first timestamp on which to display tf and store coord.
+#1598537680.4   for 2s in    1598537681.504127744 for odom

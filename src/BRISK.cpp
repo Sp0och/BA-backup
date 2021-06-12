@@ -11,8 +11,8 @@ BRISK::BRISK(const cv::Mat &_input_image,
         assert(mode == 1 || mode == 2 || mode == 3);
 
         input_image = _input_image.clone();
-        cv::resize(input_image, image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
-        cv::resize(input_image, input_image, cv::Size(), MATCH_IMAGE_SCALE, MATCH_IMAGE_SCALE);
+        cv::resize(input_image, image, cv::Size(), 1, 1);
+        cv::resize(input_image, input_image, cv::Size(), 1, 1);
         cloud = _cloud;
 
         if(mode == 1)

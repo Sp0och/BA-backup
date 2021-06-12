@@ -62,8 +62,9 @@ class transform_lookup:
         # print("with TINV: ", TINV)
         # Lookup Tf
         self.listener.waitForTransform(
-            'odom', 'base_link', ts, rospy.Duration(0.5))
-        (trans, rot) = self.listener.lookupTransform('odom', 'base_link', ts)
+            'odom', 'base_link', ts, rospy.Duration(0.1))
+        (trans, rot) = self.listener.lookupTransform(
+            'odom', 'base_link', ts)
         TINV = storage(trans, rot, ts, TINV)
 
 
@@ -79,11 +80,11 @@ def node_init():
 if __name__ == '__main__':
 
     solution_complete = open(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/test_complete.csv", "w"
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_complete.csv", "w"
     )
 
     solution_steps = open(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/test_steps.csv", "w"
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_steps.csv", "w"
     )
 
     writer_complete = csv.writer(solution_complete)

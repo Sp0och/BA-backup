@@ -7,6 +7,7 @@
 class ORB
 {
     public:
+
     cv::Mat image;
     cv::Mat input_image;
     pcl::PointCloud<PointType>::Ptr cloud;
