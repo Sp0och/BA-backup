@@ -6,6 +6,7 @@
 // #include "../include/framehandler_old.h"
 #include "../include/Framehandler.h"
 #include "Framehandler.cpp"
+// #include "../include/klt_old.h"
 #include "../include/KLT.h"
 #include "KLT.cpp"
 #include "../include/BRISK.h"
@@ -16,25 +17,36 @@ int IMAGE_WIDTH;
 int IMAGE_HEIGHT;
 int IMAGE_CROP;
 int NUM_THREADS;
+int MODE;
+ofstream OUT;
+cv::Mat MASK;
+
+//orb
 int NUM_ORB_FEATURES;
+int ORB_ACCURACY;
+//klt
 int MAX_KLT_FEATURES;
 int MIN_KLT_FEATURES;
-int ORB_ACCURACY;
+//brisk
 int BRISK_THRESHOLD;
-int MODE;
+//filtering
 int DUPLICATE_FILTERING_SIZE;
 int DOUBLE_FILTERING_SIZE;
 double MAX_COS;
 float MAX_FEATURE_DISTANCE;
 float MIN_FEATURE_DISTANCE;
+bool APPLY_DISTANCE_FILTERING;
+bool APPLY_RANSAC_FILTERING;
+bool APPLY_DOUBLE_FILTERING;
+//start time and pose
 int START_POSE;
 double START_TIMESTAMP;
-int COUNT = 0;
-ofstream OUT;
 
+int BLURR_SIZE;
 
-cv::Mat MASK;
 pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
+
+
 
 ImageHandler *image_handler;
 Framehandler *frame_handler;
@@ -57,18 +69,23 @@ void updateParams (ros::NodeHandle& n){
     fsSettings["image_width"]  >> IMAGE_WIDTH;
     fsSettings["image_height"] >> IMAGE_HEIGHT;
     fsSettings["image_crop"]   >> IMAGE_CROP;
+    fsSettings["mode"] >> MODE;
     fsSettings["num_threads"]  >> NUM_THREADS;
+
     fsSettings["num_orb_features"] >> NUM_ORB_FEATURES;
-    fsSettings["num_klt_features"] >> MAX_KLT_FEATURES;
-    fsSettings["min_klt_features"] >> MIN_KLT_FEATURES;
     fsSettings["orb_accuracy"] >> ORB_ACCURACY;
+
     fsSettings["brisk_threshold"] >> BRISK_THRESHOLD;
+
     fsSettings["max_feature_distance"] >> MAX_FEATURE_DISTANCE;
     fsSettings["min_feature_distance"] >> MIN_FEATURE_DISTANCE;
     fsSettings["max_cos"] >> MAX_COS;
-    fsSettings["mode"] >> MODE;
     fsSettings["duplicate_filtering_size"] >> DUPLICATE_FILTERING_SIZE;
     fsSettings["double_filtering_size"] >> DOUBLE_FILTERING_SIZE;
+    fsSettings["apply_ransac_filtering"] >> APPLY_RANSAC_FILTERING;
+    fsSettings["apply_double_filtering"] >> APPLY_DOUBLE_FILTERING;
+    fsSettings["apply_distance_filtering"] >> APPLY_DISTANCE_FILTERING;
+
     fsSettings["start_pose"] >> START_POSE;
     fsSettings["start_timestamp"] >> START_TIMESTAMP;
 }

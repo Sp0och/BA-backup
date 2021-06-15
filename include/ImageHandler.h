@@ -12,12 +12,17 @@ public:
 
     ros::Publisher pub_image;
     ros::Publisher pub_intensity;
+
     //pictures
     cv::Mat image_range;
     cv::Mat image_noise;
     cv::Mat image_intensity;
+    //blurr strength
+    int BLURR_SIZE;
+
     //pointcloud
     pcl::PointCloud<PointType>::Ptr cloud_track;
+
     //class constructor: reset the pointcloud and declare a publisher
     ImageHandler();
 

@@ -45,7 +45,7 @@ class odom_lookup:
     def __init__(self):
         # setup subscribers
         self.odom_sub = rospy.Subscriber(
-            "/scan_to_map_extrapolated_10Hz", Odometry, self.odomCallback)
+            "/scan_to_scan_10Hz", Odometry, self.odomCallback)
 
         # image callback function
     def odomCallback(self, odom):

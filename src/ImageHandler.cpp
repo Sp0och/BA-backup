@@ -24,6 +24,14 @@ ImageHandler::ImageHandler()
     {
         cloud_track.reset(new pcl::PointCloud<PointType>());
         cloud_track->resize(IMAGE_HEIGHT * IMAGE_WIDTH);
+
+        std::string config_file;
+        nh.getParam("parameter_file", config_file);
+        cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
+        if(!fsSettings.isOpened())
+            std::cerr << "ERROR: Wrong path to settings" << std::endl;
+        usleep(100);
+        fsSettings["blurr_size"] >> BLURR_SIZE;
         //creates the publisher publishing the image
         pub_image  = nh.advertise<sensor_msgs::Image>("image_stack", 1);
         // pub_intensity  = nh.advertise<sensor_msgs::Image>("intensity_image", 1);
@@ -82,7 +90,6 @@ void ImageHandler::cloud_handler(const sensor_msgs::PointCloud2ConstPtr &cloud_m
             }
         }
 
-        //APPLY BLUR HERE:
 
         //Publish intensity image seperately
         if(pub_intensity.getNumSubscribers()!=0){
@@ -91,8 +98,14 @@ void ImageHandler::cloud_handler(const sensor_msgs::PointCloud2ConstPtr &cloud_m
             cv::cvtColor(intensity_visualization, intensity_visualization, CV_GRAY2RGB);
             pubImage(&pub_intensity, intensity_visualization, cloud_msg->header, "bgr8");
         }
-        cv::blur(image_intensity,image_intensity,cv::Size(2,2));
-        cv::blur(image_noise,image_noise,cv::Size(2,2));
+
+
+        //APPLY BLUR HERE:
+        if(BLURR_SIZE>1){
+            cv::blur(image_intensity,image_intensity,cv::Size(BLURR_SIZE,BLURR_SIZE));
+            cv::blur(image_noise,image_noise,cv::Size(BLURR_SIZE,BLURR_SIZE));
+        }
+
         if (pub_image.getNumSubscribers() != 0)
         {
 

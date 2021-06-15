@@ -49,5 +49,4 @@ file(GLOB all_source_files
                                              ${OpenCV_LIBRARIES} 
                                              ${DBoW3_LIBRARIES} 
                                              ${OpenMP_CXX_FLAGS} 
-                                            #  ${xfeatures}
                                             )

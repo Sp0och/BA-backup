@@ -22,7 +22,6 @@
 #include <opencv2/calib3d.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/highgui.hpp>
-// #include <opencv2/xfeatures2d.hpp>
 
 #include <pcl/point_cloud.h>
 #include <pcl_ros/point_cloud.h>
@@ -70,28 +69,34 @@ using namespace std;
 
 typedef pcl::PointXYZI PointType;
 
+extern cv::FileStorage fsSettings;
+
+extern pcl::PointCloud<PointType>::Ptr cloud_traj;
 extern string CLOUD_TOPIC;
 extern int IMAGE_WIDTH;
 extern int IMAGE_HEIGHT;
 extern int IMAGE_CROP;
-extern int NUM_ORB_FEATURES;
-extern int MIN_KLT_FEATURES;
-extern int MAX_KLT_FEATURES;
-extern int ORB_ACCURACY;
-extern int BRISK_THRESHOLD;
-extern int MIN_LOOP_FEATURE_NUM;
 extern int NUM_THREADS;
-extern int DEBUG_IMAGE;
+extern cv::Mat MASK;
+extern ofstream OUT;
+
+extern int NUM_ORB_FEATURES;
+extern int ORB_ACCURACY;
+
+extern int BRISK_THRESHOLD;
+
+extern int MIN_LOOP_FEATURE_NUM;
 extern int DUPLICATE_FILTERING_SIZE;
 extern int DOUBLE_FILTERING_SIZE;
 extern float MAX_FEATURE_DISTANCE;
 extern float MIN_FEATURE_DISTANCE;
+extern bool APPLY_DISTANCE_FILTERING;
+extern bool APPLY_RANSAC_FILTERING;
+extern bool APPLY_DOUBLE_FILTERING;
 extern double MAX_COS;
-extern cv::Mat MASK;
-extern ofstream OUT;
-extern int COUNT;
+
 extern int START_POSE;
-extern pcl::PointCloud<PointType>::Ptr cloud_traj;
+
 
 
 

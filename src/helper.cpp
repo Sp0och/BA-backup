@@ -21,11 +21,11 @@ template <typename Derived1>
 /**
  * Get the 3d coordinates of the keypoints - used in KLT
  * */
-static void get_3D_points(const vector<Derived1>& points_2d, Eigen::MatrixXd& points_3d, const pcl::PointCloud<PointType>::Ptr PC){
-    points_3d.resize(3,points_2d.size());
-    for(size_t i = 0; i < points_2d.size(); i++){
-        int row_index = cvRound(points_2d[i].y);
-        int col_index = cvRound(points_2d[i].x);
+static void get_3D_points(vector<Derived1>& points_2f, Eigen::MatrixXd& points_3d, const pcl::PointCloud<PointType>::Ptr PC){
+    points_3d.resize(3,points_2f.size());
+    for(size_t i = 0; i < points_2f.size(); i++){
+        int row_index = cvRound(points_2f[i].y);
+        int col_index = cvRound(points_2f[i].x);
         int index = row_index*IMAGE_WIDTH + col_index;
         PointType *pi = &PC->points[index];
         points_3d(0,i) = pi->x;
@@ -34,11 +34,11 @@ static void get_3D_points(const vector<Derived1>& points_2d, Eigen::MatrixXd& po
     }
 }
 
-template <typename Derived2>
+template <typename Derived>
 /**
  * Trim a 2D Vector according to a flag vector status
  * */
-static void trimVector(vector<Derived2>& v,const vector<bool>& status)
+static void trimVector(vector<Derived>& v,const vector<bool>& status)
 {
     int j = 0;
     for (int i = 0; i < int(v.size()); i++){
@@ -188,7 +188,6 @@ static void RANSAC_filtering_f(std::vector<cv::Point2f>& sorted_fd_cur, std::vec
         trim_matrix(cur_SVD,status);
 }
 
-
 /**
  * Filter out all 3D points whoose difference in a coordinate dirction is more than half its effective value as well as points that are too close to the origin
  * */
@@ -243,6 +242,35 @@ static void filtering_3D_f(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, 
     trim_matrix(cur_SVD,distance_flag);
     trimVector(cur,distance_flag);
     trimVector(prev,distance_flag);
+}
+
+/**
+ * Filter out duplicate point usage (one point two matches) for FLOATs
+ * */
+static void double_point_filtering_f(vector<cv::Point2f>& cur, vector<cv::Point2f>& prev,Eigen::MatrixXd& curM, Eigen::MatrixXd& prevM){
+    std::vector<bool> duplicate_status;
+    cv::Mat dubplicate_mask_c = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
+    cv::Mat dubplicate_mask_p = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
+    for(int i = 0; i < cur.size();i++){
+        cv::Point2d pt_c = cur.at(i);
+        cv::Point2d pt_p = prev.at(i);
+        cv::Scalar color_c = dubplicate_mask_c.at<uchar>(pt_c);
+        cv::Scalar color_p = dubplicate_mask_p.at<uchar>(pt_p);
+        //check whether a point has already been used if not draw there to indicate usage
+        if(color_c == cv::Scalar(0) && color_p == cv::Scalar(0)){
+            cv::circle(dubplicate_mask_c,pt_c,0,cv::Scalar(255),DOUBLE_FILTERING_SIZE);
+            cv::circle(dubplicate_mask_p,pt_p,0,cv::Scalar(255),DOUBLE_FILTERING_SIZE);
+            duplicate_status.push_back(1);
+        }   
+        //If one of the points has already been used delete the whole match
+        else{
+            duplicate_status.push_back(0);
+        }
+    }
+    trimVector(cur,duplicate_status);
+    trimVector(prev,duplicate_status);
+    trim_matrix(curM,duplicate_status);
+    trim_matrix(prevM,duplicate_status);
 }
 
 //Visualization Functions:

@@ -8,6 +8,27 @@ KLT::KLT(int _mode,int START_POSE){
 
         mode = _mode;
 
+        std::string config_file;
+        n_KLT.getParam("parameter_file", config_file);
+        cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
+        if(!fsSettings.isOpened())
+            std::cerr << "ERROR: Wrong path to settings" << std::endl;
+        usleep(100);
+        fsSettings["min_klt_features"] >> MIN_KLT_FEATURES;
+        //Extraction
+        fsSettings["epislon"] >> EPSILON;
+        fsSettings["criteria_reps"] >> CRITERIA_REPS;
+        fsSettings["opt_size"] >> OPT_SIZE;
+        fsSettings["num_pyramids"] >> NUM_PYRAMIDS;
+        //Tracking
+        fsSettings["max_klt_features"] >> MAX_KLT_FEATURES;
+        fsSettings["blocksize"] >> BLOCKSIZE;
+        fsSettings["quality_level"] >> QUALITY_LEVEL;
+        fsSettings["min_klt_detection_distance"] >> MIN_KLT_DETECTION_DISTANCE;
+
+        prev_corners.resize(MAX_KLT_FEATURES);
+        cur_corners.resize(MAX_KLT_FEATURES);
+
         if(START_POSE == 0){
             my_pose << 1,0,0,0,
                     0,1,0,0,
@@ -35,6 +56,7 @@ KLT::KLT(int _mode,int START_POSE){
             color_vector.push_back(color);
         }
         kp_pc_publisher_cur = n_KLT.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1);
+        gotten_KP = n_KLT.advertise<PointCloud>("Gotten_KP", 1);
         kp_pc_publisher_prev = n_KLT.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1);
         mid_point_line_publisher = n_KLT.advertise<visualization_msgs::Marker>("connection_lines", 1);
         odom_publisher = n_KLT.advertise<nav_msgs::Odometry>("Odometry", 1);
@@ -48,68 +70,86 @@ KLT::KLT(int _mode,int START_POSE){
     }
 
 void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointType>::Ptr _cloud,ros::Time _raw_time){
+    cout << "Start Iteration!" << endl;
     //First iteration
     raw_time = _raw_time;
-    if(prev_image.rows == 0 || prev_corners.size()==0){
+    if(prev_image.rows == 0){
         prev_image = input_image.clone();
         prev_cloud = _cloud;
-        cv::goodFeaturesToTrack(prev_image,prev_corners,MAX_KLT_FEATURES,0.1,3,MASK,7,true,0.04);
+        cv::goodFeaturesToTrack(prev_image,prev_corners,MAX_KLT_FEATURES,QUALITY_LEVEL,MIN_KLT_DETECTION_DISTANCE,MASK,BLOCKSIZE,true,0.04);
         get_3D_points(prev_corners,prev_3D_points,prev_cloud);
+        set_plotting_columns_and_start_pose();
         publish_tf();
     }
     
     else {
         cur_image = input_image.clone();
         cur_cloud = _cloud;
+
         std::vector<uchar> stat;
         std::vector<float> err;
-        //Create Termination criteria for the KLT method
-        cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), 10, 0.03);
-        //create the new features from the old ones
+        static cv::TermCriteria criteria = cv::TermCriteria((cv::TermCriteria::COUNT) + (cv::TermCriteria::EPS), CRITERIA_REPS,EPSILON );
         assert(prev_corners.size()>0);
-        //New point locations
-
+        //Track points
         cv::calcOpticalFlowPyrLK(prev_image,cur_image,prev_corners,cur_corners,stat,err,
-        cv::Size(21,21),3,criteria);
-        std::vector<bool> status(stat.size());
+        cv::Size(OPT_SIZE,OPT_SIZE),NUM_PYRAMIDS,criteria);
+        int size_before = prev_corners.size();
+        std::vector<bool> status(stat.size(),1);
         for(int i = 0; i < stat.size();i++){
-            status.at(i) = (stat.at(i)!=0);
+            if(stat.at(i) == 0 || cur_corners.at(i).x < IMAGE_CROP || cur_corners.at(i).x > IMAGE_WIDTH-IMAGE_CROP/2 || cur_corners.at(i).y >127)
+            status.at(i) = 0;
         }
         trimVector(cur_corners,status);
         trimVector(prev_corners,status);
+        int size_after = prev_corners.size();
         trim_matrix(prev_3D_points,status);
-        get_3D_points(cur_corners,cur_3D_points,cur_cloud);
+        cout << "timestamp: " << raw_time << " " << endl;
+        if(size_before > size_after)
+            std::cout << "THERE WERE POINTS NEGLECTED: " << std::endl;
 
-        // RANSAC_filtering_f(cur_corners,prev_corners,cur_3D_points,prev_3D_points);
+        //Filtering
+        if(APPLY_RANSAC_FILTERING){
+            RANSAC_filtering_f(cur_corners,prev_corners,cur_3D_points,prev_3D_points);
+            std::cout << "SIZE 3D AFTER RANSAC: " << prev_3D_points.cols() << " " << std::endl;
+        }
+        if(APPLY_DOUBLE_FILTERING){
+            double_point_filtering_f(cur_corners,prev_corners,cur_3D_points,prev_3D_points);
+            std::cout << "SIZE 3D AFTER DOUBLE: " << prev_3D_points.cols() << " " << std::endl;
+        }
+        if(APPLY_DISTANCE_FILTERING){
+            filtering_3D_f(cur_3D_points,prev_3D_points,cur_corners,prev_corners);
+            std::cout << "PREV SIZE 3D AFTER FILTERING: " << prev_3D_points.cols() << " " << std::endl;
+        }
 
-        filtering_3D_f(cur_3D_points,prev_3D_points,cur_corners,prev_corners);
-
+        //visualization
         visualizer_3D(cur_3D_points,prev_3D_points);
-
-
+        store_feature_number(cur_3D_points);
+        //SVD
         if(cur_3D_points.cols() == prev_3D_points.cols() && cur_3D_points.cols() != 0 )
             SVD(cur_3D_points,prev_3D_points);
         else
             cout << "3D Data not set up correctly" << " " << endl;
 
+        publish_3D_keypoints(cur_3D_points,&gotten_KP,raw_time);
         publish_tf();
-        //Publish and adapt prev_corners
+
+        // Publish and adapt prev_corners
         if(mode == 1)
         publish_KLT(&pub_KLT_int,cur_image,cur_corners,prev_corners,2);
         else if(mode == 2)
         publish_KLT(&pub_KLT_ran,cur_image,cur_corners,prev_corners,2);
         else
         publish_KLT(&pub_KLT_amb,cur_image,cur_corners,prev_corners,2);
+        get_3D_points(cur_corners,cur_3D_points,cur_cloud);        
         
         prev_image = cur_image.clone();
         prev_cloud = cur_cloud;
         prev_corners = cur_corners;
         prev_3D_points = cur_3D_points;
         if(prev_corners.size()<MIN_KLT_FEATURES){
-            // std::cout << "GET NEW CORNERS" << std::endl;
-            cv::goodFeaturesToTrack(prev_image,prev_corners,MAX_KLT_FEATURES,0.2,7,MASK,7,true,0.04);
+            std::cout << "GET NEW CORNERS" << std::endl;
+            cv::goodFeaturesToTrack(prev_image,prev_corners,MAX_KLT_FEATURES,QUALITY_LEVEL,MIN_KLT_DETECTION_DISTANCE,MASK,BLOCKSIZE,true,0.04);
             get_3D_points(prev_corners,prev_3D_points,prev_cloud);
-            comparison = 1;
         }
         else{
             // std::cout << "All Goodie" << std::endl;
@@ -152,8 +192,6 @@ void KLT::store_coordinates(const Vector3d& t, const Matrix3d& R){
         OUT.close(); 
 
 
-
-
         // overall
         Matrix3d R_complete = my_pose.topLeftCorner(3,3);
         Quaterniond q_complete(R_complete);
@@ -189,15 +227,15 @@ void KLT::store_coordinates(const Vector3d& t, const Matrix3d& R){
 
 //visualization methods:
 
-void KLT::publish_KLT(ros::Publisher* publisher, cv::Mat& cur_image,
+void KLT::publish_KLT(ros::Publisher* publisher, const cv::Mat& cur_image,
         const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,
         int circle_size){
-        cv::Mat image = cur_image;
+        cv::Mat image = cur_image.clone();
         cv::cvtColor(image,image,CV_GRAY2RGB);
         for(int i = 0; i < cur_corners.size();i++){
-            cv::Scalar line_color = color_vector.at(i);
-            cv::circle(image,cur_corners[i],circle_size,line_color,2,8,0);
-            cv::line(image,cur_corners[i],prev_corners[i],line_color,1,8,0);
+            cv::Scalar line_color = color_vector.at(i%100);
+            cv::circle(image,cur_corners.at(i),circle_size,line_color,2,8,0);
+            cv::line(image,cur_corners.at(i),prev_corners[i],line_color,1,8,0);
         }
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(),
         "bgr8", image).toImageMsg();
@@ -211,8 +249,6 @@ void KLT::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD){
 }
 
 void KLT::publish_tf(){
-        cout << "TF Publisher " << endl;
-        cout << my_pose << endl;
         tf::TransformBroadcaster odom_t_velo_b;
         //Create Eigen Quaternion
         Matrix3d R = my_pose.topLeftCorner(3,3);
@@ -246,9 +282,64 @@ void KLT::publish_tf(){
         odom_t_velo_b.sendTransform(tf::StampedTransform(odom_t_velo,raw_time,"odom","my_velo"));
     }
 
+void KLT::store_feature_number(const MatrixXd& cur_SVD){
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv",ios_base::app);
+    OUT << cur_SVD.cols() << "," << raw_time <<  endl;
+    OUT.close(); 
+}
+
+void KLT::set_plotting_columns_and_start_pose(){
+
+    // store the start pose (either their start or identity)
+        Matrix3d R_complete = my_pose.topLeftCorner(3,3);
+        Quaterniond q_complete(R_complete);
+        tfScalar xqc = q_complete.x();
+        tfScalar yqc = q_complete.y();
+        tfScalar zqc = q_complete.z();
+        tfScalar wqc = q_complete.w();
+        tf::Quaternion qtfc;
+        qtfc.setX(xqc);
+        qtfc.setY(yqc);
+        qtfc.setZ(zqc);
+        qtfc.setW(wqc);
+
+        tfScalar xc = my_pose(0,3);
+        tfScalar yc = my_pose(1,3);
+        tfScalar zc = my_pose(2,3);
+        tf::Vector3 tc_fill = tf::Vector3(xc,yc,zc);
+        tf::Transform odom_t_velo_complete = tf::Transform(qtfc,tc_fill);
+        Eigen::Vector3d e1c, e2c;
+        odom_t_velo_complete.getBasis().getRPY(e1c[0], e1c[1], e1c[2]);  //XYZ
+        odom_t_velo_complete.getBasis().getRPY(e2c[0], e2c[1], e2c[2], 2);
+
+        Vector3d eac/*  = R.eulerAngles(0,1,2) */;
+        if (e1c.norm() < e2c.norm())
+            eac = e1c;
+        else
+            eac = e2c;
+        
+
+
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_complete.csv",ios_base::app);
+    OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
+    OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
+    OUT.close(); 
+    
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps.csv",ios_base::app);
+    OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
+    OUT.close(); 
+    
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv",ios_base::app);
+    OUT << "num_of_features" "," << "time" << endl;
+    OUT.close(); 
+}
+
+
 //SVD:
 
-void KLT::SVD(MatrixXd& cur_SVD,MatrixXd& prev_SVD){
+void KLT::SVD(const MatrixXd& cur_3D,const MatrixXd& prev_3D){
+        MatrixXd cur_SVD = cur_3D;
+        MatrixXd prev_SVD = prev_3D;
         Vector3d sum_prev(0,0,0);
         Vector3d sum_cur(0,0,0);
 
@@ -295,9 +386,7 @@ void KLT::SVD(MatrixXd& cur_SVD,MatrixXd& prev_SVD){
         current_iteration.block<3,3>(0,0) = R;
         current_iteration.block<3,1>(0,3) = t;
 
-
         my_pose = my_pose*current_iteration;
-
         //Storing the plot data
         // if(raw_time >= ros::Time(1598537680.405615616))
         store_coordinates(t,R);

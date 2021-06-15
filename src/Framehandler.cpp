@@ -107,14 +107,15 @@ void Framehandler::matches_filtering_motion(){
         
         
         cout << "right after matching: " << prev_SVD.cols() << " " << endl;
-        RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
+        if(APPLY_RANSAC_FILTERING)
+            RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
         // std::cout << "size after ransac: " << sorted_2d_cur.size() << " " << std::endl;
         cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
-        
-        double_point_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
+        if(APPLY_DOUBLE_FILTERING)
+            double_point_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
         cout << "size after double point filtering: " << prev_SVD.cols() << " "<< endl;
-
-        filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
+        if(APPLY_DISTANCE_FILTERING)
+            filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
         cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
         
 
