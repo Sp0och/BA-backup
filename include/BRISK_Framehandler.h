@@ -1,7 +1,7 @@
 
 #pragma once
 #include "parameters.h"
-#include "ORB.h"
+#include "BRISK.h"
 
 using namespace Eigen;
 
@@ -9,13 +9,13 @@ using namespace Eigen;
  * Framehandler: creates matches between two consecutive frames, publishes these matches 
  * and uses them to indicate the points to use for SVD, also implements SVD
  */
-class Framehandler{
+class BRISK_Framehandler{
 
     public:
     //Constructor
-    Framehandler(int _mode,int START_POSE);
+    BRISK_Framehandler(int _image_source,int START_POSE);
     //Boundary condition for first iteration and then just calling matches_filtering_motion
-    void newIteration(std::shared_ptr<ORB> new_frame, ros::Time _raw_time);
+    void newIteration(std::shared_ptr<BRISK> new_frame, ros::Time _raw_time);
     /**
      * Core of this class: creates matches, performs filtering, calls SVD function, publishes matches + transform
      * */
@@ -52,9 +52,9 @@ class Framehandler{
     
     private:
 
-    std::shared_ptr<ORB> cur_orb, prev_orb;
+    std::shared_ptr<BRISK> cur_brisk, prev_brisk;
     vector<cv::DMatch> matches; 
-    int mode;
+    int image_source;
     Matrix4d my_pose;
 
     ros::Time raw_time;

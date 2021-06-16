@@ -4,8 +4,10 @@
 #include "../include/ORB.h"
 #include "ORB.cpp"
 // #include "../include/framehandler_old.h"
-#include "../include/Framehandler.h"
-#include "Framehandler.cpp"
+#include "../include/ORB_Framehandler.h"
+#include "ORB_Framehandler.cpp"
+#include "../include/BRISK_Framehandler.h"
+#include "BRISK_Framehandler.cpp"
 // #include "../include/klt_old.h"
 #include "../include/KLT.h"
 #include "KLT.cpp"
@@ -13,11 +15,12 @@
 #include "BRISK.cpp"
 
 std::string CLOUD_TOPIC;
+std::string EXTRACTOR;
 int IMAGE_WIDTH;
 int IMAGE_HEIGHT;
 int IMAGE_CROP;
 int NUM_THREADS;
-int MODE;
+int IMAGE_SOURCE;
 ofstream OUT;
 cv::Mat MASK;
 
@@ -49,7 +52,8 @@ pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
 
 
 ImageHandler *image_handler;
-Framehandler *frame_handler;
+ORB_Framehandler *orb_frame_handler;
+BRISK_Framehandler *brisk_frame_handler;
 // Framehandler *frame_handler2;
 // Framehandler *frame_handler3;
 KLT *klt;
@@ -69,8 +73,9 @@ void updateParams (ros::NodeHandle& n){
     fsSettings["image_width"]  >> IMAGE_WIDTH;
     fsSettings["image_height"] >> IMAGE_HEIGHT;
     fsSettings["image_crop"]   >> IMAGE_CROP;
-    fsSettings["mode"] >> MODE;
+    fsSettings["image_source"] >> IMAGE_SOURCE;
     fsSettings["num_threads"]  >> NUM_THREADS;
+    fsSettings["extractor"]  >> EXTRACTOR;
 
     fsSettings["num_orb_features"] >> NUM_ORB_FEATURES;
     fsSettings["orb_accuracy"] >> ORB_ACCURACY;
@@ -120,13 +125,13 @@ class cloud_displayer{
         auto raw_time = cloud_message->header.stamp;
         MASK = create_mask();
         ros::Time first_timestamp(START_TIMESTAMP);
-        assert(MODE == 1 || MODE == 2 || MODE == 3);
+        
         
         // image_intensity 
         cv::Mat& input_image = image_handler->image_intensity;
-        if(MODE == 1);
+        if(IMAGE_SOURCE == 1);
             // image_range 
-        else if(MODE == 2)
+        else if(IMAGE_SOURCE == 2)
         input_image = image_handler->image_range;
             // image_ambient (noise) 
         else
@@ -136,29 +141,34 @@ class cloud_displayer{
         // static tf::Transform base_to_lidar = tf::Transform(tf::createQuaternionFromRPY(0, 0, 0), tf::Vector3(0, 0, 0));
         // tf_base_to_lidar.sendTransform(tf::StampedTransform(base_to_lidar, cloud_message->header.stamp, "base_link", "velodyne"));
 
-
         if(raw_time >= ros::Time(START_TIMESTAMP)){
             // cout << "this TS: " << raw_time << " " << endl;
 
-
             //KLT:
+            if((EXTRACTOR == "klt"))
             klt->KLT_Iteration(input_image,image_handler->cloud_track,raw_time);
 
 
-            
             //ORB:
+            if((EXTRACTOR == "orb")){
             //test ORB alone:
-            // ORB* orb = new ORB(input_image,image_handler->cloud_track,MODE);
-            // std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,MODE);
+            // ORB* orb = new ORB(input_image,image_handler->cloud_track,IMAGE_SOURCE);
+            
+            std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,IMAGE_SOURCE);
             // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
             // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
-            
+            // Matches
+            orb_frame_handler->newIteration(orb,raw_time);
+            }
 
             //BRISK:
-
-            // std::shared_ptr<BRISK> brisk = std::make_shared<BRISK>(input_image,image_handler->cloud_track,MODE);
+            if((EXTRACTOR == "brisk")){
+            std::shared_ptr<BRISK> brisk = std::make_shared<BRISK>(input_image,image_handler->cloud_track,IMAGE_SOURCE);
             //Brisk alone
-            // BRISK* brisk = new BRISK(input_image,image_handler->cloud_track,MODE);
+            // BRISK* brisk = new BRISK(input_image,image_handler->cloud_track,IMAGE_SOURCE);
+            //Matches
+            brisk_frame_handler->newIteration(brisk,raw_time);
+            }
 
 
 
@@ -181,12 +191,17 @@ int main(int argc, char **argv){
 ros::init(argc, argv, "cloud_projection");
 ros::NodeHandle n;
     updateParams(n);
+    assert(IMAGE_SOURCE == 1 || IMAGE_SOURCE == 2 || IMAGE_SOURCE == 3);
+    assert(EXTRACTOR == "orb" || EXTRACTOR == "brisk" || EXTRACTOR == "klt");
     image_handler = new ImageHandler();
-    frame_handler = new Framehandler(MODE,START_POSE);
+    orb_frame_handler = new ORB_Framehandler(IMAGE_SOURCE,START_POSE);
     // frame_handler2 = new Framehandler(2);
     // frame_handler3 = new Framehandler(3);
+    brisk_frame_handler = new BRISK_Framehandler(IMAGE_SOURCE,START_POSE);
+    // frame_handler2 = new Framehandler(2);
+    // frame_handler3 = new Framehandler(3);
+    klt = new KLT(IMAGE_SOURCE,START_POSE);
     cloud_displayer cloudDisplayer;
-    klt = new KLT(MODE,START_POSE);
   
     ros::spin();
     return 0;

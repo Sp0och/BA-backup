@@ -13,7 +13,8 @@ image_crop: 225                 # normally 225, mask for blocking feature extrac
 path_topic: "lio_sam/mapping/path"
 
 #picture mode
-mode: 1
+image_source: 1                         #which image source to use  1 is int, 2 range, 3 ambient
+extractor: "klt"                #which extractor to use
 
 # Features and matching
 #ORB:
@@ -31,7 +32,7 @@ min_klt_detection_distance: 1   #minimum distance to previously tracked point
 epsilon: 0.03                    #the parameter change at which to stop
 criteria_reps: 100               #the maximal number of reps to achieve it
 opt_size: 15                     # Size of the search window at each pyramid iteration
-num_pyramids: 2                  #number of pyramid layers
+num_pyramids: 4                  #number of pyramid layers
 
 #feature filtering
 apply_ransac_filtering: 1       #set filter active or not
@@ -52,6 +53,6 @@ match_image_scale: 1.0          # debug image display size
 blurr_size: 1                    # blurr strength
 
 #start time and pose:
-start_pose: 1                #0 for identity, 1 for SP at 2s and 2 for SP at odom
-start_timestamp: 1598537680.4  # first timestamp on which to display tf and store coord.
-#1598537680.4   for 2s in    1598537681.504127744 for odom
+start_pose: 2                #0 for identity, 1 for SP at 2s and 2 for SP at odom
+start_timestamp: 1598537681.403899136  # first timestamp on which to display tf and store coord.
+#1598537680.4   for 2s in    1598537681.403899136 for odom

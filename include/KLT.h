@@ -20,7 +20,7 @@ using namespace Eigen;
 class KLT {
     public:
     
-    KLT(int _mode,int START_POSE);
+    KLT(int image_source,int START_POSE);
 
     void KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointType>::Ptr _cloud,ros::Time _raw_time);
 
@@ -54,7 +54,7 @@ class KLT {
     pcl::PointCloud<PointType>::Ptr cur_cloud;
     Matrix4d my_pose;
 
-    int mode;
+    int image_source;
     std::vector<cv::Scalar> color_vector;
     bool comparison;
     ros::Time raw_time;

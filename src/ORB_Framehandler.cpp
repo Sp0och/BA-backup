@@ -1,11 +1,11 @@
-#include "../include/Framehandler.h"
+#include "../include/ORB_Framehandler.h"
 #include "helper.cpp"
 
 
 //core member methods:
 
-Framehandler::Framehandler(int _mode,int START_POSE){
-        mode = _mode;
+ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
+        image_source = _image_source;
         if(START_POSE == 0){
             my_pose << 1,0,0,0,
                     0,1,0,0,
@@ -34,15 +34,15 @@ Framehandler::Framehandler(int _mode,int START_POSE){
         midpoint_publisher = n_frame.advertise<PointCloud>("KP_PC_Midpoints", 1);
         line_publisher = n_frame.advertise<visualization_msgs::Marker>("connection_lines", 1);
         odom_publisher = n_frame.advertise<nav_msgs::Odometry>("Odometry", 1);
-        if(mode == 1)
+        if(image_source == 1)
             intensity_publisher = n_frame.advertise<sensor_msgs::Image>("intensity_matches", 1);
-        else if(mode == 2)
+        else if(image_source == 2)
             range_publisher = n_frame.advertise<sensor_msgs::Image>("range_matches", 1);
         else
             ambient_publisher = n_frame.advertise<sensor_msgs::Image>("ambient_matches", 1);
     }
 
-void Framehandler::newIteration(const std::shared_ptr<ORB> new_frame, ros::Time _raw_time){
+void ORB_Framehandler::newIteration(const std::shared_ptr<ORB> new_frame, ros::Time _raw_time){
         raw_time = _raw_time;
         //if first iteration
         if(cur_orb == nullptr){
@@ -58,7 +58,7 @@ void Framehandler::newIteration(const std::shared_ptr<ORB> new_frame, ros::Time 
         }
     }
 
-void Framehandler::matches_filtering_motion(){
+void ORB_Framehandler::matches_filtering_motion(){
         static cv::Ptr<cv::BFMatcher> matcher = cv::BFMatcher::create(cv::NORM_HAMMING);
 
         //create matches
@@ -143,18 +143,18 @@ void Framehandler::matches_filtering_motion(){
 
         //First 2D match display option
         
-        if(mode == 1)
+        if(image_source == 1)
         publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
-        else if(mode == 2)
+        else if(image_source == 2)
         publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
         else
         publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
         
         //Second 2D match display option
 
-        // if(mode == 1)
+        // if(image_source == 1)
         // publish_matches_1F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,5,true);
-        // else if(mode == 2)
+        // else if(image_source == 2)
         // publish_matches_1F(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,true);
         // else
         // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,true);
@@ -163,7 +163,7 @@ void Framehandler::matches_filtering_motion(){
 
 //plotting functions
 
-void Framehandler::set_plotting_columns_and_start_pose(){
+void ORB_Framehandler::set_plotting_columns_and_start_pose(){
 
     // store the start pose (either their start or identity)
         Matrix3d R_complete = my_pose.topLeftCorner(3,3);
@@ -209,7 +209,7 @@ void Framehandler::set_plotting_columns_and_start_pose(){
     OUT.close(); 
 }
 
-void Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
+void ORB_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
 
         //step changes:
         Quaterniond q(R);
@@ -279,7 +279,7 @@ void Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
         OUT.close();
     }
 
-void Framehandler::store_feature_number(const MatrixXd& cur_SVD){
+void ORB_Framehandler::store_feature_number(const MatrixXd& cur_SVD){
     OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv",ios_base::app);
     OUT << cur_SVD.cols() << "," << raw_time <<  endl;
     OUT.close(); 
@@ -287,7 +287,7 @@ void Framehandler::store_feature_number(const MatrixXd& cur_SVD){
 
 // publishing functions
 
-void Framehandler::publish_tf(){
+void ORB_Framehandler::publish_tf(){
         cout << "TF Publisher " << endl;
         tf::TransformBroadcaster odom_t_velo_b;
         //Create Eigen Quaternion
@@ -322,7 +322,7 @@ void Framehandler::publish_tf(){
         odom_t_velo_b.sendTransform(tf::StampedTransform(odom_t_velo,raw_time,"odom","my_velo"));
     }
 
-void Framehandler::publish_odom(){
+void ORB_Framehandler::publish_odom(){
         nav_msgs::Odometry odom;
         //translation
         odom.pose.pose.position.x = my_pose(0,3);
@@ -341,13 +341,13 @@ void Framehandler::publish_odom(){
 
 //member visualization functions
 
-void Framehandler::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD){
+void ORB_Framehandler::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD){
         publish_3D_keypoints(cur_SVD, &kp_pc_publisher_cur, raw_time);
         publish_3D_keypoints(prev_SVD, &kp_pc_publisher_prev, raw_time);
         publish_lines_3D(cur_SVD, prev_SVD, &line_publisher, raw_time);
 }
 
-void Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
+void ORB_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
     const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
     cv::Mat color_img,gray_img;
     const cv::Mat old_img = prev_orb->input_image.clone();
@@ -381,9 +381,9 @@ void Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std:
             cv::line(color_img, sorted_KP_cur[i] * 1, old_pt, line_color, 1*2, 8, 0);
         }
     }
-    if(mode == 1)
+    if(image_source == 1)
     cv::putText(color_img, "Intensity",   cv::Point2d(300, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-    else if (mode == 2)
+    else if (image_source == 2)
     cv::putText(color_img, "Range",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
     else
     cv::putText(color_img, "Ambient",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
@@ -393,7 +393,7 @@ void Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std:
 
 }
 
-void Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
+void ORB_Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
     const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, bool draw_lines){
         cv::Mat image = cur_orb->input_image.clone();
         cv::cvtColor(image,image,CV_GRAY2RGB);
@@ -409,9 +409,9 @@ void Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std:
             cv::circle(image, cur_pt, circle_size*1, circle_col, 1*1);
             cv::line(image, cur_pt * 1, old_pt, cv::Scalar(255,0,0), 1*1, 8, 0);
         }
-        if(mode == 1)
+        if(image_source == 1)
         cv::putText(image, "Intensity",   cv::Point2d(300, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-        else if (mode == 2)
+        else if (image_source == 2)
         cv::putText(image, "Range",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
         else
         cv::putText(image, "Ambient",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
@@ -422,7 +422,7 @@ void Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std:
 
 //SVD
 
-void Framehandler::SVD(MatrixXd& cur_SVD,MatrixXd& prev_SVD){
+void ORB_Framehandler::SVD(MatrixXd& cur_SVD,MatrixXd& prev_SVD){
         Vector3d sum_prev(0,0,0);
         Vector3d sum_cur(0,0,0);
 

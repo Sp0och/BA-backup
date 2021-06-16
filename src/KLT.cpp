@@ -1,12 +1,11 @@
 #include "../include/KLT.h"
 #include "helper.cpp"
 
+//class core
 
+KLT::KLT(int _image_source,int START_POSE){
 
-
-KLT::KLT(int _mode,int START_POSE){
-
-        mode = _mode;
+        image_source = _image_source;
 
         std::string config_file;
         n_KLT.getParam("parameter_file", config_file);
@@ -61,9 +60,9 @@ KLT::KLT(int _mode,int START_POSE){
         mid_point_line_publisher = n_KLT.advertise<visualization_msgs::Marker>("connection_lines", 1);
         odom_publisher = n_KLT.advertise<nav_msgs::Odometry>("Odometry", 1);
 
-        if(mode == 1)
+        if(image_source == 1)
         pub_KLT_int = n_KLT.advertise<sensor_msgs::Image>("tracked_points_int", 1);
-        else if(mode == 2)
+        else if(image_source == 2)
         pub_KLT_ran = n_KLT.advertise<sensor_msgs::Image>("tracked_points_ran", 1);
         else
         pub_KLT_amb = n_KLT.advertise<sensor_msgs::Image>("tracked_points_amb", 1);
@@ -102,6 +101,7 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         trimVector(cur_corners,status);
         trimVector(prev_corners,status);
         int size_after = prev_corners.size();
+        get_3D_points(cur_corners,cur_3D_points,cur_cloud);
         trim_matrix(prev_3D_points,status);
         cout << "timestamp: " << raw_time << " " << endl;
         if(size_before > size_after)
@@ -134,9 +134,9 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         publish_tf();
 
         // Publish and adapt prev_corners
-        if(mode == 1)
+        if(image_source == 1)
         publish_KLT(&pub_KLT_int,cur_image,cur_corners,prev_corners,2);
-        else if(mode == 2)
+        else if(image_source == 2)
         publish_KLT(&pub_KLT_ran,cur_image,cur_corners,prev_corners,2);
         else
         publish_KLT(&pub_KLT_amb,cur_image,cur_corners,prev_corners,2);
@@ -158,6 +158,9 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
 }
 
 void KLT::store_coordinates(const Vector3d& t, const Matrix3d& R){
+
+        string sizeParam = to_string(OPT_SIZE);
+        string PyrParam = to_string(NUM_PYRAMIDS);
 
         //step changes:
         Quaterniond q(R);
@@ -187,7 +190,7 @@ void KLT::store_coordinates(const Vector3d& t, const Matrix3d& R){
             ea = e1;
         else
             ea = e2;
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps.csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/steps_num_pyramids"+PyrParam+".csv",ios_base::app);
         OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << raw_time <<  endl;
         OUT.close(); 
 
@@ -220,7 +223,7 @@ void KLT::store_coordinates(const Vector3d& t, const Matrix3d& R){
         else
             eac = e2c;
         
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_complete.csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/complete_num_pyramids"+PyrParam+".csv",ios_base::app);
         OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
         OUT.close();
     }
@@ -282,6 +285,8 @@ void KLT::publish_tf(){
         odom_t_velo_b.sendTransform(tf::StampedTransform(odom_t_velo,raw_time,"odom","my_velo"));
     }
 
+//plotting functions
+
 void KLT::store_feature_number(const MatrixXd& cur_SVD){
     OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv",ios_base::app);
     OUT << cur_SVD.cols() << "," << raw_time <<  endl;
@@ -318,20 +323,21 @@ void KLT::set_plotting_columns_and_start_pose(){
         else
             eac = e2c;
         
+    string sizeParam = to_string(OPT_SIZE);
+    string PyrParam = to_string(NUM_PYRAMIDS);
 
-
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_complete.csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/complete_num_pyramids"+PyrParam+".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps.csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/steps_num_pyramids"+PyrParam+".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv",ios_base::app);
-    OUT << "num_of_features" "," << "time" << endl;
-    OUT.close(); 
+    // OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/opt_size.csv",ios_base::app);
+    // OUT << "num_of_features" "," << "time" << endl;
+    // OUT.close(); 
 }
 
 
