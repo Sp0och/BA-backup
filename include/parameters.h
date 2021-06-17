@@ -80,11 +80,6 @@ extern int NUM_THREADS;
 extern cv::Mat MASK;
 extern ofstream OUT;
 
-extern int NUM_ORB_FEATURES;
-extern int ORB_ACCURACY;
-
-extern int BRISK_THRESHOLD;
-
 extern int MIN_LOOP_FEATURE_NUM;
 extern int DUPLICATE_FILTERING_SIZE;
 extern int DOUBLE_FILTERING_SIZE;

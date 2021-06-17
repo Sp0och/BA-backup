@@ -104,6 +104,7 @@ void ImageHandler::cloud_handler(const sensor_msgs::PointCloud2ConstPtr &cloud_m
         if(BLURR_SIZE>1){
             cv::blur(image_intensity,image_intensity,cv::Size(BLURR_SIZE,BLURR_SIZE));
             cv::blur(image_noise,image_noise,cv::Size(BLURR_SIZE,BLURR_SIZE));
+            cv::blur(image_range,image_range,cv::Size(BLURR_SIZE,BLURR_SIZE));
         }
 
         if (pub_image.getNumSubscribers() != 0)

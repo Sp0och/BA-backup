@@ -159,8 +159,7 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
 
 void KLT::store_coordinates(const Vector3d& t, const Matrix3d& R){
 
-        string sizeParam = to_string(OPT_SIZE);
-        string PyrParam = to_string(NUM_PYRAMIDS);
+        string Param = to_string(EPSILON);
 
         //step changes:
         Quaterniond q(R);
@@ -190,7 +189,7 @@ void KLT::store_coordinates(const Vector3d& t, const Matrix3d& R){
             ea = e1;
         else
             ea = e2;
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/steps_num_pyramids"+PyrParam+".csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/steps_epsilon_at_1000_reps"+Param+".csv",ios_base::app);
         OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << raw_time <<  endl;
         OUT.close(); 
 
@@ -223,7 +222,7 @@ void KLT::store_coordinates(const Vector3d& t, const Matrix3d& R){
         else
             eac = e2c;
         
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/complete_num_pyramids"+PyrParam+".csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/pose_epsilon_at_1000_reps"+Param+".csv",ios_base::app);
         OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
         OUT.close();
     }
@@ -323,15 +322,14 @@ void KLT::set_plotting_columns_and_start_pose(){
         else
             eac = e2c;
         
-    string sizeParam = to_string(OPT_SIZE);
-    string PyrParam = to_string(NUM_PYRAMIDS);
+    string Param = to_string(EPSILON);
 
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/complete_num_pyramids"+PyrParam+".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/pose_epsilon_at_1000_reps"+Param+".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/steps_num_pyramids"+PyrParam+".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/steps_epsilon_at_1000_reps"+Param+".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT.close(); 
     
@@ -391,7 +389,9 @@ void KLT::SVD(const MatrixXd& cur_3D,const MatrixXd& prev_3D){
         current_iteration.setIdentity();
         current_iteration.block<3,3>(0,0) = R;
         current_iteration.block<3,1>(0,3) = t;
-
+        cout << "R: " << endl << R << endl;
+        cout << "t: " << endl << t << endl;
+        
         my_pose = my_pose*current_iteration;
         //Storing the plot data
         // if(raw_time >= ros::Time(1598537680.405615616))

@@ -49,8 +49,9 @@ class BRISK
     ros::Publisher KP_pub_ambient;
     int mode;
 
-
-
+    int BRISK_THRESHOLD;
+    int OCTAVES;
+    float PATTERN_SCALE;
 };
 
 

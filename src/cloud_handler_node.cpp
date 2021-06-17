@@ -24,9 +24,6 @@ int IMAGE_SOURCE;
 ofstream OUT;
 cv::Mat MASK;
 
-//orb
-int NUM_ORB_FEATURES;
-int ORB_ACCURACY;
 //klt
 int MAX_KLT_FEATURES;
 int MIN_KLT_FEATURES;
@@ -76,11 +73,6 @@ void updateParams (ros::NodeHandle& n){
     fsSettings["image_source"] >> IMAGE_SOURCE;
     fsSettings["num_threads"]  >> NUM_THREADS;
     fsSettings["extractor"]  >> EXTRACTOR;
-
-    fsSettings["num_orb_features"] >> NUM_ORB_FEATURES;
-    fsSettings["orb_accuracy"] >> ORB_ACCURACY;
-
-    fsSettings["brisk_threshold"] >> BRISK_THRESHOLD;
 
     fsSettings["max_feature_distance"] >> MAX_FEATURE_DISTANCE;
     fsSettings["min_feature_distance"] >> MIN_FEATURE_DISTANCE;

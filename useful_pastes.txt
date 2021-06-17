@@ -45,3 +45,25 @@ cv::Mat MASK;
                     -0.14255745, -0.9894887,  -0.02427929, -0.02220684,
                     0.04480693, -0.03095621,  0.99851592, -0.01088667,
                     0,          0,          0,          1; 
+
+
+        KLT default:
+        Data = "Intensity"
+        Extractor = "KLT"
+        MASK = "ON"
+        max_match_distance = "0.3m"
+        min_distance = "0.1m"
+        max_cos = "0.2"
+        smoothing = "1"
+        length = "100"
+
+        klt_min_tracked = "40"
+        klt_max_detected = "500"
+        klt_quality_level = "0.05"
+        klt_block_size = "7"
+        klt_min_det_distance = "1"
+
+        klt_epsilon = "0.05"
+        klt_criteria_reps = "100"
+        klt_opt_size = "15"
+        klt_num_pyramids = "2"

@@ -80,11 +80,11 @@ def node_init():
 if __name__ == '__main__':
 
     solution_complete = open(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_complete.csv", "w"
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/tst_GT_complete.csv", "w"
     )
 
     solution_steps = open(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_steps.csv", "w"
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/tst_GT_steps.csv", "w"
     )
 
     writer_complete = csv.writer(solution_complete)

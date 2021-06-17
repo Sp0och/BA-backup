@@ -639,7 +639,7 @@ if __name__ == "__main__":
     prediction_yaws = pd.DataFrame.to_numpy(prediction_step["yaw"])
 
     prediction_overall = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_complete.csv", nrows=1000)
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/pose_opt_size15.csv", nrows=1000)
     prediction_xc = pd.DataFrame.to_numpy(prediction_overall["x"])
     prediction_yc = pd.DataFrame.to_numpy(prediction_overall["y"])
     prediction_zc = pd.DataFrame.to_numpy(prediction_overall["z"])

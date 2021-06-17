@@ -8,6 +8,17 @@ ORB::ORB(const cv::Mat &_input_image, const pcl::PointCloud<PointType>::Ptr _clo
         {
             mode = _mode;
 
+            std::string config_file;
+            n.getParam("parameter_file", config_file);
+            cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
+            if(!fsSettings.isOpened())
+                std::cerr << "ERROR: Wrong path to settings" << std::endl;
+            usleep(100);
+            fsSettings["num_orb_features"] >> NUM_ORB_FEATURES;
+            fsSettings["orb_accuracy"] >> ORB_ACCURACY;
+            fsSettings["scale_factor"] >> SCALE_FACTOR;
+            fsSettings["levels"] >> LEVELS;
+
             input_image = _input_image.clone();
             cv::resize(input_image, image, cv::Size(), 1, 1);
             //input_image used for framehandler to have a non-altered image to draw the matches on
@@ -23,7 +34,7 @@ ORB::ORB(const cv::Mat &_input_image, const pcl::PointCloud<PointType>::Ptr _clo
             create_descriptors();
         }
 void ORB::create_descriptors(){
-        cv::Ptr<cv::ORB> detector = cv::ORB::create(NUM_ORB_FEATURES, 1.2f, 8, ORB_ACCURACY/* ,0,2,cv::ORB::HARRIS_SCORE,31,20 */);
+        cv::Ptr<cv::ORB> detector = cv::ORB::create(NUM_ORB_FEATURES, SCALE_FACTOR, LEVELS, ORB_ACCURACY/* ,0,2,cv::ORB::HARRIS_SCORE,31,20 */);
         //store keypoints in orb_keypoints
         detector->detect(image,orb_keypoints,MASK);
         keypointTransition(orb_keypoints,orb_keypoints_2d);

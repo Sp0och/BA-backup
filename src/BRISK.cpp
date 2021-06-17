@@ -10,6 +10,16 @@ BRISK::BRISK(const cv::Mat &_input_image,
         mode = _mode;
         assert(mode == 1 || mode == 2 || mode == 3);
 
+        std::string config_file;
+        n.getParam("parameter_file", config_file);
+        cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
+        if(!fsSettings.isOpened())
+            std::cerr << "ERROR: Wrong path to settings" << std::endl;
+        usleep(100);
+        fsSettings["brisk_threshold"] >> BRISK_THRESHOLD;
+        fsSettings["octaves"] >> OCTAVES;
+        fsSettings["pattern_scale"] >> PATTERN_SCALE;
+
         input_image = _input_image.clone();
         cv::resize(input_image, image, cv::Size(), 1, 1);
         cv::resize(input_image, input_image, cv::Size(), 1, 1);
@@ -26,7 +36,7 @@ BRISK::BRISK(const cv::Mat &_input_image,
 }
 
 void BRISK::create_descriptors(){
-    static cv::Ptr<cv::BRISK> detector = cv::BRISK::create(BRISK_THRESHOLD,3,1.0f);
+    static cv::Ptr<cv::BRISK> detector = cv::BRISK::create(BRISK_THRESHOLD,OCTAVES,PATTERN_SCALE);
     detector->detect(image,brisk_keypoints,MASK);
     keypointTransition(brisk_keypoints,brisk_keypoints_2d);
     // duplicate_filtering();

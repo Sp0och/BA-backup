@@ -46,5 +46,10 @@ class ORB
     ros::Publisher KP_pub_ambient;
     int mode;
 
+    int NUM_ORB_FEATURES;
+    int ORB_ACCURACY;
+    float SCALE_FACTOR;
+    int LEVELS;
+
 
 };
