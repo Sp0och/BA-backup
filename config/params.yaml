@@ -11,7 +11,7 @@ image_crop: 225                 # normally 225, mask for blocking feature extrac
 
 #start time and pose:
 start_pose: 2                #0 for identity, 1 for SP at 2s and 2 for SP at odom
-start_timestamp: 1598537681.403899136  # first timestamp on which to display tf and store coord.
+start_timestamp: 1598537681.4  # first timestamp on which to display tf and store coord.
 #1598537680.4   for 2s in    1598537681.403899136 for odom 
 
 # CPU
@@ -19,30 +19,30 @@ num_threads: 4                  # CPU thread number
 
 #IMAGE SOURCE AND EXTRACTOR
 image_source: 1                         #which image source to use  1 is int, 2 range, 3 ambient
-extractor: "klt"                #which extractor to use
+extractor: "orb"                #which extractor to use
 
 # Features and matching
 
 #ORB:
 num_orb_features: 1000           # feature num for ORB
 orb_accuracy: 31                # ORB extractor threshold for letting the points pass
-scale_factor: 1.2               # greater than 1, if smaller-> more expensive but good, if higher less quality
+scale_factor: 1.7               # greater than 1, if smaller-> more expensive but good, if higher less quality
 levels: 8                       # number of pyramid levels
 #brisk
-brisk_threshold: 60             # threshold for brisk feature acceptance
+brisk_threshold: 45             # threshold for brisk feature acceptance
 octaves: 3                      #number of octaves
 pattern_scale: 1.0              #scale applied to pattern used for sampling neighborhood
 
 #klt extraction
 min_klt_features: 40            #min number of features until new ones have to be found
 max_klt_features: 500           #upper level klt feature number
-quality_level: 0.05              #quality threshold for point detection
+quality_level: 0.005              #quality threshold for point detection
 blocksize: 7                   #Block size for comparing the most promissing points  
 min_klt_detection_distance: 1.0   #minimum distance to previously tracked point
 #klt point tracking
-epsilon: 0.005                    #the parameter change at which to stop
-criteria_reps: 10000               #the maximal number of reps to achieve it
-opt_size: 15                     # Size of the search window at each pyramid iteration
+epsilon: 0.03                    #the parameter change at which to stop
+criteria_reps: 10               #the maximal number of reps to achieve it
+opt_size: 17                     # Size of the search window at each pyramid iteration
 num_pyramids: 2                  #number of pyramid layers
 
 #match filtering
@@ -50,11 +50,11 @@ apply_ransac_filtering: 1       #set filter active or not
 apply_double_filtering: 1
 apply_distance_filtering: 1
 duplicate_filtering_size: 1    # (pixels) the circle patch size in which another point can not be located
-double_filtering_size: 1      # (pixels) the circle patch size in which another point can not be located
-max_feature_distance: 0.3        # (meters) max feature match distance
-min_feature_distance: 0.1       #(meters) minimum distance to sensor that a feature must have
-max_cos: 0.2                    #max cos of intermediate angle of matches compared to distance direction
+double_filtering_size: 3      # (pixels) the circle patch size in which another point can not be located
+max_match_distance: 0.8        # (meters) max feature match distance
+min_kp_distance: 0.1       #(meters) minimum distance to sensor that a feature must have
+max_cos: 0.2                     #max cos of intermediate angle of matches compared to distance direction
 
 # Visualization
-blurr_size: 1                    # blurr strength
+blurr_size: 2                    # blurr strength
 

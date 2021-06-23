@@ -67,3 +67,54 @@ cv::Mat MASK;
         klt_criteria_reps = "100"
         klt_opt_size = "15"
         klt_num_pyramids = "2"
+
+
+        ORB default:
+
+        Data = "Intensity"
+        Extractor = "KLT"
+        MASK = "ON"
+        max_match_distance = "0.3m"
+        min_distance = "0.1m"
+        max_cos = "0.2"
+        smoothing = "1"
+        length = "100"
+
+        num_orb_features: 1000           
+        orb_accuracy: 31                
+        scale_factor: 1.2               
+        levels: 8 
+
+
+        BRISK default:
+
+        Data = "Intensity"
+        Extractor = "BRISK"
+        MASK = "ON"
+        max_match_distance = "0.3m"
+        min_distance = "0.1m"
+        max_cos = "0.2"
+        smoothing = "1"
+        length = "100"
+
+        brisk_threshold: 60             
+        octaves: 3                      
+        pattern_scale: 1.0 
+
+
+        filter default:
+
+        Data = "Intensity"
+        Extractor = "ORB"
+        MASK = "ON"
+        duplicate_filtering_size = 1
+        max_match_distance = "0.3m"
+        min_kp_distance = "0.1m"
+        max_cos = "0.2"
+        smoothing = "1"
+        length = "100"
+
+        num_orb_features: 1000           
+        orb_accuracy: 31                
+        scale_factor: 1.7               
+        levels: 8  

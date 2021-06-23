@@ -6,6 +6,15 @@
 
 BRISK_Framehandler::BRISK_Framehandler(int _image_source,int START_POSE){
         image_source = _image_source;
+        std::string config_file;
+        n_frame.getParam("parameter_file", config_file);
+        cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
+        if(!fsSettings.isOpened())
+            std::cerr << "ERROR: Wrong path to settings" << std::endl;
+        usleep(100);
+        fsSettings["brisk_threshold"] >> BRISK_THRESHOLD;
+        fsSettings["octaves"] >> OCTAVES;
+        fsSettings["pattern_scale"] >> PATTERN_SCALE;
         if(START_POSE == 0){
             my_pose << 1,0,0,0,
                     0,1,0,0,
@@ -122,7 +131,7 @@ void BRISK_Framehandler::matches_filtering_motion(){
         if(prev_SVD.cols() < 40)
             cout << "size after distance filtering: " << prev_SVD.cols() << " at timestamp: " << raw_time << "   " << endl;
 
-        store_feature_number(cur_SVD);
+        // store_feature_number(cur_SVD);
 
         visualizer_3D(cur_SVD,prev_SVD);
 
@@ -193,23 +202,25 @@ void BRISK_Framehandler::set_plotting_columns_and_start_pose(){
         else
             eac = e2c;
         
+    string Param = to_string(OCTAVES);
 
-
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_complete.csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_brisk/best_pose_octaves"+Param+".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps.csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_brisk/best_steps_octaves"+Param+".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv",ios_base::app);
-    OUT << "num_of_features" "," << "time" << endl;
-    OUT.close(); 
+    // OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv",ios_base::app);
+    // OUT << "num_of_features" "," << "time" << endl;
+    // OUT.close(); 
 }
 
 void BRISK_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
+
+        string Param = to_string(OCTAVES);
 
         //step changes:
         Quaterniond q(R);
@@ -239,7 +250,7 @@ void BRISK_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R)
             ea = e1;
         else
             ea = e2;
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps.csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_brisk/best_steps_octaves"+Param+".csv",ios_base::app);
         OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << raw_time <<  endl;
         OUT.close(); 
 
@@ -274,7 +285,7 @@ void BRISK_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R)
         else
             eac = e2c;
         
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_complete.csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_brisk/best_pose_octaves"+Param+".csv",ios_base::app);
         OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
         OUT.close();
     }

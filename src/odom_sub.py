@@ -45,7 +45,7 @@ class odom_lookup:
     def __init__(self):
         # setup subscribers
         self.odom_sub = rospy.Subscriber(
-            "/scan_to_scan_10Hz", Odometry, self.odomCallback)
+            "/scan_to_map_extrapolated_10Hz", Odometry, self.odomCallback)
 
         # image callback function
     def odomCallback(self, odom):
@@ -72,11 +72,11 @@ def node_init():
 if __name__ == '__main__':
 
     solution_complete = open(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/tstodom_complete.csv", "w"
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/test_odom_pose.csv", "w"
     )
 
     solution_steps = open(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/tstodom_steps.csv", "w"
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/test_odom_steps.csv", "w"
     )
 
     writer_complete = csv.writer(solution_complete)

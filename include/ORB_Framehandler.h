@@ -40,13 +40,13 @@ class ORB_Framehandler{
     /**
      * Calls all necessary functions to visualize keypoints and matches in 3D
      * */
-    void visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD);
+    void visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD,ros::Publisher* cur,ros::Publisher* prev,ros::Publisher* line);
     //publish the 2D matches
     void publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
-    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines);
+    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar point_color, cv::Scalar line_color, bool draw_lines);
     //publish matches by indicating direction 
     void publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
-    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, bool draw_lines);
+    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar point_color, cv::Scalar line_color, bool draw_lines);
     //apply closed form solution to predict transform
     void SVD(MatrixXd& cur_SVD,MatrixXd& prev_SVD);
     
@@ -61,6 +61,14 @@ class ORB_Framehandler{
 
     ros::NodeHandle n_frame;
     ros::Publisher match_publisher, range_publisher, ambient_publisher, intensity_publisher, 
-    kp_pc_publisher_cur, kp_pc_publisher_prev, midpoint_publisher, odom_publisher, line_publisher;
+    kp_pc_publisher_cur, kp_pc_publisher_prev,ransac_publisher,duplicate_publisher,distance_publisher, odom_publisher, line_publisher,pc_distance_publisher_p,pc_distance_publisher_c,line_distance_publisher;
     
+    cv::Scalar POINT_COLOR;
+    cv::Scalar LINE_COLOR;
+
+    int NUM_ORB_FEATURES;
+    int ORB_ACCURACY;
+    float SCALE_FACTOR;
+    int LEVELS;
+
 };

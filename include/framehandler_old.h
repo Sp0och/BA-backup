@@ -60,7 +60,7 @@ void distance_filtering(MatrixXd& cur_ICP, MatrixXd& prev_ICP){
         float dist_c = sqrt(p_c_x*p_c_x + p_c_y*p_c_y + p_c_z*p_c_z);
         float dist_p = sqrt(p_p_x*p_p_x + p_p_y*p_p_y + p_p_z*p_p_z);
 
-        if(mdif > MAX_FEATURE_DISTANCE || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
+        if(mdif > MAX_MATCH_DISTANCE || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
             distance_flag.at(i) = 0;
     }
     trim_matrix(prev_ICP,distance_flag);

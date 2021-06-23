@@ -63,4 +63,7 @@ class BRISK_Framehandler{
     ros::Publisher match_publisher, range_publisher, ambient_publisher, intensity_publisher, 
     kp_pc_publisher_cur, kp_pc_publisher_prev, midpoint_publisher, odom_publisher, line_publisher;
     
+    int BRISK_THRESHOLD;
+    int OCTAVES;
+    float PATTERN_SCALE;
 };

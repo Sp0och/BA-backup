@@ -131,7 +131,7 @@ static void filtering_3D(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, ve
     //     float dist_c = sqrt(p_c_x*p_c_x + p_c_y*p_c_y + p_c_z*p_c_z);
     //     float dist_p = sqrt(p_p_x*p_p_x + p_p_y*p_p_y + p_p_z*p_p_z);
 
-    //     if(mdif > MAX_FEATURE_DISTANCE || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
+    //     if(mdif > MAX_MATCH_DISTANCE || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
     //         distance_flag.at(i) = 0;
     // }
     //vector product attempt:
@@ -155,9 +155,9 @@ static void filtering_3D(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, ve
         float dist_c = sqrt(p_c_x*p_c_x + p_c_y*p_c_y + p_c_z*p_c_z);
         float dist_p = sqrt(p_p_x*p_p_x + p_p_y*p_p_y + p_p_z*p_p_z);
 
-        if((costheta > MAX_COS && mdif > MAX_FEATURE_DISTANCE) || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
+        if((costheta > MAX_COS && mdif > MAX_MATCH_DISTANCE) || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
             distance_flag.at(i) = 0;
-        // if((costheta * mdif > MAX_FEATURE_DISTANCE) || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
+        // if((costheta * mdif > MAX_MATCH_DISTANCE) || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
         //     distance_flag.at(i) = 0;
     }
 
@@ -208,7 +208,7 @@ static void filtering_3D_f(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, 
     //     float dist_c = sqrt(p_c_x*p_c_x + p_c_y*p_c_y + p_c_z*p_c_z);
     //     float dist_p = sqrt(p_p_x*p_p_x + p_p_y*p_p_y + p_p_z*p_p_z);
 
-    //     if(mdif > MAX_FEATURE_DISTANCE || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
+    //     if(mdif > MAX_MATCH_DISTANCE || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
     //         distance_flag.at(i) = 0;
     // }
     //vector product attempt:
@@ -232,9 +232,9 @@ static void filtering_3D_f(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, 
         float dist_c = sqrt(p_c_x*p_c_x + p_c_y*p_c_y + p_c_z*p_c_z);
         float dist_p = sqrt(p_p_x*p_p_x + p_p_y*p_p_y + p_p_z*p_p_z);
 
-        if((costheta > MAX_COS && mdif > MAX_FEATURE_DISTANCE) || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
+        if((costheta > MAX_COS && mdif > MAX_MATCH_DISTANCE) || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
             distance_flag.at(i) = 0;
-        // if((costheta * mdif > MAX_FEATURE_DISTANCE) || dist_c < MIN_FEATURE_DISTANCE || dist_p < MIN_FEATURE_DISTANCE)
+        // if((costheta * mdif > MAX_MATCH_DISTANCE) || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
         //     distance_flag.at(i) = 0;
     }
 

@@ -33,8 +33,8 @@ int BRISK_THRESHOLD;
 int DUPLICATE_FILTERING_SIZE;
 int DOUBLE_FILTERING_SIZE;
 double MAX_COS;
-float MAX_FEATURE_DISTANCE;
-float MIN_FEATURE_DISTANCE;
+float MAX_MATCH_DISTANCE;
+float MIN_KP_DISTANCE;
 bool APPLY_DISTANCE_FILTERING;
 bool APPLY_RANSAC_FILTERING;
 bool APPLY_DOUBLE_FILTERING;
@@ -74,8 +74,8 @@ void updateParams (ros::NodeHandle& n){
     fsSettings["num_threads"]  >> NUM_THREADS;
     fsSettings["extractor"]  >> EXTRACTOR;
 
-    fsSettings["max_feature_distance"] >> MAX_FEATURE_DISTANCE;
-    fsSettings["min_feature_distance"] >> MIN_FEATURE_DISTANCE;
+    fsSettings["max_match_distance"] >> MAX_MATCH_DISTANCE;
+    fsSettings["min_kp_distance"] >> MIN_KP_DISTANCE;
     fsSettings["max_cos"] >> MAX_COS;
     fsSettings["duplicate_filtering_size"] >> DUPLICATE_FILTERING_SIZE;
     fsSettings["double_filtering_size"] >> DOUBLE_FILTERING_SIZE;

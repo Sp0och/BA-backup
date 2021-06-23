@@ -28,7 +28,7 @@ def storage(trans, rot, timestamp, TINV):
     # Complete initial state
     Transform = np.copy(R)
     Transform[0:3, 3] = trans
-    print("Transform: ", Transform)
+    print("timestamp: ", timestamp, "Transform: ", Transform)
 
     # Iteration STEPS:
     T_step = np.matmul(TINV, Transform)

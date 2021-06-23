@@ -5,6 +5,16 @@
 //core member methods:
 
 ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
+        std::string config_file;
+        n_frame.getParam("parameter_file", config_file);
+        cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
+        if(!fsSettings.isOpened())
+            std::cerr << "ERROR: Wrong path to settings" << std::endl;
+        usleep(100);
+        fsSettings["num_orb_features"] >> NUM_ORB_FEATURES;
+        fsSettings["orb_accuracy"] >> ORB_ACCURACY;
+        fsSettings["scale_factor"] >> SCALE_FACTOR;
+        fsSettings["levels"] >> LEVELS;
         image_source = _image_source;
         if(START_POSE == 0){
             my_pose << 1,0,0,0,
@@ -19,20 +29,28 @@ ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
             0,           0,           0,            1;
         }
         else{
-            my_pose << 0.21383611, -0.97496278, -0.06100574,  0.14088768,
-        0.92808941,  0.22224938, -0.29875621,  1.44032526,
-        0.30483467,  0.00726608,  0.95237757,  0.3799721,
+            my_pose << 0.08959188, -0.99543686,  0.03284438,  0.17298461,
+        0.96004952,  0.07753545, -0.26887389,  1.35417363,
+        0.26510037,  0.05562115,  0.96261523,  0.42004326,
         0,0,0,1;
         }
         
         cur_orb = nullptr;
         prev_orb = nullptr;
-        // match_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
+
+        POINT_COLOR = cv::Scalar(255,0,0);
+        LINE_COLOR = cv::Scalar(0,255,0);
+        match_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
+        ransac_publisher = n_frame.advertise<sensor_msgs::Image>("RANSAC_filtered", 1);
+        duplicate_publisher = n_frame.advertise<sensor_msgs::Image>("DUPLICATE_filtered", 1);
+        distance_publisher = n_frame.advertise<sensor_msgs::Image>("DISTANCE_filtered", 1);
 
         kp_pc_publisher_cur = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1);
         kp_pc_publisher_prev = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1);
-        midpoint_publisher = n_frame.advertise<PointCloud>("KP_PC_Midpoints", 1);
+        pc_distance_publisher_c = n_frame.advertise<PointCloud>("Distance_filtered_3D_c", 1);
+        pc_distance_publisher_p = n_frame.advertise<PointCloud>("Distance_filtered_3D_p", 1);
         line_publisher = n_frame.advertise<visualization_msgs::Marker>("connection_lines", 1);
+        line_distance_publisher = n_frame.advertise<visualization_msgs::Marker>("connection_lines_distance", 1);
         odom_publisher = n_frame.advertise<nav_msgs::Odometry>("Odometry", 1);
         if(image_source == 1)
             intensity_publisher = n_frame.advertise<sensor_msgs::Image>("intensity_matches", 1);
@@ -102,21 +120,29 @@ void ORB_Framehandler::matches_filtering_motion(){
             prev_SVD(2,i) = prev_orb->orb_points_3d.at(prev_index).z;
         }
         matches.clear();
-        //Publish matches before RANSAC filtering:
-        // publish_matches(&match_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
-        
-        
+        //Publish matches before filtering:
+        publish_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
         cout << "right after matching: " << prev_SVD.cols() << " " << endl;
-        if(APPLY_RANSAC_FILTERING)
+
+        if(APPLY_RANSAC_FILTERING){
             RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
+            publish_matches_2F(&ransac_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+            cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         // std::cout << "size after ransac: " << sorted_2d_cur.size() << " " << std::endl;
-        cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
-        if(APPLY_DOUBLE_FILTERING)
+        }
+        if(APPLY_DOUBLE_FILTERING){
             double_point_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
-        cout << "size after double point filtering: " << prev_SVD.cols() << " "<< endl;
-        if(APPLY_DISTANCE_FILTERING)
+            publish_matches_2F(&duplicate_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+            cout << "size after double point filtering: " << prev_SVD.cols() << " "<< endl;
+        }
+
+        visualizer_3D(cur_SVD,prev_SVD,&pc_distance_publisher_c,&pc_distance_publisher_p,&line_distance_publisher);
+
+        if(APPLY_DISTANCE_FILTERING){
             filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
-        cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
+            publish_matches_2F(&distance_publisher, sorted_2d_cur, sorted_2d_prev,2,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
+            cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
+        }
         
 
         if(prev_SVD.cols() < 40)
@@ -124,7 +150,7 @@ void ORB_Framehandler::matches_filtering_motion(){
 
         store_feature_number(cur_SVD);
 
-        visualizer_3D(cur_SVD,prev_SVD);
+        visualizer_3D(cur_SVD,prev_SVD,&kp_pc_publisher_cur,&kp_pc_publisher_prev,&line_publisher);
 
 
         //SVD Here
@@ -144,20 +170,20 @@ void ORB_Framehandler::matches_filtering_motion(){
         //First 2D match display option
         
         if(image_source == 1)
-        publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
         else if(image_source == 2)
-        publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
         else
-        publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
         
         //Second 2D match display option
 
         // if(image_source == 1)
-        // publish_matches_1F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,5,true);
+        // publish_matches_1F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,1,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
         // else if(image_source == 2)
-        // publish_matches_1F(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,true);
+        // publish_matches_1F(&range_publisher, sorted_2d_cur, sorted_2d_prev,1,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
         // else
-        // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,true);
+        // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,1,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
     
     }
 
@@ -192,24 +218,28 @@ void ORB_Framehandler::set_plotting_columns_and_start_pose(){
             eac = e1c;
         else
             eac = e2c;
+
+    string Param = to_string(DUPLICATE_FILTERING_SIZE);
         
 
 
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_complete.csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_filters/pose_best" + Param + ".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps.csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_filters/steps_best" + Param + ".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv",ios_base::app);
-    OUT << "num_of_features" "," << "time" << endl;
-    OUT.close(); 
+    // OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv",ios_base::app);
+    // OUT << "num_of_features" "," << "time" << endl;
+    // OUT.close(); 
 }
 
 void ORB_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
+
+        string Param = to_string(DUPLICATE_FILTERING_SIZE);
 
         //step changes:
         Quaterniond q(R);
@@ -239,7 +269,7 @@ void ORB_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
             ea = e1;
         else
             ea = e2;
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps.csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_filters/steps_best" + Param + ".csv",ios_base::app);
         OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << raw_time <<  endl;
         OUT.close(); 
 
@@ -274,7 +304,7 @@ void ORB_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
         else
             eac = e2c;
         
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_complete.csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_filters/pose_best" + Param + ".csv",ios_base::app);
         OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
         OUT.close();
     }
@@ -341,14 +371,14 @@ void ORB_Framehandler::publish_odom(){
 
 //member visualization functions
 
-void ORB_Framehandler::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD){
-        publish_3D_keypoints(cur_SVD, &kp_pc_publisher_cur, raw_time);
-        publish_3D_keypoints(prev_SVD, &kp_pc_publisher_prev, raw_time);
-        publish_lines_3D(cur_SVD, prev_SVD, &line_publisher, raw_time);
+void ORB_Framehandler::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD,ros::Publisher* cur_publisher,ros::Publisher* prev_publisher,ros::Publisher* line_publisher){
+        publish_3D_keypoints(cur_SVD, cur_publisher, raw_time);
+        publish_3D_keypoints(prev_SVD, prev_publisher, raw_time);
+        publish_lines_3D(cur_SVD, prev_SVD, line_publisher, raw_time);
 }
 
 void ORB_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
-    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
+    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar point_color, cv::Scalar line_color, bool draw_lines){
     cv::Mat color_img,gray_img;
     const cv::Mat old_img = prev_orb->input_image.clone();
     const cv::Mat new_img = cur_orb->input_image.clone();
@@ -362,15 +392,15 @@ void ORB_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  
     //indicate features in new image
     for(int i = 0; i< (int)sorted_KP_cur.size(); i++)
     {
-        cv::Point2d cur_pt = sorted_KP_cur[i] * 1;
-        cv::circle(color_img, cur_pt, circle_size*1, line_color, 1*2);
+        cv::Point2d cur_pt = sorted_KP_cur[i] ;
+        cv::circle(color_img, cur_pt, circle_size, point_color, 2);
     }
     //indicate features in old image
     for(int i = 0; i< (int)sorted_KP_prev.size(); i++)
     {
-        cv::Point2d old_pt = sorted_KP_prev[i] * 1;
+        cv::Point2d old_pt = sorted_KP_prev[i];
         old_pt.y += new_img.size().height + gap;
-        cv::circle(color_img, old_pt, circle_size*1, line_color, 1*2);
+        cv::circle(color_img, old_pt, circle_size, point_color, 2);
     }
 
     if(draw_lines){
@@ -394,20 +424,18 @@ void ORB_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  
 }
 
 void ORB_Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
-    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, bool draw_lines){
+    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar point_color, cv::Scalar line_color, bool draw_lines){
         cv::Mat image = cur_orb->input_image.clone();
         cv::cvtColor(image,image,CV_GRAY2RGB);
 
         for (int i = 0; i< (int)sorted_KP_cur.size(); i++)
         {
-            cv::Point2d old_pt = sorted_KP_prev[i] * 1;
-            cv::Point2d cur_pt = sorted_KP_cur[i] * 1;
-            unsigned int r = rand() % 256;
-            unsigned int g = rand() % 256;
-            unsigned int b = rand() % 256;
-            cv::Scalar circle_col = cv::Scalar(r,g,b);
-            cv::circle(image, cur_pt, circle_size*1, circle_col, 1*1);
-            cv::line(image, cur_pt * 1, old_pt, cv::Scalar(255,0,0), 1*1, 8, 0);
+            cv::Point2d old_pt = sorted_KP_prev[i];
+            cv::Point2d cur_pt = sorted_KP_cur[i];
+            cv::circle(image, cur_pt, circle_size, point_color, 2);
+            cv::circle(image, old_pt, circle_size, point_color, 2);
+            if(draw_lines)
+                cv::line(image, cur_pt * 1, old_pt, line_color, 1, 8, 0);
         }
         if(image_source == 1)
         cv::putText(image, "Intensity",   cv::Point2d(300, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);

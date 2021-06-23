@@ -2,15 +2,15 @@ import numpy as np
 import pandas as pd
 
 Data = "Intensity"
-Extractor = "KLT"
+Extractor = "ORB"
 MASK = "ON"
 max_match_distance = "0.3m"
 min_distance = "0.1m"
 max_cos = "0.2"
 smoothing = "1"
-length = "100"
+length = "150"
 
-changing_parameter = "epsilon"
+changing_parameter = "best"
 num_points = int(length)*10
 
 
@@ -54,9 +54,9 @@ def averager_pose(pr_x, pr_y, pr_z, pr_roll, pr_pitch, pr_yaw):
 
 
 def get_pose_vector(value):
-    print("reading file: ", "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/pose_"+changing_parameter +
+    print("reading file: ", "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_filters/pose_"+changing_parameter +
           str(value)+".csv")
-    data = pd.read_csv("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/pose_"+changing_parameter +
+    data = pd.read_csv("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_filters/pose_"+changing_parameter +
                        str(value)+".csv", nrows=1000)
     data_x = pd.DataFrame.to_numpy(data["x"])
     data_y = pd.DataFrame.to_numpy(data["y"])
@@ -69,7 +69,7 @@ def get_pose_vector(value):
 
 
 def get_step_vector(value):
-    data = pd.read_csv("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/steps_"+changing_parameter +
+    data = pd.read_csv("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_filters/steps_"+changing_parameter +
                        str(value)+".csv", nrows=1000)
     data_x = pd.DataFrame.to_numpy(data["x"])
     data_y = pd.DataFrame.to_numpy(data["y"])
@@ -101,7 +101,7 @@ if __name__ == "__main__":
     GT_yaws = pd.DataFrame.to_numpy(GT_steps["yaw"])
 
     GT_overall = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_complete.csv", nrows=1000
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_pose.csv", nrows=1000
     )
 
     GT_xc = pd.DataFrame.to_numpy(GT_overall["x"])
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     GT_yawc = pd.DataFrame.to_numpy(GT_overall["yaw"])
 
     odom_file_pose = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/odom_aligned.csv", nrows=1000
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/odom_pose.csv", nrows=1000
     )
     odom_xc = pd.DataFrame.to_numpy(odom_file_pose["x"])
     odom_yc = pd.DataFrame.to_numpy(odom_file_pose["y"])
@@ -133,25 +133,26 @@ if __name__ == "__main__":
     odom_yaws = pd.DataFrame.to_numpy(odom_file_steps["yaw"])
 
     writer_pose = pd.ExcelWriter(
-        "tables/KLT_pose_" + changing_parameter + ".xlsx", engine="xlsxwriter")
+        "tables/brisk/BRISK_pose_" + changing_parameter + ".xlsx", engine="xlsxwriter")
 
     writer_steps = pd.ExcelWriter(
-        "tables/KLT_steps_" + changing_parameter + ".xlsx", engine="xlsxwriter")
+        "tables/filters/Distance_filtering_steps_" + changing_parameter + ".xlsx", engine="xlsxwriter")
 
-    df_pose = pd.DataFrame(index=range(6), columns=range(6))
-    df_pose.columns = ["0.001", "0.005", "0.01", "0.03", "0.05", "0.1"]
+    df_pose = pd.DataFrame(index=range(6), columns=range(5))
+    df_pose.columns = ["1", "2", "3", "4", "5"]
     df_pose.index = ['err x', 'err y', 'err z',
                      'err roll', 'err pitch', 'err yaw']
     df_pose.columns.name = changing_parameter
-    df_pose.style.set_caption("HolaHola")
+    df_pose.style.set_caption("HolaHola").to_excel(
+        "tables/filters/Distance_filtering_pose_" + changing_parameter + ".xlsx")
 
-    df_steps = pd.DataFrame(index=range(6), columns=range(6))
-    df_steps.columns = ["0.001", "0.005", "0.01", "0.03", "0.05", "0.1"]
+    df_steps = pd.DataFrame(index=range(6), columns=range(5))
+    df_steps.columns = ["1", "2", "3", "4", "5"]
     df_steps.index = ['err x', 'err y', 'err z',
                       'err roll', 'err pitch', 'err yaw']
     df_steps.columns.name = changing_parameter
 
-    for i in [0.001, 0.005, 0.01, 0.03, 0.05, 0.1]:
+    for i in range(1, 6):
         # save pose average errors
         pose_pr_x, pose_pr_y, pose_pr_z, pose_pr_roll, pose_pr_pitch, pose_pr_yaw = get_pose_vector(
             i)
@@ -176,13 +177,14 @@ if __name__ == "__main__":
         df_steps.loc["err pitch", str(i)] = "%.5f" % step_avg_err_pitch
         df_steps.loc["err yaw", str(i)] = "%.5f" % step_avg_err_yaw
 
+    print("We got here!!!!")
     df_pose.to_excel(writer_pose, sheet_name="sheet 1")
     df_steps.to_excel(writer_steps, sheet_name="sheet 1")
     writer_pose.save()
     writer_steps.save()
     df_pose.style.apply(highlight_min, 1).to_excel(
-        "tables/KLT_pose_" + changing_parameter + ".xlsx")
+        "tables/filters/Distance_filtering_pose_" + changing_parameter + ".xlsx")
     df_steps.style.apply(highlight_min, 1).to_excel(
-        "tables/KLT_steps_" + changing_parameter + ".xlsx")
+        "tables/filters/Distance_filtering_steps_" + changing_parameter + ".xlsx")
     # "KLT_mintracked:"+klt_min_tracked+"_max_detected:" +
     #  klt_max_detected+"_det_qual:"+klt_quality_level+"_block_size:"+klt_block_size+"_min_det_distance:"+klt_min_det_distance+"_epsilon"+klt_epsilon+"_crit_reps:"+klt_criteria_reps+"_opt_size:"+klt_opt_size+"_num_pyr:"+klt_num_pyramids

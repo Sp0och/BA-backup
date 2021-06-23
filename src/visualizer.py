@@ -8,11 +8,17 @@ max_match_distance = "0.3m"
 min_distance = "0.1m"
 max_cos = "0.2"
 smoothing = "1"
-length = "100"
+length = "950"
 
 # orb parameters
+orb_max_features = "1000"
+orb_accuracy = "31"
+orb_scale_factor = "1.7"
+orb_levels = "2"
 # brisk parameters
-
+brisk_threshold = "60"
+brisk_octaves = "3"
+brisk_pattern_scale = "1.0"
 # klt parameters
 klt_min_tracked = "40"
 klt_quality_level = "0.05"
@@ -277,14 +283,19 @@ def plot_values(printBool, extractor):
     if(printBool):
         if(extractor == "orb"):
             figc.savefig("pdfs/Path_plot" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length + ".pdf", bbox_inches='tight')
+                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" +
+                         length + "max_orb_feat:" + orb_max_features +
+                         "orb_accuracy:" + orb_accuracy + "orb_scale_factor:"
+                         + orb_scale_factor + "orb_levels:" + orb_levels+".pdf", bbox_inches='tight')
             figs.savefig("pdfs/Steps" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length + ".pdf", bbox_inches='tight')
+                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" +
+                         length + "max_orb_feat:" + orb_max_features+"orb_accuracy:" + orb_accuracy + "orb_scale_factor:" +
+                         orb_scale_factor + "orb_levels:" + orb_levels+".pdf", bbox_inches='tight')
         elif(extractor == "brisk"):
             figc.savefig("pdfs/Path_plot" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length + ".pdf", bbox_inches='tight')
+                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length + "brisk_threshold:"+brisk_threshold + "brisk_octaves:" + brisk_octaves + "brisk_pattern_scale:"+brisk_pattern_scale+".pdf", bbox_inches='tight')
             figs.savefig("pdfs/Steps" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length + ".pdf", bbox_inches='tight')
+                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length + "brisk_threshold:"+brisk_threshold + "brisk_octaves:" + brisk_octaves + "brisk_pattern_scale:"+brisk_pattern_scale+".pdf", bbox_inches='tight')
         else:
             figc.savefig("pdfs/Path_plot" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
                          min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_smoothing:" + smoothing+"_length:" + length +
@@ -572,14 +583,22 @@ def plot_errors(printBool, extractor):
     if(printBool):
         if(extractor == "orb"):
             figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length + ".pdf", bbox_inches='tight')
+                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length + "max_orb_feat:" + orb_max_features +
+                         "orb_accuracy:" + orb_accuracy + "orb_scale_factor:"
+                         + orb_scale_factor + "orb_levels:" + orb_levels+".pdf", bbox_inches='tight')
             figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length + ".pdf", bbox_inches='tight')
+                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" +
+                         length + "max_orb_feat:" + orb_max_features +
+                         "orb_accuracy:" + orb_accuracy + "orb_scale_factor:"
+                         + orb_scale_factor + "orb_levels:" + orb_levels+".pdf", bbox_inches='tight')
         elif(extractor == "brisk"):
             figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length + ".pdf", bbox_inches='tight')
+                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" +
+                         length + "brisk_threshold:"+brisk_threshold + "brisk_octaves:" + brisk_octaves + "brisk_pattern_scale:" +
+                         brisk_pattern_scale+".pdf", bbox_inches='tight')
             figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length + ".pdf", bbox_inches='tight')
+                         min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length +
+                         "brisk_threshold:"+brisk_threshold + "brisk_octaves:" + brisk_octaves + "brisk_pattern_scale:"+brisk_pattern_scale+".pdf", bbox_inches='tight')
         else:
             figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
                          min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_smoothing:" + smoothing+"_length:" + length +
@@ -630,7 +649,7 @@ def plot_trajectory(printBool, extractor):
 if __name__ == "__main__":
 
     prediction_step = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps.csv", nrows=1000)
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_filters/prediction_steps.csv", nrows=10*int(length))
     prediction_xs = pd.DataFrame.to_numpy(prediction_step["x"])
     prediction_ys = pd.DataFrame.to_numpy(prediction_step["y"])
     prediction_zs = pd.DataFrame.to_numpy(prediction_step["z"])
@@ -639,7 +658,7 @@ if __name__ == "__main__":
     prediction_yaws = pd.DataFrame.to_numpy(prediction_step["yaw"])
 
     prediction_overall = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data/pose_opt_size15.csv", nrows=1000)
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_filters/prediction_pose.csv", nrows=10*int(length))
     prediction_xc = pd.DataFrame.to_numpy(prediction_overall["x"])
     prediction_yc = pd.DataFrame.to_numpy(prediction_overall["y"])
     prediction_zc = pd.DataFrame.to_numpy(prediction_overall["z"])
@@ -648,7 +667,7 @@ if __name__ == "__main__":
     prediction_yawc = pd.DataFrame.to_numpy(prediction_overall["yaw"])
 
     GT_steps = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_steps.csv", nrows=1000
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_steps.csv", nrows=10*int(length)
     )
 
     GT_xs = pd.DataFrame.to_numpy(GT_steps["x"])
@@ -659,7 +678,7 @@ if __name__ == "__main__":
     GT_yaws = pd.DataFrame.to_numpy(GT_steps["yaw"])
 
     GT_overall = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_complete.csv", nrows=1000
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_pose.csv", nrows=10*int(length)
     )
 
     GT_xc = pd.DataFrame.to_numpy(GT_overall["x"])
@@ -670,7 +689,7 @@ if __name__ == "__main__":
     GT_yawc = pd.DataFrame.to_numpy(GT_overall["yaw"])
 
     odom_file_complete = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/odom_aligned.csv", nrows=1000
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/odom_pose.csv", nrows=10*int(length)
     )
     odom_xc = pd.DataFrame.to_numpy(odom_file_complete["x"])
     odom_yc = pd.DataFrame.to_numpy(odom_file_complete["y"])
@@ -680,7 +699,7 @@ if __name__ == "__main__":
     odom_yawc = pd.DataFrame.to_numpy(odom_file_complete["yaw"])
 
     odom_file_steps = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/odom_steps.csv", nrows=1000
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/odom_steps.csv", nrows=10*int(length)
     )
 
     odom_xs = pd.DataFrame.to_numpy(odom_file_steps["x"])
@@ -691,7 +710,7 @@ if __name__ == "__main__":
     odom_yaws = pd.DataFrame.to_numpy(odom_file_steps["yaw"])
 
     feature_number_file = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv", nrows=1000
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv", nrows=10*int(length)
     )
 
     feature_number = pd.DataFrame.to_numpy(
@@ -706,39 +725,37 @@ if __name__ == "__main__":
     odom_c_timestamps = pd.DataFrame.to_numpy(odom_file_complete["time"])
 
     feature_timestamps = pd.DataFrame.to_numpy(feature_number_file["time"])
-    feature_timestamps = feature_timestamps - complete_timestamps[0]
+    # feature_timestamps = feature_timestamps - complete_timestamps[0]
     step_timestamps = step_timestamps - complete_timestamps[0]
-    odom_s_timestamps = odom_s_timestamps / 1e09
     odom_s_timestamps = odom_s_timestamps - complete_timestamps[0]
-    odom_c_timestamps = odom_c_timestamps / 1e09
     odom_c_timestamps = odom_c_timestamps - complete_timestamps[0]
     complete_timestamps = complete_timestamps - complete_timestamps[0]
 
-    plot_values(False, "klt")
-    plot_errors(False, "klt")
-    plot_trajectory(False, "klt")
+    plot_values(False, "orb")
+    plot_errors(False, "orb")
+    plot_trajectory(False, "orb")
 
     # calculation of average error:
-    # diffx = prediction_xs-GT_xs
-    # diffy = prediction_ys-GT_ys
-    # diffz = prediction_zs-GT_zs
-    # diffroll = prediction_rolls-GT_rolls
-    # diffpitch = prediction_pitchs-GT_pitchs
-    # diffyaw = prediction_yaws-GT_yaws
+    diffx = prediction_xs-GT_xs
+    diffy = prediction_ys-GT_ys
+    diffz = prediction_zs-GT_zs
+    diffroll = prediction_rolls-GT_rolls
+    diffpitch = prediction_pitchs-GT_pitchs
+    diffyaw = prediction_yaws-GT_yaws
 
-    # average_x = np.sum(np.abs(diffx))/1000
-    # average_y = np.sum(np.abs(diffy))/1000
-    # average_z = np.sum(np.abs(diffz))/1000
-    # average_roll = np.sum(np.abs(diffroll))/1000
-    # average_pitch = np.sum(np.abs(diffpitch))/1000
-    # average_yaw = np.sum(np.abs(diffyaw))/1000
+    average_x = np.sum(np.abs(diffx))/int(length)*10
+    average_y = np.sum(np.abs(diffy))/int(length)*10
+    average_z = np.sum(np.abs(diffz))/int(length)*10
+    average_roll = np.sum(np.abs(diffroll))/int(length)*10
+    average_pitch = np.sum(np.abs(diffpitch))/int(length)*10
+    average_yaw = np.sum(np.abs(diffyaw))/int(length)*10
 
-    # print("Average diff x: ", average_x)
-    # print("Average diff y: ", average_y)
-    # print("Average diff z: ", average_z)
-    # print("Average diff roll: ", average_roll)
-    # print("Average diff pitch: ", average_pitch)
-    # print("Average diff yaw: ", average_yaw)
+    print("Average diff x: ", average_x)
+    print("Average diff y: ", average_y)
+    print("Average diff z: ", average_z)
+    print("Average diff roll: ", average_roll)
+    print("Average diff pitch: ", average_pitch)
+    print("Average diff yaw: ", average_yaw)
 
     # open the old wrong files for a comparison:
 
