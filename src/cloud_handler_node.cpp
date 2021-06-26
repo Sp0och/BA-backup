@@ -31,18 +31,21 @@ int MIN_KLT_FEATURES;
 int BRISK_THRESHOLD;
 //filtering
 int DUPLICATE_FILTERING_SIZE;
-int DOUBLE_FILTERING_SIZE;
-double MAX_COS;
-float MAX_MATCH_DISTANCE;
-float MIN_KP_DISTANCE;
 bool APPLY_DISTANCE_FILTERING;
 bool APPLY_RANSAC_FILTERING;
-bool APPLY_DOUBLE_FILTERING;
+bool APPLY_DUPLICATE_FILTERING;
+double MAX_DEPTH_DISTANCE;
 //start time and pose
 int START_POSE;
 double START_TIMESTAMP;
 
 int BLURR_SIZE;
+
+//analysis
+int extracted_count;
+int duplicate_filtered_count;
+int min_distance_filtered_count;
+int COUNT;
 
 pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
 
@@ -50,6 +53,8 @@ pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
 
 ImageHandler *image_handler;
 ORB_Framehandler *orb_frame_handler;
+ORB_Framehandler *orb_frame_handler2;
+ORB_Framehandler *orb_frame_handler3;
 BRISK_Framehandler *brisk_frame_handler;
 // Framehandler *frame_handler2;
 // Framehandler *frame_handler3;
@@ -74,14 +79,11 @@ void updateParams (ros::NodeHandle& n){
     fsSettings["num_threads"]  >> NUM_THREADS;
     fsSettings["extractor"]  >> EXTRACTOR;
 
-    fsSettings["max_match_distance"] >> MAX_MATCH_DISTANCE;
-    fsSettings["min_kp_distance"] >> MIN_KP_DISTANCE;
-    fsSettings["max_cos"] >> MAX_COS;
     fsSettings["duplicate_filtering_size"] >> DUPLICATE_FILTERING_SIZE;
-    fsSettings["double_filtering_size"] >> DOUBLE_FILTERING_SIZE;
+    fsSettings["apply_duplicate_filtering"] >> APPLY_DUPLICATE_FILTERING;
     fsSettings["apply_ransac_filtering"] >> APPLY_RANSAC_FILTERING;
-    fsSettings["apply_double_filtering"] >> APPLY_DOUBLE_FILTERING;
     fsSettings["apply_distance_filtering"] >> APPLY_DISTANCE_FILTERING;
+    fsSettings["max_depth_distance"] >> MAX_DEPTH_DISTANCE;
 
     fsSettings["start_pose"] >> START_POSE;
     fsSettings["start_timestamp"] >> START_TIMESTAMP;
@@ -145,17 +147,21 @@ class cloud_displayer{
             if((EXTRACTOR == "orb")){
             //test ORB alone:
             // ORB* orb = new ORB(input_image,image_handler->cloud_track,IMAGE_SOURCE);
+            // ORB* orb1 = new ORB(input_image2,image_handler->cloud_track,2);
+            // ORB* orb2 = new ORB(input_image3,image_handler->cloud_track,3);
             
-            std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,IMAGE_SOURCE);
+            std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,IMAGE_SOURCE,raw_time,extracted_count,duplicate_filtered_count,min_distance_filtered_count,COUNT);
             // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
             // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
             // Matches
             orb_frame_handler->newIteration(orb,raw_time);
+            // orb_frame_handler2->newIteration(orb2,raw_time);
+            // orb_frame_handler3->newIteration(orb3,raw_time);
             }
 
             //BRISK:
             if((EXTRACTOR == "brisk")){
-            std::shared_ptr<BRISK> brisk = std::make_shared<BRISK>(input_image,image_handler->cloud_track,IMAGE_SOURCE);
+            std::shared_ptr<BRISK> brisk = std::make_shared<BRISK>(input_image,image_handler->cloud_track,IMAGE_SOURCE,extracted_count,duplicate_filtered_count,min_distance_filtered_count,COUNT);
             //Brisk alone
             // BRISK* brisk = new BRISK(input_image,image_handler->cloud_track,IMAGE_SOURCE);
             //Matches
@@ -187,8 +193,8 @@ ros::NodeHandle n;
     assert(EXTRACTOR == "orb" || EXTRACTOR == "brisk" || EXTRACTOR == "klt");
     image_handler = new ImageHandler();
     orb_frame_handler = new ORB_Framehandler(IMAGE_SOURCE,START_POSE);
-    // frame_handler2 = new Framehandler(2);
-    // frame_handler3 = new Framehandler(3);
+    orb_frame_handler2 = new ORB_Framehandler(2,START_POSE);
+    orb_frame_handler3 = new ORB_Framehandler(3,START_POSE);
     brisk_frame_handler = new BRISK_Framehandler(IMAGE_SOURCE,START_POSE);
     // frame_handler2 = new Framehandler(2);
     // frame_handler3 = new Framehandler(3);

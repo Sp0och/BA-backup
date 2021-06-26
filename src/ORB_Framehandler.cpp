@@ -1,11 +1,17 @@
 #include "../include/ORB_Framehandler.h"
 #include "helper.cpp"
 
+using namespace std;
 
 //core member methods:
 
 ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
         std::string config_file;
+        COUNT = 0;
+        filtered_count = 0;
+        ransac_filtered_count = 0;
+        unfiltered_count = 0;
+        path = "orb_0.25";
         n_frame.getParam("parameter_file", config_file);
         cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
         if(!fsSettings.isOpened())
@@ -43,7 +49,6 @@ ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
         match_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
         ransac_publisher = n_frame.advertise<sensor_msgs::Image>("RANSAC_filtered", 1);
         duplicate_publisher = n_frame.advertise<sensor_msgs::Image>("DUPLICATE_filtered", 1);
-        distance_publisher = n_frame.advertise<sensor_msgs::Image>("DISTANCE_filtered", 1);
 
         kp_pc_publisher_cur = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1);
         kp_pc_publisher_prev = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1);
@@ -92,7 +97,6 @@ void ORB_Framehandler::matches_filtering_motion(){
         std::sort(matches.begin(),matches.end());
         std::vector<cv::Point2d> sorted_2d_cur, sorted_2d_prev;
         MatrixXd prev_SVD(3,matches.size()),cur_SVD(3,matches.size());
-
         //pair the keypoints up according to the matches:
         for (size_t i = 0; i < matches.size(); i++)
         {
@@ -107,7 +111,7 @@ void ORB_Framehandler::matches_filtering_motion(){
                 cur_index = matches.at(i).trainIdx;
                 prev_index = matches.at(i).queryIdx;
             }
-            
+
             //create sorted keypoint vectors
             sorted_2d_cur.push_back(cur_orb->orb_keypoints_2d.at(cur_index));
             sorted_2d_prev.push_back(prev_orb->orb_keypoints_2d.at(prev_index));
@@ -122,31 +126,24 @@ void ORB_Framehandler::matches_filtering_motion(){
         matches.clear();
         //Publish matches before filtering:
         publish_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
-        cout << "right after matching: " << prev_SVD.cols() << " " << endl;
-
+        // cout << "right after matching: " << prev_SVD.cols() << " " << endl;
+        unfiltered_count += cur_SVD.cols();
         if(APPLY_RANSAC_FILTERING){
             RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
             publish_matches_2F(&ransac_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
-            cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
+            // cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         // std::cout << "size after ransac: " << sorted_2d_cur.size() << " " << std::endl;
         }
-        if(APPLY_DOUBLE_FILTERING){
-            double_point_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
-            publish_matches_2F(&duplicate_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
-            cout << "size after double point filtering: " << prev_SVD.cols() << " "<< endl;
-        }
-
+        ransac_filtered_count+=cur_SVD.cols();
         visualizer_3D(cur_SVD,prev_SVD,&pc_distance_publisher_c,&pc_distance_publisher_p,&line_distance_publisher);
-
         if(APPLY_DISTANCE_FILTERING){
             filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
-            publish_matches_2F(&distance_publisher, sorted_2d_cur, sorted_2d_prev,2,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
-            cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
+            // cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
         }
-        
+        filtered_count += cur_SVD.cols();
 
-        if(prev_SVD.cols() < 40)
-            cout << "size after distance filtering: " << prev_SVD.cols() << " at timestamp: " << raw_time << "   " << endl;
+        // if(prev_SVD.cols() < 40)
+        //     cout << "size after distance filtering: " << prev_SVD.cols() << " at timestamp: " << raw_time << "   " << endl;
 
         store_feature_number(cur_SVD);
 
@@ -184,7 +181,13 @@ void ORB_Framehandler::matches_filtering_motion(){
         // publish_matches_1F(&range_publisher, sorted_2d_cur, sorted_2d_prev,1,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
         // else
         // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,1,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
-    
+        COUNT++;
+        if(COUNT >= 100){
+        cout << "average_unfilterd is: " << 1.0*unfiltered_count/COUNT<< " " << endl;
+        cout << "average ransac filtered is: " << 1.0*ransac_filtered_count/COUNT << " " << endl;
+        cout << "average_filtered is : " << 1.0*filtered_count/COUNT<< " " << endl;
+        cout << "TRUE POSITIVE MATCHING RATE IS: " << 100*(1.0*filtered_count/unfiltered_count)<< " " << endl;
+        }
     }
 
 //plotting functions
@@ -223,18 +226,18 @@ void ORB_Framehandler::set_plotting_columns_and_start_pose(){
         
 
 
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_filters/pose_best" + Param + ".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_pose_"+path+".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_filters/steps_best" + Param + ".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps_"+path+".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT.close(); 
     
-    // OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv",ios_base::app);
-    // OUT << "num_of_features" "," << "time" << endl;
-    // OUT.close(); 
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number_"+path+".csv",ios_base::app);
+    OUT << "num_of_features" "," << "time" << endl;
+    OUT.close(); 
 }
 
 void ORB_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
@@ -269,7 +272,7 @@ void ORB_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
             ea = e1;
         else
             ea = e2;
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_filters/steps_best" + Param + ".csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps_"+path+".csv",ios_base::app);
         OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << raw_time <<  endl;
         OUT.close(); 
 
@@ -304,13 +307,13 @@ void ORB_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
         else
             eac = e2c;
         
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/comparison_data_filters/pose_best" + Param + ".csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_pose_"+path+".csv",ios_base::app);
         OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
         OUT.close();
     }
 
 void ORB_Framehandler::store_feature_number(const MatrixXd& cur_SVD){
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number.csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number_"+path+".csv",ios_base::app);
     OUT << cur_SVD.cols() << "," << raw_time <<  endl;
     OUT.close(); 
 }
@@ -501,10 +504,7 @@ void ORB_Framehandler::SVD(MatrixXd& cur_SVD,MatrixXd& prev_SVD){
         my_pose = my_pose*current_iteration;
 
         //Storing the plot data
-        // if(raw_time >= ros::Time(1598537680.405615616))
         store_coordinates(t,R);
 
-        //print to see my pose after this iteration
-        // std::cout << "The current coordinates are: " << std::endl << my_pose << std::endl;
     }
 

@@ -61,9 +61,14 @@ class BRISK_Framehandler{
 
     ros::NodeHandle n_frame;
     ros::Publisher match_publisher, range_publisher, ambient_publisher, intensity_publisher, 
-    kp_pc_publisher_cur, kp_pc_publisher_prev, midpoint_publisher, odom_publisher, line_publisher;
+    kp_pc_publisher_cur, kp_pc_publisher_prev, midpoint_publisher, odom_publisher, line_publisher,ransac_publisher,duplicate_publisher;
     
     int BRISK_THRESHOLD;
     int OCTAVES;
     float PATTERN_SCALE;
+
+    int COUNT;
+    int unfiltered_count;
+    int ransac_filtered_count;
+    int filtered_count;
 };

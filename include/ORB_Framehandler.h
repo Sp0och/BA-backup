@@ -56,12 +56,17 @@ class ORB_Framehandler{
     vector<cv::DMatch> matches; 
     int image_source;
     Matrix4d my_pose;
+    int COUNT;
+    int unfiltered_count;
+    int ransac_filtered_count;
+    int filtered_count;
 
     ros::Time raw_time;
 
     ros::NodeHandle n_frame;
-    ros::Publisher match_publisher, range_publisher, ambient_publisher, intensity_publisher, 
-    kp_pc_publisher_cur, kp_pc_publisher_prev,ransac_publisher,duplicate_publisher,distance_publisher, odom_publisher, line_publisher,pc_distance_publisher_p,pc_distance_publisher_c,line_distance_publisher;
+    ros::Publisher match_publisher,range_publisher, ambient_publisher, intensity_publisher, 
+    kp_pc_publisher_cur, kp_pc_publisher_prev,ransac_publisher,duplicate_publisher,
+    odom_publisher, line_publisher,pc_distance_publisher_p,pc_distance_publisher_c,line_distance_publisher;
     
     cv::Scalar POINT_COLOR;
     cv::Scalar LINE_COLOR;
@@ -70,5 +75,6 @@ class ORB_Framehandler{
     int ORB_ACCURACY;
     float SCALE_FACTOR;
     int LEVELS;
+    std::string path;
 
 };

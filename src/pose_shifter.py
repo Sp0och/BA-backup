@@ -31,7 +31,7 @@ def euler_to_rotMat(roll, pitch, yaw):
 if __name__ == "__main__":
 
     odom_complete = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/test_odom_pose.csv")
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_pose_scan_2_map.csv")
 
     odom_xc = pd.DataFrame.to_numpy(odom_complete["x"])
     odom_yc = pd.DataFrame.to_numpy(odom_complete["y"])
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     odom_yawc = pd.DataFrame.to_numpy(odom_complete["yaw"])
     odom_time = pd.DataFrame.to_numpy(odom_complete["time"])
     odom_aligned = open(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/test_odom_aligned.csv", "w"
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_pose_scan_2_map.csv", "w"
     )
 
     writer_aligned = csv.writer(odom_aligned)

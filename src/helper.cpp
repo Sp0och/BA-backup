@@ -3,6 +3,7 @@
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
+
 //conversions and trimming: 
 
 /**
@@ -14,23 +15,6 @@ static void keypointTransition(vector<cv::KeyPoint>& keypoints_in, vector<cv::Po
     for(size_t i = 0; i < keypoints_in.size(); i++)
     {
         points_in[i] = keypoints_in[i].pt;
-    }
-}
-
-template <typename Derived1>
-/**
- * Get the 3d coordinates of the keypoints - used in KLT
- * */
-static void get_3D_points(vector<Derived1>& points_2f, Eigen::MatrixXd& points_3d, const pcl::PointCloud<PointType>::Ptr PC){
-    points_3d.resize(3,points_2f.size());
-    for(size_t i = 0; i < points_2f.size(); i++){
-        int row_index = cvRound(points_2f[i].y);
-        int col_index = cvRound(points_2f[i].x);
-        int index = row_index*IMAGE_WIDTH + col_index;
-        PointType *pi = &PC->points[index];
-        points_3d(0,i) = pi->x;
-        points_3d(1,i) = pi->y;
-        points_3d(2,i) = pi->z;
     }
 }
 
@@ -63,6 +47,59 @@ static void trim_matrix(Eigen::MatrixXd& m, vector<bool>& status){
     m.conservativeResize(3,j);
 }
 
+
+template <typename Derived1>
+/**
+ * Get the 3d coordinates of the keypoints - used in KLT
+ * */
+static void get_3D_points(vector<Derived1>& points_2D, Eigen::MatrixXd& points_3D, const pcl::PointCloud<PointType>::Ptr PC){
+    points_3D.resize(3,points_2D.size());
+    std::vector<bool>status(points_2D.size(),1);
+    for(size_t i = 0; i < points_2D.size(); i++){
+        int row_index = cvRound(points_2D[i].y);
+        int col_index = cvRound(points_2D[i].x);
+        if(row_index > 127)
+        row_index = 127;
+        if(row_index < 0)
+        row_index = 0;
+        int index = row_index*IMAGE_WIDTH + col_index;
+        PointType *pi = &PC->points[index];
+        if(pi->x == pi->y && pi->y == pi->z && pi->z == 0)
+            status.at(i) = 0;
+        points_3D(0,i) = pi->x;
+        points_3D(1,i) = pi->y;
+        points_3D(2,i) = pi->z;
+    }
+    trimVector(points_2D,status);
+    trim_matrix(points_3D,status);
+}
+
+template <typename Derived2>
+/**
+ * Get the 3d coordinates of the keypoints - used in KLT
+ * */
+static void get_3D_points_adapt_status(vector<Derived2>& points_2D, Eigen::MatrixXd& points_3D, const pcl::PointCloud<PointType>::Ptr PC,std::vector<bool>& status){
+    points_3D.resize(3,points_2D.size());
+    for(size_t i = 0; i < points_2D.size(); i++){
+        unsigned int row_index = cvRound(points_2D.at(i).y);
+        unsigned int col_index = cvRound(points_2D.at(i).x);
+        if(row_index > 127)
+        row_index = 127;
+        if(row_index < 0)
+        row_index = 0;
+        unsigned int index = row_index*IMAGE_WIDTH + col_index;
+        const PointType *pi = &PC->points[index];
+        if(pi->x == pi->y && pi->y == pi->z && pi->z == 0)
+            status.at(i) = 0;
+        points_3D(0,i) = pi->x;
+        points_3D(1,i) = pi->y;
+        points_3D(2,i) = pi->z;
+    }
+    trimVector(points_2D,status);
+    trim_matrix(points_3D,status);
+}
+
+
 //Filtering Functions:
 /**
  * Apply RANSAC filtering to the point clouds using the find Homography method
@@ -82,34 +119,6 @@ static void RANSAC_filtering(std::vector<cv::Point2d>& sorted_2d_cur, std::vecto
         trim_matrix(cur_SVD,status);
 }
 
-/**
- * Filter out duplicate point usage (one point two matches)
- * */
-static void double_point_filtering(vector<cv::Point2d>& cur, vector<cv::Point2d>& prev,Eigen::MatrixXd& curM, Eigen::MatrixXd& prevM){
-    std::vector<bool> duplicate_status;
-    cv::Mat dubplicate_mask_c = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
-    cv::Mat dubplicate_mask_p = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
-    for(int i = 0; i < cur.size();i++){
-        cv::Point2d pt_c = cur.at(i);
-        cv::Point2d pt_p = prev.at(i);
-        cv::Scalar color_c = dubplicate_mask_c.at<uchar>(pt_c);
-        cv::Scalar color_p = dubplicate_mask_p.at<uchar>(pt_p);
-        //check whether a point has already been used if not draw there to indicate usage
-        if(color_c == cv::Scalar(0) && color_p == cv::Scalar(0)){
-            cv::circle(dubplicate_mask_c,pt_c,0,cv::Scalar(255),DOUBLE_FILTERING_SIZE);
-            cv::circle(dubplicate_mask_p,pt_p,0,cv::Scalar(255),DOUBLE_FILTERING_SIZE);
-            duplicate_status.push_back(1);
-        }   
-        //If one of the points has already been used delete the whole match
-        else{
-            duplicate_status.push_back(0);
-        }
-    }
-    trimVector(cur,duplicate_status);
-    trimVector(prev,duplicate_status);
-    trim_matrix(curM,duplicate_status);
-    trim_matrix(prevM,duplicate_status);
-}
 
 /**
  * Filter out all 3D points whoose difference in a coordinate dirction is more than half its effective value as well as points that are too close to the origin
@@ -146,19 +155,22 @@ static void filtering_3D(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, ve
         float dist_y = p_c_y - p_p_y;
         float dist_z = p_c_z - p_p_z;
 
-        Eigen::Vector3d distance(dist_x,dist_y,dist_z);
+        Eigen::Vector3d match_vector(dist_x,dist_y,dist_z);
         Eigen::Vector3d O_cur(p_c_x,p_c_y,p_c_z);
-        double colinearity = fabs(distance.dot(O_cur));
-        double costheta = colinearity/(distance.norm()*O_cur.norm());
+        Eigen::Vector3d O_prev(p_p_x,p_p_y,p_p_z);
+        double dot = fabs(match_vector.dot(O_cur));
+        double depth_distance = dot/O_cur.norm();
 
         float mdif = sqrt(dist_x*dist_x + dist_y*dist_y + dist_z*dist_z);
         float dist_c = sqrt(p_c_x*p_c_x + p_c_y*p_c_y + p_c_z*p_c_z);
         float dist_p = sqrt(p_p_x*p_p_x + p_p_y*p_p_y + p_p_z*p_p_z);
 
-        if((costheta > MAX_COS && mdif > MAX_MATCH_DISTANCE) || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
-            distance_flag.at(i) = 0;
+        // if((costheta > MAX_COS && mdif > MAX_MATCH_DISTANCE) || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
+        //     distance_flag.at(i) = 0;
         // if((costheta * mdif > MAX_MATCH_DISTANCE) || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
         //     distance_flag.at(i) = 0;
+        if(depth_distance > MAX_DEPTH_DISTANCE)
+            distance_flag.at(i) = 0;
     }
 
     trim_matrix(prev_SVD,distance_flag);
@@ -193,25 +205,6 @@ static void RANSAC_filtering_f(std::vector<cv::Point2f>& sorted_fd_cur, std::vec
  * */
 static void filtering_3D_f(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, vector<cv::Point2f>& cur,vector<cv::Point2f>& prev){
     vector<bool> distance_flag(prev_SVD.cols(),1);
-    // for(int i = 0; i < prev_SVD.cols();i++){
-    //     float p_c_x = cur_SVD(0,i);
-    //     float p_c_y = cur_SVD(1,i);
-    //     float p_c_z = cur_SVD(2,i);
-    //     float p_p_x = prev_SVD(0,i);
-    //     float p_p_y = prev_SVD(1,i);
-    //     float p_p_z = prev_SVD(2,i);
-    //     float dist_x = p_c_x - p_p_x;
-    //     float dist_y = p_c_y - p_p_y;
-    //     float dist_z = p_c_z - p_p_z;
-
-    //     float mdif = sqrt(dist_x*dist_x + dist_y*dist_y + dist_z*dist_z);
-    //     float dist_c = sqrt(p_c_x*p_c_x + p_c_y*p_c_y + p_c_z*p_c_z);
-    //     float dist_p = sqrt(p_p_x*p_p_x + p_p_y*p_p_y + p_p_z*p_p_z);
-
-    //     if(mdif > MAX_MATCH_DISTANCE || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
-    //         distance_flag.at(i) = 0;
-    // }
-    //vector product attempt:
     for(int i = 0; i < prev_SVD.cols();i++){
         float p_c_x = cur_SVD(0,i);
         float p_c_y = cur_SVD(1,i);
@@ -223,19 +216,22 @@ static void filtering_3D_f(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, 
         float dist_y = p_c_y - p_p_y;
         float dist_z = p_c_z - p_p_z;
 
-        Eigen::Vector3d distance(dist_x,dist_y,dist_z);
+        Eigen::Vector3d match_vector(dist_x,dist_y,dist_z);
         Eigen::Vector3d O_cur(p_c_x,p_c_y,p_c_z);
-        double colinearity = fabs(distance.dot(O_cur));
-        double costheta = colinearity/(distance.norm()*O_cur.norm());
+        Eigen::Vector3d O_prev(p_p_x,p_p_y,p_p_z);
+        double dot = fabs(match_vector.dot(O_cur));
+        double depth_distance = dot/O_cur.norm();
 
         float mdif = sqrt(dist_x*dist_x + dist_y*dist_y + dist_z*dist_z);
         float dist_c = sqrt(p_c_x*p_c_x + p_c_y*p_c_y + p_c_z*p_c_z);
         float dist_p = sqrt(p_p_x*p_p_x + p_p_y*p_p_y + p_p_z*p_p_z);
 
-        if((costheta > MAX_COS && mdif > MAX_MATCH_DISTANCE) || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
-            distance_flag.at(i) = 0;
+        // if((costheta > MAX_COS && mdif > MAX_MATCH_DISTANCE) || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
+        //     distance_flag.at(i) = 0;
         // if((costheta * mdif > MAX_MATCH_DISTANCE) || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
         //     distance_flag.at(i) = 0;
+        if(depth_distance > MAX_DEPTH_DISTANCE)
+            distance_flag.at(i) = 0;
     }
 
     trim_matrix(prev_SVD,distance_flag);
@@ -245,21 +241,17 @@ static void filtering_3D_f(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, 
 }
 
 /**
- * Filter out duplicate point usage (one point two matches) for FLOATs
+ * Filter out duplicate points
  * */
-static void double_point_filtering_f(vector<cv::Point2f>& cur, vector<cv::Point2f>& prev,Eigen::MatrixXd& curM, Eigen::MatrixXd& prevM){
+static void duplicate_point_filtering(vector<cv::Point2d>& point){
     std::vector<bool> duplicate_status;
-    cv::Mat dubplicate_mask_c = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
     cv::Mat dubplicate_mask_p = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
-    for(int i = 0; i < cur.size();i++){
-        cv::Point2d pt_c = cur.at(i);
-        cv::Point2d pt_p = prev.at(i);
-        cv::Scalar color_c = dubplicate_mask_c.at<uchar>(pt_c);
+    for(int i = 0; i < point.size();i++){
+        cv::Point2d pt_p = point.at(i);
         cv::Scalar color_p = dubplicate_mask_p.at<uchar>(pt_p);
         //check whether a point has already been used if not draw there to indicate usage
-        if(color_c == cv::Scalar(0) && color_p == cv::Scalar(0)){
-            cv::circle(dubplicate_mask_c,pt_c,0,cv::Scalar(255),DOUBLE_FILTERING_SIZE);
-            cv::circle(dubplicate_mask_p,pt_p,0,cv::Scalar(255),DOUBLE_FILTERING_SIZE);
+        if(color_p == cv::Scalar(0)){
+            cv::circle(dubplicate_mask_p,pt_p,0,cv::Scalar(255),DUPLICATE_FILTERING_SIZE);
             duplicate_status.push_back(1);
         }   
         //If one of the points has already been used delete the whole match
@@ -267,10 +259,29 @@ static void double_point_filtering_f(vector<cv::Point2f>& cur, vector<cv::Point2
             duplicate_status.push_back(0);
         }
     }
-    trimVector(cur,duplicate_status);
-    trimVector(prev,duplicate_status);
-    trim_matrix(curM,duplicate_status);
-    trim_matrix(prevM,duplicate_status);
+    trimVector(point,duplicate_status);
+}
+
+/**
+ * Filter out duplicate points (FLOATs)
+ * */
+static void duplicate_point_filtering_f(vector<cv::Point2f>& point){
+    std::vector<bool> duplicate_status;
+    cv::Mat dubplicate_mask_p = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
+    for(int i = 0; i < point.size();i++){
+        cv::Point2d pt_p = point.at(i);
+        cv::Scalar color_p = dubplicate_mask_p.at<uchar>(pt_p);
+        //check whether a point has already been used if not draw there to indicate usage
+        if(color_p == cv::Scalar(0)){
+            cv::circle(dubplicate_mask_p,pt_p,0,cv::Scalar(255),DUPLICATE_FILTERING_SIZE);
+            duplicate_status.push_back(1);
+        }   
+        //If one of the points has already been used delete the whole match
+        else{
+            duplicate_status.push_back(0);
+        }
+    }
+    trimVector(point,duplicate_status);
 }
 
 //Visualization Functions:
@@ -279,13 +290,14 @@ template <typename Keypoints>
 /**
  * Visualizing the 2D keypoints
  * */
-static void publish_keypoints (ros::Publisher* publisher, cv::Mat& image, const vector<Keypoints>& keypoints, const int circle_size,const cv::Scalar line_color){
-    cv::cvtColor(image, image, CV_GRAY2RGB);
+static void publish_keypoints (ros::Publisher* publisher, const cv::Mat& input_image, const vector<Keypoints>& keypoints, const int circle_size,const cv::Scalar line_color){
+    cv::Mat color_image;
+    cv::cvtColor(input_image, color_image, CV_GRAY2RGB);
     for(int i = 0; i < (int)keypoints.size(); i++){
         cv::Point2d cur_pt = keypoints[i];
-        cv::circle(image,cur_pt,circle_size,line_color,2);
+        cv::circle(color_image,cur_pt,circle_size,line_color,2);
     }
-    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
+    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", color_image).toImageMsg();
     publisher->publish(msg);
 }
 

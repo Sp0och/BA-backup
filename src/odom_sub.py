@@ -72,11 +72,11 @@ def node_init():
 if __name__ == '__main__':
 
     solution_complete = open(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/test_odom_pose.csv", "w"
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_pose_scan_2_map.csv", "w"
     )
 
     solution_steps = open(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/test_odom_steps.csv", "w"
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_steps_scan_2_map.csv", "w"
     )
 
     writer_complete = csv.writer(solution_complete)

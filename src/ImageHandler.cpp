@@ -76,17 +76,17 @@ void ImageHandler::cloud_handler(const sensor_msgs::PointCloud2ConstPtr &cloud_m
                 // fill our pointcloud
                 PointType* p = &cloud_track->points[u * IMAGE_WIDTH + v];
 
-                // if (range >= 0.1)
-                // {
+                if (range >= 0.1)
+                {
                     p->x = pt.x;
                     p->y = pt.y;
                     p->z = pt.z;
                     p->intensity = intensity;
-                // }
-                // else
-                // {
-                //     p->x = p->y = p->z = p->intensity = 0;
-                // }
+                }
+                else
+                {
+                    p->x = p->y = p->z = p->intensity = 0;
+                }
             }
         }
 

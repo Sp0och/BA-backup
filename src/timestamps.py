@@ -14,7 +14,7 @@ import csv
 if __name__ == "__main__":
 
     odom_complete = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/tst_GT_steps.csv")
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_steps_scan_2_map.csv")
 
     file_xc = pd.DataFrame.to_numpy(odom_complete["x"])
     file_yc = pd.DataFrame.to_numpy(odom_complete["y"])
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     file_yawc = pd.DataFrame.to_numpy(odom_complete["yaw"])
     file_time = pd.DataFrame.to_numpy(odom_complete["time"])
     odom_aligned_shifted = open(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_steps.csv", "w"
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_steps_scan_2_map.csv", "w"
     )
     writer_aligned_shifted = csv.writer(odom_aligned_shifted)
     writer_aligned_shifted.writerow(

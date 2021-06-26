@@ -27,10 +27,17 @@ class KLT {
     void store_coordinates(const Vector3d& t_input, const Matrix3d& R);
 
     void SVD(const MatrixXd& cur_SVD,const MatrixXd& prev_SVD);
-
-    void publish_KLT(ros::Publisher* publisher, const cv::Mat& cur_image,
+    /**
+     * publish the KLT trackings
+     * */
+    void publish_tracking(ros::Publisher* publisher, const cv::Mat& cur_image,
         const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,
         int circle_size);
+    /**
+     * Publish the extracted points
+     * */
+    void publish_extraction(ros::Publisher* publisher, const cv::Mat& cur_image,
+        const vector<cv::Point2f>& cur_keypoints,int circle_size);
 
     void store_feature_number(const MatrixXd& cur_SVD);
 
@@ -42,7 +49,7 @@ class KLT {
 
     private:
     ros::NodeHandle n_KLT;
-    ros::Publisher pub_KLT_int,pub_KLT_ran,pub_KLT_amb,pub_KLT_tf,kp_pc_publisher_cur,kp_pc_publisher_prev,mid_point_line_publisher,odom_publisher,gotten_KP;
+    ros::Publisher pub_KLT_int,pub_KLT_ran,pub_KLT_amb,pub_KLT_tf,kp_pc_publisher_cur,kp_pc_publisher_prev,mid_point_line_publisher,odom_publisher,gotten_KP,extraction_publisher,ransac_publisher,duplicate_publisher,match_publisher;
     
     cv::Mat cur_image;
     cv::Mat prev_image;
@@ -69,4 +76,15 @@ class KLT {
     int CRITERIA_REPS;
     int OPT_SIZE;
     int NUM_PYRAMIDS;
+    bool USE_HARRIS;
+
+    int extracted_count;
+    int duplicate_filtered_count;
+    int min_distance_filtered_count;
+    int COUNT;
+    
+    int unfiltered_count;
+    int ransac_filtered_count;
+    int distance_filtered_count;
+    int MATCH_COUNT;
 };

@@ -82,13 +82,10 @@ extern ofstream OUT;
 
 extern int MIN_LOOP_FEATURE_NUM;
 extern int DUPLICATE_FILTERING_SIZE;
-extern int DOUBLE_FILTERING_SIZE;
-extern float MAX_MATCH_DISTANCE;
-extern float MIN_KP_DISTANCE;
+extern double MAX_DEPTH_DISTANCE;
+extern bool APPLY_DUPLICATE_FILTERING;
 extern bool APPLY_DISTANCE_FILTERING;
 extern bool APPLY_RANSAC_FILTERING;
-extern bool APPLY_DOUBLE_FILTERING;
-extern double MAX_COS;
 
 extern int START_POSE;
 
