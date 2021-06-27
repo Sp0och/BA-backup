@@ -265,7 +265,7 @@ static void duplicate_point_filtering(vector<cv::Point2d>& point){
 /**
  * Filter out duplicate points (FLOATs)
  * */
-static void duplicate_point_filtering_f(vector<cv::Point2f>& point){
+static void duplicate_point_filtering_f(vector<cv::Point2f>& point, Eigen::MatrixXd& points_3D){
     std::vector<bool> duplicate_status;
     cv::Mat dubplicate_mask_p = cv::Mat(IMAGE_HEIGHT,IMAGE_WIDTH,CV_8UC1,cv::Scalar(0));
     for(int i = 0; i < point.size();i++){
@@ -282,6 +282,7 @@ static void duplicate_point_filtering_f(vector<cv::Point2f>& point){
         }
     }
     trimVector(point,duplicate_status);
+    trim_matrix(points_3D,duplicate_status);
 }
 
 //Visualization Functions:
@@ -290,13 +291,20 @@ template <typename Keypoints>
 /**
  * Visualizing the 2D keypoints
  * */
-static void publish_keypoints (ros::Publisher* publisher, const cv::Mat& input_image, const vector<Keypoints>& keypoints, const int circle_size,const cv::Scalar line_color){
+static void publish_keypoints (ros::Publisher* publisher, const cv::Mat& input_image, const vector<Keypoints>& keypoints, const int circle_size,const cv::Scalar line_color, int image_source){
     cv::Mat color_image;
     cv::cvtColor(input_image, color_image, CV_GRAY2RGB);
     for(int i = 0; i < (int)keypoints.size(); i++){
         cv::Point2d cur_pt = keypoints[i];
         cv::circle(color_image,cur_pt,circle_size,line_color,2);
     }
+    if(image_source == 1)
+    cv::putText(color_image, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    else if (image_source == 2)
+    cv::putText(color_image, "Range",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    else
+    cv::putText(color_image, "Ambient",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", color_image).toImageMsg();
     publisher->publish(msg);
 }

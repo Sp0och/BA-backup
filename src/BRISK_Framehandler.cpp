@@ -14,6 +14,9 @@ BRISK_Framehandler::BRISK_Framehandler(int _image_source,int START_POSE){
         ransac_filtered_count = 0;
         filtered_count = 0;
 
+        file_name = "brisk_0.3";
+        directory = "output";
+
         std::string config_file;
         n_frame.getParam("parameter_file", config_file);
         cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
@@ -210,16 +213,16 @@ void BRISK_Framehandler::set_plotting_columns_and_start_pose(){
         
     string Param = to_string(OCTAVES);
 
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_pose_brisk.csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/prediction_pose_" + file_name + ".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps_brisk.csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/prediction_steps_" + file_name + ".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number_brisk.csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/feature_number_" + file_name + ".csv",ios_base::app);
     OUT << "num_of_features" "," << "time" << endl;
     OUT.close(); 
 }
@@ -256,7 +259,7 @@ void BRISK_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R)
             ea = e1;
         else
             ea = e2;
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps_brisk.csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps_" + file_name + ".csv",ios_base::app);
         OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << raw_time <<  endl;
         OUT.close(); 
 
@@ -291,13 +294,13 @@ void BRISK_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R)
         else
             eac = e2c;
         
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_pose_brisk.csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_pose_" + file_name + ".csv",ios_base::app);
         OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
         OUT.close();
     }
 
 void BRISK_Framehandler::store_feature_number(const MatrixXd& cur_SVD){
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number_brisk.csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number_" + file_name + ".csv",ios_base::app);
     OUT << cur_SVD.cols() << "," << raw_time <<  endl;
     OUT.close(); 
 }
@@ -380,14 +383,14 @@ void BRISK_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const
     for(int i = 0; i< (int)sorted_KP_cur.size(); i++)
     {
         cv::Point2d cur_pt = sorted_KP_cur[i];
-        cv::circle(color_img, cur_pt, circle_size, cv::Scalar(255,0,0), 1*2);
+        cv::circle(color_img, cur_pt, circle_size, cv::Scalar(255,0,0), 1);
     }
     //indicate features in old image
     for(int i = 0; i< (int)sorted_KP_prev.size(); i++)
     {
         cv::Point2d old_pt = sorted_KP_prev[i];
         old_pt.y += new_img.size().height + gap;
-        cv::circle(color_img, old_pt, circle_size, cv::Scalar(255,0,0), 1*2);
+        cv::circle(color_img, old_pt, circle_size, cv::Scalar(255,0,0), 1);
     }
 
     if(draw_lines){
@@ -399,11 +402,11 @@ void BRISK_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const
         }
     }
     if(image_source == 1)
-    cv::putText(color_img, "Intensity",   cv::Point2d(300, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    cv::putText(color_img, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
     else if (image_source == 2)
-    cv::putText(color_img, "Range",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    cv::putText(color_img, "Range",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
     else
-    cv::putText(color_img, "Ambient",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    cv::putText(color_img, "Ambient",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
 
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", color_img).toImageMsg();
     this_pub->publish(msg);
@@ -428,11 +431,11 @@ void BRISK_Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const
             cv::line(image, cur_pt * 1, old_pt, cv::Scalar(0,255,0), 1, 8, 0);
         }
         if(image_source == 1)
-        cv::putText(image, "Intensity",   cv::Point2d(300, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+        cv::putText(image, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
         else if (image_source == 2)
-        cv::putText(image, "Range",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+        cv::putText(image, "Range",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
         else
-        cv::putText(image, "Ambient",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+        cv::putText(image, "Ambient",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
 
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
         this_pub->publish(msg);

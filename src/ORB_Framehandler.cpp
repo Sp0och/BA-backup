@@ -6,12 +6,12 @@ using namespace std;
 //core member methods:
 
 ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
-        std::string config_file;
         COUNT = 0;
         filtered_count = 0;
         ransac_filtered_count = 0;
         unfiltered_count = 0;
-        path = "orb_0.25";
+        path = "orb_1.0";
+        std::string config_file;
         n_frame.getParam("parameter_file", config_file);
         cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
         if(!fsSettings.isOpened())
@@ -124,30 +124,31 @@ void ORB_Framehandler::matches_filtering_motion(){
             prev_SVD(2,i) = prev_orb->orb_points_3d.at(prev_index).z;
         }
         matches.clear();
+
         //Publish matches before filtering:
-        publish_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+        // publish_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
         // cout << "right after matching: " << prev_SVD.cols() << " " << endl;
         unfiltered_count += cur_SVD.cols();
+        
         if(APPLY_RANSAC_FILTERING){
             RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
-            publish_matches_2F(&ransac_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+            // publish_matches_2F(&ransac_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
             // cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         // std::cout << "size after ransac: " << sorted_2d_cur.size() << " " << std::endl;
         }
         ransac_filtered_count+=cur_SVD.cols();
-        visualizer_3D(cur_SVD,prev_SVD,&pc_distance_publisher_c,&pc_distance_publisher_p,&line_distance_publisher);
+
+        // visualizer_3D(cur_SVD,prev_SVD,&pc_distance_publisher_c,&pc_distance_publisher_p,&line_distance_publisher);
+        
         if(APPLY_DISTANCE_FILTERING){
             filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
             // cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
         }
         filtered_count += cur_SVD.cols();
 
-        // if(prev_SVD.cols() < 40)
-        //     cout << "size after distance filtering: " << prev_SVD.cols() << " at timestamp: " << raw_time << "   " << endl;
-
         store_feature_number(cur_SVD);
 
-        visualizer_3D(cur_SVD,prev_SVD,&kp_pc_publisher_cur,&kp_pc_publisher_prev,&line_publisher);
+        // visualizer_3D(cur_SVD,prev_SVD,&kp_pc_publisher_cur,&kp_pc_publisher_prev,&line_publisher);
 
 
         //SVD Here
@@ -156,22 +157,16 @@ void ORB_Framehandler::matches_filtering_motion(){
         else    
             std::cout << "ERROR: 3D Vectors weren't initialized properly" << std::endl;
 
-
-        //publish my estimated transform in between odom and my_velo
-        // if(raw_time >= ros::Time(1598537680.405615616))
         publish_tf();
-
-        //publish odometry message
-        // publish_odom();
 
         //First 2D match display option
         
-        if(image_source == 1)
-        publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
-        else if(image_source == 2)
-        publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
-        else
-        publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+        // if(image_source == 1)
+        // publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+        // else if(image_source == 2)
+        // publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+        // else
+        // publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
         
         //Second 2D match display option
 
@@ -181,6 +176,7 @@ void ORB_Framehandler::matches_filtering_motion(){
         // publish_matches_1F(&range_publisher, sorted_2d_cur, sorted_2d_prev,1,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
         // else
         // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,1,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
+        
         COUNT++;
         if(COUNT >= 100){
         cout << "average_unfilterd is: " << 1.0*unfiltered_count/COUNT<< " " << endl;
@@ -415,11 +411,11 @@ void ORB_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  
         }
     }
     if(image_source == 1)
-    cv::putText(color_img, "Intensity",   cv::Point2d(300, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    cv::putText(color_img, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
     else if (image_source == 2)
-    cv::putText(color_img, "Range",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    cv::putText(color_img, "Range",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
     else
-    cv::putText(color_img, "Ambient",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    cv::putText(color_img, "Ambient",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
 
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", color_img).toImageMsg();
     this_pub->publish(msg);
@@ -441,11 +437,11 @@ void ORB_Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  
                 cv::line(image, cur_pt * 1, old_pt, line_color, 1, 8, 0);
         }
         if(image_source == 1)
-        cv::putText(image, "Intensity",   cv::Point2d(300, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+        cv::putText(image, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
         else if (image_source == 2)
-        cv::putText(image, "Range",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+        cv::putText(image, "Range",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
         else
-        cv::putText(image, "Ambient",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+        cv::putText(image, "Ambient",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
 
         sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
         this_pub->publish(msg);

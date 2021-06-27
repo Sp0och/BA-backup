@@ -56,6 +56,8 @@ class BRISK_Framehandler{
     vector<cv::DMatch> matches; 
     int image_source;
     Matrix4d my_pose;
+    std::string file_name;
+    std::string directory;
 
     ros::Time raw_time;
 

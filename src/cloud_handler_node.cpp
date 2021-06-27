@@ -121,19 +121,19 @@ class cloud_displayer{
         ros::Time first_timestamp(START_TIMESTAMP);
         
         
-        // image_intensity 
+        // set input image variant 1: choice by parameter server
         cv::Mat& input_image = image_handler->image_intensity;
         if(IMAGE_SOURCE == 1);
-            // image_range 
         else if(IMAGE_SOURCE == 2)
         input_image = image_handler->image_range;
-            // image_ambient (noise) 
         else
         input_image = image_handler->image_noise;
+        
+        // set input image variant 2: all 3 for comparison
+        // cv::Mat& input_image = image_handler->image_intensity;
+        // cv::Mat& input_image2 = image_handler->image_range;
+        // cv::Mat& input_image3 = image_handler->image_noise;
 
-        // static tf::TransformBroadcaster tf_base_to_lidar;
-        // static tf::Transform base_to_lidar = tf::Transform(tf::createQuaternionFromRPY(0, 0, 0), tf::Vector3(0, 0, 0));
-        // tf_base_to_lidar.sendTransform(tf::StampedTransform(base_to_lidar, cloud_message->header.stamp, "base_link", "velodyne"));
 
         if(raw_time >= ros::Time(START_TIMESTAMP)){
             // cout << "this TS: " << raw_time << " " << endl;
@@ -150,9 +150,9 @@ class cloud_displayer{
             // ORB* orb1 = new ORB(input_image2,image_handler->cloud_track,2);
             // ORB* orb2 = new ORB(input_image3,image_handler->cloud_track,3);
             
-            std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,IMAGE_SOURCE,raw_time,extracted_count,duplicate_filtered_count,min_distance_filtered_count,COUNT);
-            // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
-            // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
+            std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,IMAGE_SOURCE,extracted_count,duplicate_filtered_count,min_distance_filtered_count,COUNT);
+            // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2,extracted_count,duplicate_filtered_count,min_distance_filtered_count,COUNT);
+            // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3,extracted_count,duplicate_filtered_count,min_distance_filtered_count,COUNT);
             // Matches
             orb_frame_handler->newIteration(orb,raw_time);
             // orb_frame_handler2->newIteration(orb2,raw_time);

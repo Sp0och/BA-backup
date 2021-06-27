@@ -27,17 +27,22 @@ class KLT {
     void store_coordinates(const Vector3d& t_input, const Matrix3d& R);
 
     void SVD(const MatrixXd& cur_SVD,const MatrixXd& prev_SVD);
-    /**
-     * publish the KLT trackings
-     * */
-    void publish_tracking(ros::Publisher* publisher, const cv::Mat& cur_image,
-        const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,
-        int circle_size);
+
     /**
      * Publish the extracted points
      * */
     void publish_extraction(ros::Publisher* publisher, const cv::Mat& cur_image,
         const vector<cv::Point2f>& cur_keypoints,int circle_size);
+    /**
+     * publish the KLT trackings version with 1 image
+     * */
+    void publish_tracking(ros::Publisher* publisher, const cv::Mat& cur_image,
+        const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,
+        int circle_size);
+
+    void publish_tracking_2F(ros::Publisher* publisher, const cv::Mat& cur_image, const cv::Mat& prev_image,
+        const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,
+        int circle_size);
 
     void store_feature_number(const MatrixXd& cur_SVD);
 
@@ -79,7 +84,6 @@ class KLT {
     bool USE_HARRIS;
 
     int extracted_count;
-    int duplicate_filtered_count;
     int min_distance_filtered_count;
     int COUNT;
     
@@ -87,4 +91,6 @@ class KLT {
     int ransac_filtered_count;
     int distance_filtered_count;
     int MATCH_COUNT;
+    std::string file_name;
+    std::string directory;
 };

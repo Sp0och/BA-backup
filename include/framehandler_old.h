@@ -105,11 +105,11 @@ class Framehandler{
 
     public:
     //Constructor
-    Framehandler(int _mode,bool START_AT_ZERO){
+    Framehandler(int _image_source,bool START_AT_ZERO){
         OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/OLD_prediction_complete.csv",ios_base::app);
         OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
         OUT.close(); 
-        mode = _mode;
+        image_source = _image_source;
         comp_sum = comp_count = 0;
         if(START_AT_ZERO)
             RT << 1,0,0,0,
@@ -136,9 +136,9 @@ class Framehandler{
         midpoint_publisher = n_frame.advertise<PointCloud>("KP_PC_Midpoints", 1);
         // raw_sub = n_frame.subscribe(CLOUD_TOPIC,1000,&Framehandler::publish_tf);
         odom_publisher = n_frame.advertise<nav_msgs::Odometry>("Odometry", 1);
-        if(mode == 1)
+        if(image_source == 1)
         intensity_publisher = n_frame.advertise<sensor_msgs::Image>("intensity_matches", 1);
-        else if(mode == 2)
+        else if(image_source == 2)
         range_publisher = n_frame.advertise<sensor_msgs::Image>("range_matches", 1);
         else
         ambient_publisher = n_frame.advertise<sensor_msgs::Image>("ambient_matches", 1);
@@ -247,18 +247,18 @@ class Framehandler{
 
         //First 2D match display option
         
-        if(mode == 1)
+        if(image_source == 1)
         publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
-        else if(mode == 2)
+        else if(image_source == 2)
         publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
         else
         publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
         
         //Second 2D match display option
 
-        // if(mode == 1)
+        // if(image_source == 1)
         // publish_matches_1F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,5,true);
-        // else if(mode == 2)
+        // else if(image_source == 2)
         // publish_matches_1F(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,true);
         // else
         // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,true);
@@ -403,9 +403,9 @@ class Framehandler{
             cv::line(color_img, sorted_KP_cur[i] * 1, old_pt, line_color, 1*2, 8, 0);
         }
     }
-    if(mode == 1)
+    if(image_source == 1)
     cv::putText(color_img, "Intensity",   cv::Point2d(300, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-    else if (mode == 2)
+    else if (image_source == 2)
     cv::putText(color_img, "Range",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
     else
     cv::putText(color_img, "Ambient",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
@@ -431,9 +431,9 @@ class Framehandler{
             cv::circle(image, cur_pt, circle_size*1, circle_col, 1*1);
             cv::line(image, cur_pt * 1, old_pt, cv::Scalar(255,0,0), 1*1, 8, 0);
         }
-        if(mode == 1)
+        if(image_source == 1)
         cv::putText(image, "Intensity",   cv::Point2d(300, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-        else if (mode == 2)
+        else if (image_source == 2)
         cv::putText(image, "Range",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
         else
         cv::putText(image, "Ambient",   cv::Point2d(5, 20 + IMAGE_HEIGHT*0), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
@@ -498,7 +498,7 @@ class Framehandler{
 
     std::shared_ptr<ORB> cur_orb, prev_orb;
     vector<cv::DMatch> matches; 
-    int mode;
+    int image_source;
     unsigned int comp_sum;
     unsigned int comp_count;
 

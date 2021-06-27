@@ -3,10 +3,9 @@
 //Member functions:
 
 ORB::ORB(const cv::Mat &_input_image, const pcl::PointCloud<PointType>::Ptr _cloud,
-        int _mode,ros::Time raw_time,int& ec,int& dfc, int& mdfc, int& count)
+        int _image_source,int& ec,int& dfc, int& mdfc, int& count)
         {
-            mode = _mode;
-            RAW_TIME = raw_time;
+            image_source = _image_source;
             COUNT = count;
             extracted_count = ec;
             duplicate_filtered_count = dfc;
@@ -35,9 +34,9 @@ ORB::ORB(const cv::Mat &_input_image, const pcl::PointCloud<PointType>::Ptr _clo
             before_3D = n.advertise<PointCloud>("before_3D_3D", 1);
             after_3D = n.advertise<PointCloud>("after_3D_3D", 1);
 
-            if(mode == 1)
+            if(image_source == 1)
             KP_pub_intensity = n.advertise<sensor_msgs::Image>("orb_keypoints_intensity", 1);
-            else if(mode == 2)
+            else if(image_source == 2)
             KP_pub_range = n.advertise<sensor_msgs::Image>("orb_keypoints_range", 1);
             else
             KP_pub_ambient = n.advertise<sensor_msgs::Image>("orb_keypoints_ambient", 1);
@@ -55,33 +54,33 @@ void ORB::create_descriptors(){
         keypointTransition(orb_keypoints,orb_keypoints_2d);
         extracted_count += orb_keypoints_2d.size();
         // cout << "orb size after extraction: " << orb_keypoints_2d.size() << " " << endl;
-        if(APPLY_DUPLICATE_FILTERING){
-            duplicate_filtering();
-            // cout << "orb size after duplicate filtering: " << orb_keypoints_2d.size() << " " << endl;
-            publish_keypoints(&dupl_publisher, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
-        }
-        duplicate_filtered_count += orb_keypoints_2d.size();
         get_3D_data();
         min_distance_filtered_count += orb_keypoints_2d.size();
         // cout << "orb size after min distance filtering: " << orb_keypoints_2d.size() << " " << endl;
-        publish_keypoints(&pub_3D, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
+        publish_keypoints(&pub_3D, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),image_source);
+        if(APPLY_DUPLICATE_FILTERING){
+            duplicate_filtering();
+            // cout << "orb size after duplicate filtering: " << orb_keypoints_2d.size() << " " << endl;
+            publish_keypoints(&dupl_publisher, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),image_source);
+        }
+        duplicate_filtered_count += orb_keypoints_2d.size();
         //Create descriptors
         detector->compute(image,orb_keypoints,orb_descriptors);
         
         // publishing the keypoints on whatever image type they are
-        if(mode == 1)
-        publish_keypoints(&KP_pub_intensity, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
-        else if(mode == 2)
-        publish_keypoints(&KP_pub_range, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
+        if(image_source == 1)
+        publish_keypoints(&KP_pub_intensity, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),image_source);
+        else if(image_source == 2)
+        publish_keypoints(&KP_pub_range, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),image_source);
         else
-        publish_keypoints(&KP_pub_ambient, image,orb_keypoints_2d,1,cv::Scalar(0,255,0));
+        publish_keypoints(&KP_pub_ambient, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),image_source);
 
         COUNT++;
         if(COUNT >= 100){
         cout << "average extracted is : " << 1.0*extracted_count/COUNT<< " " << endl;
         cout << "average duplicate filtered is: " << 1.0*duplicate_filtered_count/COUNT << " " << endl;
         cout << "average min distance filtered is: " << 1.0*min_distance_filtered_count/COUNT<< " " << endl;
-        cout << "TRUE POSITIVE EXTRACTOR RATE IS: " << 100*(1.0*min_distance_filtered_count/extracted_count)<< " " << endl;
+        cout << "TRUE POSITIVE EXTRACTOR RATE IS: " << 100*(1.0*duplicate_filtered_count/min_distance_filtered_count)<< " " << endl;
         }
     }
 
@@ -127,5 +126,6 @@ void ORB::duplicate_filtering(){
     }
     trimVector(orb_keypoints_2d,duplicate_status);
     trimVector(orb_keypoints,duplicate_status);
+    trimVector(orb_points_3d,duplicate_status);
 }
 

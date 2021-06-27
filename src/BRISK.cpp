@@ -6,9 +6,9 @@
 
 BRISK::BRISK(const cv::Mat &_input_image, 
         const pcl::PointCloud<PointType>::Ptr _cloud,
-        int _mode,int& ec,int& dfc,int& mdfc,int& count){
-        mode = _mode;
-        assert(mode == 1 || mode == 2 || mode == 3);
+        int _image_source,int& ec,int& dfc,int& mdfc,int& count){
+        image_source = _image_source;
+        assert(image_source == 1 || image_source == 2 || image_source == 3);
         COUNT = count;
         extracted_count = ec;
         duplicate_filtered_count = dfc;
@@ -33,9 +33,9 @@ BRISK::BRISK(const cv::Mat &_input_image,
         pub_3D = n.advertise<sensor_msgs::Image>("min_distance_filtered", 1);
 
 
-        if(mode == 1)
+        if(image_source == 1)
         KP_pub_intensity = n.advertise<sensor_msgs::Image>("brisk_keypoints_intensity", 1);
-        else if(mode == 2)
+        else if(image_source == 2)
         KP_pub_range = n.advertise<sensor_msgs::Image>("brisk_keypoints_range", 1);
         else
         KP_pub_ambient = n.advertise<sensor_msgs::Image>("brisk_keypoints_ambient", 1);
@@ -52,31 +52,31 @@ void BRISK::create_descriptors(){
     detector->detect(image,brisk_keypoints,MASK);
     keypointTransition(brisk_keypoints,brisk_keypoints_2d);
     extracted_count += brisk_keypoints_2d.size();
+    get_3D_data();
+    publish_keypoints(&pub_3D, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),image_source);
+    min_distance_filtered_count += brisk_keypoints_2d.size();
     if(APPLY_DUPLICATE_FILTERING){
         duplicate_filtering();
-        publish_keypoints(&dupl_publisher, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0));
+        publish_keypoints(&dupl_publisher, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),image_source);
     }
     duplicate_filtered_count += brisk_keypoints_2d.size();
-    get_3D_data();
-    publish_keypoints(&pub_3D, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0));
-    min_distance_filtered_count += brisk_keypoints_2d.size();
     detector->compute(image,brisk_keypoints,brisk_descriptors);
 
 
 
-    if(mode == 1)
-    publish_keypoints(&KP_pub_intensity, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0));
-    else if(mode == 2)
-    publish_keypoints(&KP_pub_range, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0));
+    if(image_source == 1)
+    publish_keypoints(&KP_pub_intensity, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),image_source);
+    else if(image_source == 2)
+    publish_keypoints(&KP_pub_range, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),image_source);
     else
-    publish_keypoints(&KP_pub_ambient, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0));
+    publish_keypoints(&KP_pub_ambient, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),image_source);
 
     COUNT++;
     if(COUNT >= 100){
     cout << "average extracted is : " << 1.0*extracted_count/COUNT<< " " << endl;
     cout << "average duplicate filtered is: " << 1.0*duplicate_filtered_count/COUNT << " " << endl;
     cout << "average min distance filtered is: " << 1.0*min_distance_filtered_count/COUNT<< " " << endl;
-    cout << "TRUE POSITIVE EXTRACTOR RATE IS: " << 100*(1.0*min_distance_filtered_count/extracted_count)<< " " << endl;
+    cout << "TRUE POSITIVE EXTRACTOR RATE IS: " << 100*(1.0*duplicate_filtered_count/min_distance_filtered_count)<< " " << endl;
     }
 }
 
@@ -119,6 +119,7 @@ void BRISK::duplicate_filtering(){
         }
         trimVector(brisk_keypoints_2d,duplicate_status);
         trimVector(brisk_keypoints,duplicate_status);
+        trimVector(brisk_points_3d,duplicate_status);
     }
 
 

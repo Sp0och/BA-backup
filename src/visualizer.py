@@ -2,11 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-file_name = "orb_0.3"
+file_name = "orb_1.0"
 directory = "output"
 
 Data = "Intensity"
-Extractor = "ORB"
+Extractor = "KLT"
 MASK = "ON"
 duplicate_size = "1"
 max_match_distance = "0.3m"
@@ -38,11 +38,11 @@ klt_num_pyramids = "2"
 
 def plot_values(printBool, extractor):
     figc = plt.figure()
-    overall_plot_1 = plt.subplot(4, 2, 1)
+    overall_plot_1 = plt.subplot(3, 2, 1)
     plt.title("X")
     plt.plot(odom_c_timestamps, odom_xc, 'y', label='LOAM S2S')
     plt.plot(complete_timestamps, prediction_xc, 'b', label='My Method')
-    plt.plot(complete_timestamps, GT_xc, 'g--', label='Lio-Sam GT')
+    plt.plot(complete_timestamps, GT_xc, 'g', label='Lio-Sam GT')
     # overall_plot_1.legend(shadow=True)
     # plt.plot(complete_timestamps, prediction_xc -
     #          GT_xc, 'r', label='error pred - GT')
@@ -54,11 +54,11 @@ def plot_values(printBool, extractor):
     plt.ylabel('Total Transl x [m]')
     plt.grid(True, 'both')
 
-    overall_plot_2 = plt.subplot(4, 2, 3)
+    overall_plot_2 = plt.subplot(3, 2, 3)
     plt.title("Y")
     plt.plot(odom_c_timestamps, odom_yc, 'y', label='LOAM S2S')
     plt.plot(complete_timestamps, prediction_yc, 'b', label='My Method')
-    plt.plot(complete_timestamps, GT_yc, 'g--', label='Lio-Sam GT')
+    plt.plot(complete_timestamps, GT_yc, 'g', label='Lio-Sam GT')
     # overall_plot_2.legend(shadow=True)
     # plt.plot(complete_timestamps, prediction_yc -
     #          GT_yc, 'r', label='error pred - GT')
@@ -70,11 +70,11 @@ def plot_values(printBool, extractor):
     plt.ylabel('Total Transl y [m]')
     plt.grid(True, 'both')
 
-    overall_plot_3 = plt.subplot(4, 2, 5)
+    overall_plot_3 = plt.subplot(3, 2, 5)
     plt.title("Z")
     plt.plot(odom_c_timestamps, odom_zc, 'y', label='LOAM S2S')
     plt.plot(complete_timestamps, prediction_zc, 'b', label='My Method')
-    plt.plot(complete_timestamps, GT_zc, 'g--', label='Lio-Sam GT')
+    plt.plot(complete_timestamps, GT_zc, 'g', label='Lio-Sam GT')
     # overall_plot_3.legend(shadow=True)
     # plt.plot(complete_timestamps, prediction_zc -
     #          GT_zc, 'r', label='error pred - GT')
@@ -86,14 +86,14 @@ def plot_values(printBool, extractor):
     plt.ylabel('Total Transl z [m]')
     plt.grid(True, 'both')
 
-    overall_plot_4 = plt.subplot(4, 2, 2)
+    overall_plot_4 = plt.subplot(3, 2, 2)
     plt.title("Roll")
     plt.plot(odom_c_timestamps, 57.2858*odom_rollc,
              'y', label='LOAM S2S')
     plt.plot(complete_timestamps, 57.2858 *
              prediction_rollc, 'b', label='My Method')
     plt.plot(complete_timestamps, 57.2858 *
-             GT_rollc, 'g--', label='Lio-Sam GT')
+             GT_rollc, 'g', label='Lio-Sam GT')
     # overall_plot_4.legend(shadow=True)
     # plt.plot(complete_timestamps, prediction_rollc -
     #          GT_rollc, 'r', label='error pred - GT')
@@ -105,14 +105,14 @@ def plot_values(printBool, extractor):
     plt.ylabel('Total row angle [°]')
     plt.grid(True, 'both')
 
-    overall_plot_5 = plt.subplot(4, 2, 4)
+    overall_plot_5 = plt.subplot(3, 2, 4)
     plt.title("Pitch")
     plt.plot(odom_c_timestamps, 57.2858*odom_pitchc,
              'y', label='LOAM S2S')
     plt.plot(complete_timestamps, 57.2858 *
              prediction_pitchc, 'b', label='My Method')
     plt.plot(complete_timestamps, 57.2858 *
-             GT_pitchc, 'g--', label='Lio-Sam GT')
+             GT_pitchc, 'g', label='Lio-Sam GT')
     # overall_plot_5.legend(shadow=True)
     # plt.plot(complete_timestamps, prediction_pitchc -
     #          GT_pitchc, 'r', label='error pred - GT')
@@ -124,13 +124,13 @@ def plot_values(printBool, extractor):
     plt.ylabel('Total pitch angle [°]')
     plt.grid(True, 'both')
 
-    overall_plot_6 = plt.subplot(4, 2, 6)
+    overall_plot_6 = plt.subplot(3, 2, 6)
     plt.title("Yaw")
     plt.plot(odom_c_timestamps, 57.2858*odom_yawc,
              'y', label='LOAM S2S')
     plt.plot(complete_timestamps, 57.2858 *
              prediction_yawc, 'b', label='My Method')
-    plt.plot(complete_timestamps, 57.2858*GT_yawc, 'g--', label='Lio-Sam GT')
+    plt.plot(complete_timestamps, 57.2858*GT_yawc, 'g', label='Lio-Sam GT')
     # overall_plot_6.legend(shadow=True)
     # plt.plot(complete_timestamps, prediction_yawc -
     #          GT_yawc, 'r', label='error pred - GT')
@@ -142,30 +142,30 @@ def plot_values(printBool, extractor):
     plt.ylabel('Total yaw angle [°]')
     plt.grid(True, 'both')
 
-    feature_plot = plt.subplot(4, 2, 7)
-    plt.title("Matches", fontsize=11)
-    plt.plot(feature_timestamps, feature_number,
-             'm', label="# of Features per step")
-    # feature_plot.legend(shadow=True)
-    plt.xlabel('s', fontsize=13)
-    plt.ylabel('Feature Number')
-    plt.grid(True, 'both')
+    # feature_plot = plt.subplot(4, 2, 7)
+    # plt.title("Matches", fontsize=11)
+    # plt.plot(feature_timestamps, feature_number,
+    #          'm', label="# of Features per step")
+    # # feature_plot.legend(shadow=True)
+    # plt.xlabel('s', fontsize=13)
+    # plt.ylabel('Feature Number')
+    # plt.grid(True, 'both')
 
-    feature_plot = plt.subplot(4, 2, 8)
-    plt.title("Matches", fontsize=11)
-    plt.plot(feature_timestamps, feature_number,
-             'm', label="# of Features per step")
-    # feature_plot.legend(shadow=True)
-    plt.xlabel('s', fontsize=13)
-    plt.ylabel('Feature Number')
-    plt.grid(True, 'both')
+    # feature_plot = plt.subplot(4, 2, 8)
+    # plt.title("Matches", fontsize=11)
+    # plt.plot(feature_timestamps, feature_number,
+    #          'm', label="# of Features per step")
+    # # feature_plot.legend(shadow=True)
+    # plt.xlabel('s', fontsize=13)
+    # plt.ylabel('Feature Number')
+    # plt.grid(True, 'both')
 
     figs = plt.figure()
 
-    step_graph_1 = plt.subplot(4, 2, 1)
+    step_graph_1 = plt.subplot(3, 2, 1)
     plt.title("X")
     plt.plot(odom_s_timestamps, odom_xs, 'y', label='LOAM S2S')
-    plt.plot(step_timestamps, prediction_xs, 'b', label='My Method')
+    plt.plot(step_timestamps, prediction_xs, 'b--', label='My Method')
     plt.plot(step_timestamps, GT_xs, 'g--', label='Lio-Sam GT')
     # step_graph_1.legend(shadow=True)
     # plt.plot(step_timestamps, prediction_xs -
@@ -177,10 +177,10 @@ def plot_values(printBool, extractor):
     plt.ylabel('step Transl x [m]')
     plt.grid(True, 'both')
 
-    step_graph_2 = plt.subplot(4, 2, 3)
+    step_graph_2 = plt.subplot(3, 2, 3)
     plt.title("Y")
     plt.plot(odom_s_timestamps, odom_ys, 'y', label='LOAM S2S')
-    plt.plot(step_timestamps, prediction_ys, 'b', label='My Method')
+    plt.plot(step_timestamps, prediction_ys, 'b--', label='My Method')
     plt.plot(step_timestamps, GT_ys, 'g--', label='Lio-Sam GT')
     # step_graph_2.legend(shadow=True)
     # plt.plot(step_timestamps, prediction_ys -
@@ -192,10 +192,10 @@ def plot_values(printBool, extractor):
     plt.ylabel('step Transl y [m]')
     plt.grid(True, 'both')
 
-    step_graph_3 = plt.subplot(4, 2, 5)
+    step_graph_3 = plt.subplot(3, 2, 5)
     plt.title("Z")
     plt.plot(odom_s_timestamps, odom_zs, 'y', label='LOAM S2S')
-    plt.plot(step_timestamps, prediction_zs, 'b', label='My Method')
+    plt.plot(step_timestamps, prediction_zs, 'b--', label='My Method')
     plt.plot(step_timestamps, GT_zs, 'g--', label='Lio-Sam GT')
     # step_graph_3.legend(shadow=True)
     # plt.plot(step_timestamps, prediction_zs -
@@ -207,14 +207,14 @@ def plot_values(printBool, extractor):
     plt.ylabel('step Transl z [m]')
     plt.grid(True, 'both')
 
-    step_graph_4 = plt.subplot(4, 2, 2)
+    step_graph_4 = plt.subplot(3, 2, 2)
     plt.title("Roll")
-    plt.plot(odom_s_timestamps, 57.2858*odom_rolls,
-             'y', label='LOAM S2S')
-    plt.plot(step_timestamps, 57.2858 *
-             prediction_rolls, 'b', label='My Method')
     plt.plot(step_timestamps, 57.2858 *
              GT_rolls, 'g--', label='Lio-Sam GT')
+    plt.plot(step_timestamps, 57.2858 *
+             prediction_rolls, 'b--', label='My Method')
+    plt.plot(odom_s_timestamps, 57.2858*odom_rolls,
+             'y', label='LOAM S2S')
     # step_graph_4.legend(shadow=True)
     # plt.plot(step_timestamps, prediction_rolls -
     #          GT_rolls, 'r', label='error pred - GT')
@@ -226,14 +226,14 @@ def plot_values(printBool, extractor):
     plt.ylabel('step row angle [°]')
     plt.grid(True, 'both')
 
-    step_graph_5 = plt.subplot(4, 2, 4)
+    step_graph_5 = plt.subplot(3, 2, 4)
     plt.title("Pitch")
-    plt.plot(odom_s_timestamps, 57.2858*odom_pitchs,
-             'y', label='LOAM S2S')
-    plt.plot(step_timestamps, 57.2858 *
-             prediction_pitchs, 'b', label='My Method')
     plt.plot(step_timestamps, 57.2858 *
              GT_pitchs, 'g--', label='Lio-Sam GT')
+    plt.plot(step_timestamps, 57.2858 *
+             prediction_pitchs, 'b--', label='My Method')
+    plt.plot(odom_s_timestamps, 57.2858*odom_pitchs,
+             'y', label='LOAM S2S')
     # step_graph_5.legend(shadow=True)
     # plt.plot(step_timestamps, prediction_pitchs -
     #          GT_pitchs, 'r', label='error pred - GT')
@@ -245,13 +245,13 @@ def plot_values(printBool, extractor):
     plt.ylabel('step pitch angle [°]')
     plt.grid(True, 'both')
 
-    step_graph_6 = plt.subplot(4, 2, 6)
+    step_graph_6 = plt.subplot(3, 2, 6)
     plt.title("Yaw")
+    plt.plot(step_timestamps, 57.2858*GT_yaws, 'g--', label='Lio-Sam GT')
+    plt.plot(step_timestamps, 57.2858 *
+             prediction_yaws, 'b--', label='My Method')
     plt.plot(odom_s_timestamps, 57.2858*odom_yaws,
              'y', label='LOAM S2S')
-    plt.plot(step_timestamps, 57.2858 *
-             prediction_yaws, 'b', label='My Method')
-    plt.plot(step_timestamps, 57.2858*GT_yaws, 'g--', label='Lio-Sam GT')
     # step_graph_6.legend(shadow=True)
     # plt.plot(step_timestamps, prediction_yaws -
     #          GT_yaws, 'r', label='error pred - GT')
@@ -263,23 +263,24 @@ def plot_values(printBool, extractor):
     plt.ylabel('step yaw angle [°]')
     plt.grid(True, 'both')
 
-    feature_plot = plt.subplot(4, 2, 7)
-    plt.title("Matches", fontsize=11)
-    plt.plot(feature_timestamps, feature_number,
-             'm', label="# of Features per step")
-    # feature_plot.legend(shadow=True)
-    plt.xlabel('s', fontsize=13)
-    plt.ylabel('Feature Number')
-    plt.grid(True, 'both')
+    # feature_plot = plt.subplot(4, 2, 7)
+    # plt.title("Matches", fontsize=11)
+    # plt.plot(feature_timestamps, feature_number,
+    #          'm', label="# of Features per step")
+    # # feature_plot.legend(shadow=True)
+    # plt.xlabel('s', fontsize=13)
+    # plt.ylabel('Feature Number')
+    # plt.grid(True, 'both')
 
-    feature_plot = plt.subplot(4, 2, 8)
-    plt.title("Matches", fontsize=11)
-    plt.plot(feature_timestamps, feature_number,
-             'm', label="# of Features per step")
-    # feature_plot.legend(shadow=True)
-    plt.xlabel('s', fontsize=13)
-    plt.ylabel('Feature Number')
-    plt.grid(True, 'both')
+    # feature_plot = plt.subplot(4, 2, 8)
+    # plt.title("Matches", fontsize=11)
+    # plt.plot(feature_timestamps, feature_number,
+    #          'm', label="# of Features per step")
+    # # feature_plot.legend(shadow=True)
+    # plt.xlabel('s', fontsize=13)
+    # plt.ylabel('Feature Number')
+    # plt.grid(True, 'both')
+
     figc.set_figheight(15)
     figs.set_figheight(15)
     figc.set_figwidth(15)
@@ -402,7 +403,7 @@ def plot_errors(printBool, show_errors, extractor):
     step_SD_eo_yaw = np.std(step_error_odom_yaw)
 
     figc = plt.figure()
-    overall_plot_1 = plt.subplot(4, 2, 1)
+    overall_plot_1 = plt.subplot(3, 2, 1)
     plt.title("X")
     plt.plot(complete_timestamps, prediction_xc -
              GT_xc, 'r', label='error My Method vs Lio-Sam GT')
@@ -412,12 +413,12 @@ def plot_errors(printBool, show_errors, extractor):
     #     overall_plot_1.legend(
     #         ["error pred - GT\nmean: %.5f" % mean_ep_x+" std: %.5f" % SD_ep_x, "error odom - GT\nmean: %.5f" % mean_eo_x+" std: %.5f" % SD_eo_x], shadow=True)
     # else:
-    overall_plot_1.legend(shadow=True)
+    # overall_plot_1.legend(shadow=True)
     plt.xlabel('s')
     plt.ylabel('Total Transl x [m]')
     plt.grid(True, 'both')
 
-    overall_plot_2 = plt.subplot(4, 2, 3)
+    overall_plot_2 = plt.subplot(3, 2, 3)
     plt.title("Y")
     plt.plot(complete_timestamps, prediction_yc -
              GT_yc, 'r', label='error pred - GT')
@@ -432,7 +433,7 @@ def plot_errors(printBool, show_errors, extractor):
     plt.ylabel('Total Transl y [m]')
     plt.grid(True, 'both')
 
-    overall_plot_3 = plt.subplot(4, 2, 5)
+    overall_plot_3 = plt.subplot(3, 2, 5)
     plt.title("Z")
     plt.plot(complete_timestamps, prediction_zc -
              GT_zc, 'r', label='error pred - GT')
@@ -447,7 +448,7 @@ def plot_errors(printBool, show_errors, extractor):
     plt.ylabel('Total Transl z [m]')
     plt.grid(True, 'both')
 
-    overall_plot_4 = plt.subplot(4, 2, 2)
+    overall_plot_4 = plt.subplot(3, 2, 2)
     plt.title("Roll")
     plt.plot(complete_timestamps, prediction_rollc -
              GT_rollc, 'r', label='error pred - GT')
@@ -462,7 +463,7 @@ def plot_errors(printBool, show_errors, extractor):
     plt.ylabel('Total row angle [°]')
     plt.grid(True, 'both')
 
-    overall_plot_5 = plt.subplot(4, 2, 4)
+    overall_plot_5 = plt.subplot(3, 2, 4)
     plt.title("Pitch")
     plt.plot(complete_timestamps, prediction_pitchc -
              GT_pitchc, 'r', label='error pred - GT')
@@ -477,7 +478,7 @@ def plot_errors(printBool, show_errors, extractor):
     plt.ylabel('Total pitch angle [°]')
     plt.grid(True, 'both')
 
-    overall_plot_6 = plt.subplot(4, 2, 6)
+    overall_plot_6 = plt.subplot(3, 2, 6)
     plt.title("Yaw")
     plt.plot(complete_timestamps, prediction_yawc -
              GT_yawc, 'r', label='error pred - GT')
@@ -492,27 +493,27 @@ def plot_errors(printBool, show_errors, extractor):
     plt.ylabel('Total yaw angle [°]')
     plt.grid(True, 'both')
 
-    feature_plot = plt.subplot(4, 2, 7)
-    plt.title("Matches", fontsize=11)
-    plt.plot(feature_timestamps, feature_number,
-             'm', label="# of Features per step")
-    # feature_plot.legend(shadow=True)
-    plt.xlabel('s', fontsize=13)
-    plt.ylabel('Feature Number')
-    plt.grid(True, 'both')
+    # feature_plot = plt.subplot(4, 2, 7)
+    # plt.title("Matches", fontsize=11)
+    # plt.plot(feature_timestamps, feature_number,
+    #          'm', label="# of Features per step")
+    # # feature_plot.legend(shadow=True)
+    # plt.xlabel('s', fontsize=13)
+    # plt.ylabel('Feature Number')
+    # plt.grid(True, 'both')
 
-    feature_plot = plt.subplot(4, 2, 8)
-    plt.title("Matches", fontsize=11)
-    plt.plot(feature_timestamps, feature_number,
-             'm', label="# of Features per step")
-    # feature_plot.legend(shadow=True)
-    plt.xlabel('s', fontsize=13)
-    plt.ylabel('Feature Number')
-    plt.grid(True, 'both')
+    # feature_plot = plt.subplot(4, 2, 8)
+    # plt.title("Matches", fontsize=11)
+    # plt.plot(feature_timestamps, feature_number,
+    #          'm', label="# of Features per step")
+    # # feature_plot.legend(shadow=True)
+    # plt.xlabel('s', fontsize=13)
+    # plt.ylabel('Feature Number')
+    # plt.grid(True, 'both')
 
     figs = plt.figure()
 
-    step_graph_1 = plt.subplot(4, 2, 1)
+    step_graph_1 = plt.subplot(3, 2, 1)
     plt.title("X")
     plt.plot(step_timestamps, prediction_xs -
              GT_xs, 'r', label='error pred - GT')
@@ -526,7 +527,7 @@ def plot_errors(printBool, show_errors, extractor):
     plt.ylabel('step Transl x [m]')
     plt.grid(True, 'both')
 
-    step_graph_2 = plt.subplot(4, 2, 3)
+    step_graph_2 = plt.subplot(3, 2, 3)
     plt.title("Y")
     plt.plot(step_timestamps, prediction_ys -
              GT_ys, 'r', label='error pred - GT')
@@ -540,7 +541,7 @@ def plot_errors(printBool, show_errors, extractor):
     plt.ylabel('step Transl y [m]')
     plt.grid(True, 'both')
 
-    step_graph_3 = plt.subplot(4, 2, 5)
+    step_graph_3 = plt.subplot(3, 2, 5)
     plt.title("Z")
     plt.plot(step_timestamps, prediction_zs -
              GT_zs, 'r', label='error pred - GT')
@@ -554,7 +555,7 @@ def plot_errors(printBool, show_errors, extractor):
     plt.ylabel('step Transl z [m]')
     plt.grid(True, 'both')
 
-    step_graph_4 = plt.subplot(4, 2, 2)
+    step_graph_4 = plt.subplot(3, 2, 2)
     plt.title("Roll")
     plt.plot(step_timestamps, prediction_rolls -
              GT_rolls, 'r', label='error pred - GT')
@@ -569,7 +570,7 @@ def plot_errors(printBool, show_errors, extractor):
     plt.ylabel('step row angle [°]')
     plt.grid(True, 'both')
 
-    step_graph_5 = plt.subplot(4, 2, 4)
+    step_graph_5 = plt.subplot(3, 2, 4)
     plt.title("Pitch")
     plt.plot(step_timestamps, prediction_pitchs -
              GT_pitchs, 'r', label='error pred - GT')
@@ -584,7 +585,7 @@ def plot_errors(printBool, show_errors, extractor):
     plt.ylabel('step pitch angle [°]')
     plt.grid(True, 'both')
 
-    step_graph_6 = plt.subplot(4, 2, 6)
+    step_graph_6 = plt.subplot(3, 2, 6)
     plt.title("Yaw")
     plt.plot(step_timestamps, prediction_yaws -
              GT_yaws, 'r', label='error pred - GT')
@@ -599,23 +600,24 @@ def plot_errors(printBool, show_errors, extractor):
     plt.ylabel('step yaw angle [°]')
     plt.grid(True, 'both')
 
-    feature_plot = plt.subplot(4, 2, 7)
-    plt.title("Matches", fontsize=11)
-    plt.plot(feature_timestamps, feature_number,
-             'm', label="# of Features per step")
-    # feature_plot.legend(shadow=True)
-    plt.xlabel('s', fontsize=13)
-    plt.ylabel('Feature Number')
-    plt.grid(True, 'both')
+    # feature_plot = plt.subplot(4, 2, 7)
+    # plt.title("Matches", fontsize=11)
+    # plt.plot(feature_timestamps, feature_number,
+    #          'm', label="# of Features per step")
+    # # feature_plot.legend(shadow=True)
+    # plt.xlabel('s', fontsize=13)
+    # plt.ylabel('Feature Number')
+    # plt.grid(True, 'both')
 
-    feature_plot = plt.subplot(4, 2, 8)
-    plt.title("Matches", fontsize=11)
-    plt.plot(feature_timestamps, feature_number,
-             'm', label="# of Features per step")
-    # feature_plot.legend(shadow=True)
-    plt.xlabel('s', fontsize=13)
-    plt.ylabel('Feature Number')
-    plt.grid(True, 'both')
+    # feature_plot = plt.subplot(4, 2, 8)
+    # plt.title("Matches", fontsize=11)
+    # plt.plot(feature_timestamps, feature_number,
+    #          'm', label="# of Features per step")
+    # # feature_plot.legend(shadow=True)
+    # plt.xlabel('s', fontsize=13)
+    # plt.ylabel('Feature Number')
+    # plt.grid(True, 'both')
+
     figc.set_figheight(15)
     figs.set_figheight(15)
     figc.set_figwidth(15)
@@ -824,9 +826,9 @@ if __name__ == "__main__":
     odom_c_timestamps = odom_c_timestamps - complete_timestamps[0]
     complete_timestamps = complete_timestamps - complete_timestamps[0]
 
-    plot_values(True, "orb")
-    plot_errors(True, False, "orb")
-    # plot_trajectory(False, "orb")
+    # plot_values(True, "orb")
+    # plot_errors(True, False, "orb")
+    plot_trajectory(False, "orb")
 
     # calculation of average error:
     diffx = prediction_xs-GT_xs

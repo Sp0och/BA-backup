@@ -29,7 +29,7 @@ orb_accuracy: 31                # ORB extractor threshold for letting the points
 scale_factor: 1.7               # greater than 1, if smaller-> more expensive but good, if higher less quality
 levels: 8                       # number of pyramid levels
 #brisk
-brisk_threshold: 60             # threshold for brisk feature acceptance
+brisk_threshold: 45             # threshold for brisk feature acceptance
 octaves: 3                      #number of octaves
 pattern_scale: 0.5              #scale applied to pattern used for sampling neighborhood
 
@@ -51,7 +51,7 @@ apply_duplicate_filtering: 1
 apply_ransac_filtering: 1        #set filter active or not
 apply_distance_filtering: 1
 duplicate_filtering_size: 1      # (pixels) the circle patch size in which another point can not be located
-max_depth_distance: 0.25              # max ratio that match distance can be in comparision to point sensor difference
+max_depth_distance: 1.0              # max ratio that match distance can be in comparision to point sensor difference
 
 # Visualization
 blurr_size: 1                    # blurr strength

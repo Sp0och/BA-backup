@@ -38,9 +38,9 @@
 
      public:
      
-     KLT(int _mode){
+     KLT(int _image_source){
 
-         mode = _mode;
+         image_source = _image_source;
 
 
         cur_corners.resize(300);
@@ -65,11 +65,11 @@
 
  
 
-         if(mode == 1)
+         if(image_source == 1)
 
          pub_KLT_int = n_KLT.advertise<sensor_msgs::Image>("tracked_points_int", 1);
 
-         else if(mode == 2)
+         else if(image_source == 2)
 
          pub_KLT_ran = n_KLT.advertise<sensor_msgs::Image>("tracked_points_ran", 1);
 
@@ -125,11 +125,11 @@
             cout << endl;
              //Publish and adapt prev_corners
 
-             if(mode == 1)
+             if(image_source == 1)
 
              publish_KLT(&pub_KLT_int,cur_image,cur_corners,prev_corners,status,5);
 
-             else if(mode == 2)
+             else if(image_source == 2)
 
              publish_KLT(&pub_KLT_ran,cur_image,cur_corners,prev_corners,status,5);
 
@@ -216,7 +216,7 @@
 
  
 
-     int mode;
+     int image_source;
 
  
 
