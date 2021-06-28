@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-file_name = "orb_1.0"
+file_name = "6"
 directory = "output"
 
 Data = "Intensity"

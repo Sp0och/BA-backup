@@ -87,7 +87,7 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         extracted_count+=prev_corners.size();
         get_3D_points(prev_corners,prev_3D_points,prev_cloud);
         min_distance_filtered_count+=prev_corners.size();
-        publish_extraction(&extraction_publisher,prev_image,prev_corners,2);
+        publish_extraction(&extraction_publisher,prev_image,prev_corners,1);
         set_plotting_columns_and_start_pose();
         publish_tf();
         COUNT++;
@@ -114,12 +114,12 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         trim_matrix(prev_3D_points,status);
         
         unfiltered_count += cur_3D_points.cols();
-        publish_tracking_2F(&match_publisher,cur_image,prev_image,cur_corners,prev_corners,2);
+        // publish_tracking_2F(&match_publisher,cur_image,prev_image,cur_corners,prev_corners,2);
 
         //Filtering
         if(APPLY_RANSAC_FILTERING){
             RANSAC_filtering_f(cur_corners,prev_corners,cur_3D_points,prev_3D_points);
-            publish_tracking(&ransac_publisher,cur_image,cur_corners,prev_corners,2);
+            // publish_tracking(&ransac_publisher,cur_image,cur_corners,prev_corners,2);
             ransac_filtered_count += cur_3D_points.cols();
         }
         if(APPLY_DISTANCE_FILTERING){
@@ -128,7 +128,7 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         }
 
         //visualization
-        visualizer_3D(cur_3D_points,prev_3D_points);
+        // visualizer_3D(cur_3D_points,prev_3D_points);
         store_feature_number(cur_3D_points);
 
         //SVD
@@ -149,12 +149,12 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         
         
         //match publishing version two with both images displayed
-        if(image_source == 1)
-        publish_tracking_2F(&pub_KLT_int,cur_image,prev_image,cur_corners,prev_corners,2);
-        else if(image_source == 2)
-        publish_tracking_2F(&pub_KLT_ran,cur_image,prev_image,cur_corners,prev_corners,2);
-        else
-        publish_tracking_2F(&pub_KLT_amb,cur_image,prev_image,cur_corners,prev_corners,2);
+        // if(image_source == 1)
+        // publish_tracking_2F(&pub_KLT_int,cur_image,prev_image,cur_corners,prev_corners,2);
+        // else if(image_source == 2)
+        // publish_tracking_2F(&pub_KLT_ran,cur_image,prev_image,cur_corners,prev_corners,2);
+        // else
+        // publish_tracking_2F(&pub_KLT_amb,cur_image,prev_image,cur_corners,prev_corners,2);
         
         prev_image = cur_image.clone();
         prev_cloud = cur_cloud;
@@ -168,7 +168,7 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
             get_3D_points(prev_corners,prev_3D_points,prev_cloud);
             min_distance_filtered_count += prev_corners.size();
             // std::cout << "size_after" << prev_corners.size() << " " <<::endl;
-            publish_extraction(&extraction_publisher,prev_image,prev_corners,2);
+            publish_extraction(&extraction_publisher,prev_image,prev_corners,1);
             COUNT++;
         }
         else{
