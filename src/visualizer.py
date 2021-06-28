@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-file_name = "orb_0.8_3"
+file_name = "ambient_0.3_3_2"
 directory = "output"
 
 Data = "Intensity"
@@ -14,7 +14,7 @@ min_distance = "0.1m"
 max_cos = "0.0"
 smoothing = "1"
 length = "150"
-file_length = 15000
+file_length = 11500
 # orb parameters
 orb_max_features = "1000"
 orb_accuracy = "31"
@@ -50,7 +50,6 @@ def plot_values(printBool, extractor):
     #          'c--', label='error odom - GT')
     # overall_plot_1.legend(
     #     ["error pred - GT\nmean: %.5f" % mean_ep_x+" std: %.5f" % SD_ep_x, "error odom - GT\nmean: %.5f" % mean_eo_x+" std: %.5f" % SD_eo_x], shadow=True)
-    plt.xlabel('s')
     plt.ylabel('Total Transl x [m]')
     plt.grid(True, 'both')
 
@@ -66,7 +65,6 @@ def plot_values(printBool, extractor):
     #          'c--', label='error odom - GT')
     # overall_plot_2.legend(["error pred - GT\nmean: %.5f" % mean_ep_y +
     #                       " std: %.5f" % SD_ep_y, "error odom - GT\nmean: %.5f" % mean_eo_y+" std: %.5f" % SD_eo_y], shadow=True)
-    plt.xlabel('s')
     plt.ylabel('Total Transl y [m]')
     plt.grid(True, 'both')
 
@@ -82,7 +80,6 @@ def plot_values(printBool, extractor):
     #          'c--', label='error odom - GT')
     # overall_plot_3.legend(["error pred - GT\nmean: %.5f" % mean_ep_z +
     #                       " std: %.5f" % SD_ep_z, "error odom - GT\nmean: %.5f" % mean_eo_z+" std: %.5f" % SD_eo_z], shadow=True)
-    plt.xlabel('s')
     plt.ylabel('Total Transl z [m]')
     plt.grid(True, 'both')
 
@@ -101,7 +98,6 @@ def plot_values(printBool, extractor):
     #          GT_rollc, 'c--', label='error odom - GT')
     # overall_plot_4.legend(["error pred - GT\nmean: %.5f" % mean_ep_roll +
     #                       " std: %.5f" % SD_ep_roll, "error odom - GT\nmean: %.5f" % mean_eo_roll+" std: %.5f" % SD_eo_roll], shadow=True)
-    plt.xlabel('s')
     plt.ylabel('Total row angle [°]')
     plt.grid(True, 'both')
 
@@ -120,7 +116,6 @@ def plot_values(printBool, extractor):
     #          GT_pitchc, 'c--', label='error odom - GT')
     # overall_plot_5.legend(["error pred - GT\nmean: %.5f" % mean_ep_pitch +
     #                       " std: %.5f" % SD_ep_pitch, "error odom - GT\nmean: %.5f" % mean_eo_pitch+" std: %.5f" % SD_eo_pitch], shadow=True)
-    plt.xlabel('s')
     plt.ylabel('Total pitch angle [°]')
     plt.grid(True, 'both')
 
@@ -138,7 +133,6 @@ def plot_values(printBool, extractor):
     #          GT_yawc, 'c--', label='error odom - GT')
     # overall_plot_6.legend(["error pred - GT\nmean: %.5f" % mean_ep_yaw +
     #                       " std: %.5f" % SD_ep_yaw, "error odom - GT\nmean: %.5f" % mean_eo_yaw+" std: %.5f" % SD_eo_yaw], shadow=True)
-    plt.xlabel('s')
     plt.ylabel('Total yaw angle [°]')
     plt.grid(True, 'both')
 
@@ -147,7 +141,6 @@ def plot_values(printBool, extractor):
     # plt.plot(feature_timestamps, feature_number,
     #          'm', label="# of Features per step")
     # # feature_plot.legend(shadow=True)
-    # plt.xlabel('s', fontsize=13)
     # plt.ylabel('Feature Number')
     # plt.grid(True, 'both')
 
@@ -156,7 +149,6 @@ def plot_values(printBool, extractor):
     # plt.plot(feature_timestamps, feature_number,
     #          'm', label="# of Features per step")
     # # feature_plot.legend(shadow=True)
-    # plt.xlabel('s', fontsize=13)
     # plt.ylabel('Feature Number')
     # plt.grid(True, 'both')
 
@@ -173,7 +165,6 @@ def plot_values(printBool, extractor):
     # plt.plot(step_timestamps, odom_xs-GT_xs, 'c--', label='error odom - GT')
     # step_graph_1.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_x +
     #                     " std: %.5f" % step_SD_ep_x, "error odom - GT\nmean: %.5f" % step_mean_eo_x+" std: %.5f" % step_SD_eo_x], shadow=True)
-    plt.xlabel('s')
     plt.ylabel('step Transl x [m]')
     plt.grid(True, 'both')
 
@@ -188,7 +179,6 @@ def plot_values(printBool, extractor):
     # plt.plot(step_timestamps, odom_ys-GT_ys, 'c--', label='error odom - GT')
     # step_graph_2.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_y +
     #                     " std: %.5f" % step_SD_ep_y, "error odom - GT\nmean: %.5f" % step_mean_eo_y+" std: %.5f" % step_SD_eo_y], shadow=True)
-    plt.xlabel('s')
     plt.ylabel('step Transl y [m]')
     plt.grid(True, 'both')
 
@@ -203,7 +193,6 @@ def plot_values(printBool, extractor):
     # plt.plot(step_timestamps, odom_zs-GT_zs, 'c--', label='error odom - GT')
     # step_graph_3.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_z +
     #                     " std: %.5f" % step_SD_ep_z, "error odom - GT\nmean: %.5f" % step_mean_eo_z+" std: %.5f" % step_SD_eo_z], shadow=True)
-    plt.xlabel('s')
     plt.ylabel('step Transl z [m]')
     plt.grid(True, 'both')
 
@@ -222,7 +211,6 @@ def plot_values(printBool, extractor):
     #          'c--', label='error odom - GT')
     # step_graph_4.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_roll +
     #                     " std: %.5f" % step_SD_ep_roll, "error odom - GT\nmean: %.5f" % step_mean_eo_roll+" std: %.5f" % step_SD_eo_roll], shadow=True)
-    plt.xlabel('s')
     plt.ylabel('step row angle [°]')
     plt.grid(True, 'both')
 
@@ -241,7 +229,6 @@ def plot_values(printBool, extractor):
     #          GT_pitchs, 'c--', label='error odom - GT')
     # step_graph_5.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_pitch +
     #                     " std: %.5f" % step_SD_ep_pitch, "error odom - GT\nmean: %.5f" % step_mean_eo_pitch+" std: %.5f" % step_SD_eo_pitch], shadow=True)
-    plt.xlabel('s')
     plt.ylabel('step pitch angle [°]')
     plt.grid(True, 'both')
 
@@ -259,7 +246,6 @@ def plot_values(printBool, extractor):
     #          'c--', label='error odom - GT')
     # step_graph_6.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_yaw +
     #                     " std: %.5f" % step_SD_ep_yaw, "error odom - GT\nmean: %.5f" % step_mean_eo_yaw+" std: %.5f" % step_SD_eo_yaw], shadow=True)
-    plt.xlabel('s')
     plt.ylabel('step yaw angle [°]')
     plt.grid(True, 'both')
 
@@ -268,7 +254,6 @@ def plot_values(printBool, extractor):
     # plt.plot(feature_timestamps, feature_number,
     #          'm', label="# of Features per step")
     # # feature_plot.legend(shadow=True)
-    # plt.xlabel('s', fontsize=13)
     # plt.ylabel('Feature Number')
     # plt.grid(True, 'both')
 
@@ -277,7 +262,6 @@ def plot_values(printBool, extractor):
     # plt.plot(feature_timestamps, feature_number,
     #          'm', label="# of Features per step")
     # # feature_plot.legend(shadow=True)
-    # plt.xlabel('s', fontsize=13)
     # plt.ylabel('Feature Number')
     # plt.grid(True, 'both')
 
@@ -414,7 +398,6 @@ def plot_errors(printBool, show_errors, extractor):
     #         ["error pred - GT\nmean: %.5f" % mean_ep_x+" std: %.5f" % SD_ep_x, "error odom - GT\nmean: %.5f" % mean_eo_x+" std: %.5f" % SD_eo_x], shadow=True)
     # else:
     # overall_plot_1.legend(shadow=True)
-    plt.xlabel('s')
     plt.ylabel('Total Transl x [m]')
     plt.grid(True, 'both')
 
@@ -429,7 +412,6 @@ def plot_errors(printBool, show_errors, extractor):
     #                            " std: %.5f" % SD_ep_y, "error odom - GT\nmean: %.5f" % mean_eo_y+" std: %.5f" % SD_eo_y], shadow=True)
     # else:
     # overall_plot_2.legend(shadow=True)
-    plt.xlabel('s')
     plt.ylabel('Total Transl y [m]')
     plt.grid(True, 'both')
 
@@ -444,7 +426,6 @@ def plot_errors(printBool, show_errors, extractor):
     #                            " std: %.5f" % SD_ep_z, "error odom - GT\nmean: %.5f" % mean_eo_z+" std: %.5f" % SD_eo_z], shadow=True)
     # else:
     # overall_plot_3.legend(shadow=True)
-    plt.xlabel('s')
     plt.ylabel('Total Transl z [m]')
     plt.grid(True, 'both')
 
@@ -459,7 +440,6 @@ def plot_errors(printBool, show_errors, extractor):
     #                            " std: %.5f" % SD_ep_roll, "error odom - GT\nmean: %.5f" % mean_eo_roll+" std: %.5f" % SD_eo_roll], shadow=True)
     # else:
     # overall_plot_4.legend(shadow=True)
-    plt.xlabel('s')
     plt.ylabel('Total row angle [°]')
     plt.grid(True, 'both')
 
@@ -474,7 +454,6 @@ def plot_errors(printBool, show_errors, extractor):
     #                            " std: %.5f" % SD_ep_pitch, "error odom - GT\nmean: %.5f" % mean_eo_pitch+" std: %.5f" % SD_eo_pitch], shadow=True)
     # else:
     # overall_plot_5.legend(shadow=True)
-    plt.xlabel('s')
     plt.ylabel('Total pitch angle [°]')
     plt.grid(True, 'both')
 
@@ -489,7 +468,6 @@ def plot_errors(printBool, show_errors, extractor):
     #                            " std: %.5f" % SD_ep_yaw, "error odom - GT\nmean: %.5f" % mean_eo_yaw+" std: %.5f" % SD_eo_yaw], shadow=True)
     # else:
     # overall_plot_6.legend(shadow=True)
-    plt.xlabel('s')
     plt.ylabel('Total yaw angle [°]')
     plt.grid(True, 'both')
 
@@ -498,7 +476,6 @@ def plot_errors(printBool, show_errors, extractor):
     # plt.plot(feature_timestamps, feature_number,
     #          'm', label="# of Features per step")
     # # feature_plot.legend(shadow=True)
-    # plt.xlabel('s', fontsize=13)
     # plt.ylabel('Feature Number')
     # plt.grid(True, 'both')
 
@@ -507,7 +484,6 @@ def plot_errors(printBool, show_errors, extractor):
     # plt.plot(feature_timestamps, feature_number,
     #          'm', label="# of Features per step")
     # # feature_plot.legend(shadow=True)
-    # plt.xlabel('s', fontsize=13)
     # plt.ylabel('Feature Number')
     # plt.grid(True, 'both')
 
@@ -523,7 +499,6 @@ def plot_errors(printBool, show_errors, extractor):
     #                         " std: %.5f" % step_SD_ep_x, "error odom - GT\nmean: %.5f" % step_mean_eo_x+" std: %.5f" % step_SD_eo_x], shadow=True)
     # else:
     #     step_graph_1.legend(shadow=True)
-    plt.xlabel('s')
     plt.ylabel('step Transl x [m]')
     plt.grid(True, 'both')
 
@@ -537,7 +512,6 @@ def plot_errors(printBool, show_errors, extractor):
     #                         " std: %.5f" % step_SD_ep_y, "error odom - GT\nmean: %.5f" % step_mean_eo_y+" std: %.5f" % step_SD_eo_y], shadow=True)
     # else:
     #     step_graph_2.legend(shadow=True)
-    plt.xlabel('s')
     plt.ylabel('step Transl y [m]')
     plt.grid(True, 'both')
 
@@ -551,7 +525,6 @@ def plot_errors(printBool, show_errors, extractor):
     #                         " std: %.5f" % step_SD_ep_z, "error odom - GT\nmean: %.5f" % step_mean_eo_z+" std: %.5f" % step_SD_eo_z], shadow=True)
     # else:
     #     step_graph_3.legend(shadow=True)
-    plt.xlabel('s')
     plt.ylabel('step Transl z [m]')
     plt.grid(True, 'both')
 
@@ -566,7 +539,6 @@ def plot_errors(printBool, show_errors, extractor):
     #                         " std: %.5f" % step_SD_ep_roll, "error odom - GT\nmean: %.5f" % step_mean_eo_roll+" std: %.5f" % step_SD_eo_roll], shadow=True)
     # else:
     #     step_graph_4.legend(shadow=True)
-    plt.xlabel('s')
     plt.ylabel('step row angle [°]')
     plt.grid(True, 'both')
 
@@ -581,7 +553,6 @@ def plot_errors(printBool, show_errors, extractor):
     #                         " std: %.5f" % step_SD_ep_pitch, "error odom - GT\nmean: %.5f" % step_mean_eo_pitch+" std: %.5f" % step_SD_eo_pitch], shadow=True)
     # else:
     # step_graph_5.legend(shadow=True)
-    plt.xlabel('s')
     plt.ylabel('step pitch angle [°]')
     plt.grid(True, 'both')
 
@@ -596,7 +567,6 @@ def plot_errors(printBool, show_errors, extractor):
     #                         " std: %.5f" % step_SD_ep_yaw, "error odom - GT\nmean: %.5f" % step_mean_eo_yaw+" std: %.5f" % step_SD_eo_yaw], shadow=True)
     # else:
     #     step_graph_6.legend(shadow=True)
-    plt.xlabel('s')
     plt.ylabel('step yaw angle [°]')
     plt.grid(True, 'both')
 
@@ -605,7 +575,6 @@ def plot_errors(printBool, show_errors, extractor):
     # plt.plot(feature_timestamps, feature_number,
     #          'm', label="# of Features per step")
     # # feature_plot.legend(shadow=True)
-    # plt.xlabel('s', fontsize=13)
     # plt.ylabel('Feature Number')
     # plt.grid(True, 'both')
 
@@ -614,7 +583,6 @@ def plot_errors(printBool, show_errors, extractor):
     # plt.plot(feature_timestamps, feature_number,
     #          'm', label="# of Features per step")
     # # feature_plot.legend(shadow=True)
-    # plt.xlabel('s', fontsize=13)
     # plt.ylabel('Feature Number')
     # plt.grid(True, 'both')
 
@@ -695,7 +663,6 @@ def plot_errors(printBool, show_errors, extractor):
     # plt.plot(GT_xc, GT_yc, 'g', label='x vs y GT')
     # plt.plot(odom_xc, odom_yc, 'y', label='x vs y Odom')
     # plt.ylabel('y')
-    # plt.xlabel('x')
     # pathplot.legend(shadow=True)
     # path_figure.set_figheight(15)
     # path_figure.set_figwidth(15)
@@ -724,17 +691,18 @@ def plot_errors(printBool, show_errors, extractor):
 def plot_trajectory(printBool, extractor):
     path_figure = plt.figure()
     pathplot = plt.subplot(1, 1, 1)
-    plt.title("My Method Trajectory", fontsize=20)
+    plt.title("My Method", fontsize=20)
     plt.plot(prediction_xc, prediction_yc, 'b', label='My Method')
-    # plt.plot(GT_xc, GT_yc, 'g', label='Lio Sam Ground Truth')
+    plt.plot(GT_xc, GT_yc, 'g', label='Lio Sam Ground Truth')
     # plt.plot(odom_xc, odom_yc, 'y', label='LOAM Scan2Scan')
+    # plt.plot(odom1_xc, odom1_yc, 'r', label='LOAM Scan2Map')
     plt.ylabel('y[m]', fontsize=20)
     plt.xlabel('x[m]', fontsize=20)
     pathplot.legend(shadow=True)
-    plt.xlim(-250, 250)
-    plt.ylim(-100, 300)
+    # plt.xlim(-250, 250)
+    # plt.ylim(-100, 300)
     path_figure.set_figheight(20)
-    path_figure.set_figwidth(20)
+    path_figure.set_figwidth(10)
     plt.show()
     if(printBool):
         path_figure.savefig("pdfs/My_Method_Trajectory.pdf",
@@ -804,6 +772,27 @@ if __name__ == "__main__":
     odom_pitchs = pd.DataFrame.to_numpy(odom_file_steps["pitch"])
     odom_yaws = pd.DataFrame.to_numpy(odom_file_steps["yaw"])
 
+    odom_file1_complete = pd.read_csv(
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_pose_scan_2_map.csv", nrows=file_length
+    )
+    odom1_xc = pd.DataFrame.to_numpy(odom_file1_complete["x"])
+    odom1_yc = pd.DataFrame.to_numpy(odom_file1_complete["y"])
+    odom1_zc = pd.DataFrame.to_numpy(odom_file1_complete["z"])
+    odom1_rollc = pd.DataFrame.to_numpy(odom_file1_complete["roll"])
+    odom1_pitchc = pd.DataFrame.to_numpy(odom_file1_complete["pitch"])
+    odom1_yawc = pd.DataFrame.to_numpy(odom_file1_complete["yaw"])
+
+    odom_file1_steps = pd.read_csv(
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_steps_scan_2_map.csv", nrows=file_length
+    )
+
+    odom1_xs = pd.DataFrame.to_numpy(odom_file1_steps["x"])
+    odom1_ys = pd.DataFrame.to_numpy(odom_file1_steps["y"])
+    odom1_zs = pd.DataFrame.to_numpy(odom_file1_steps["z"])
+    odom1_rolls = pd.DataFrame.to_numpy(odom_file1_steps["roll"])
+    odom1_pitchs = pd.DataFrame.to_numpy(odom_file1_steps["pitch"])
+    odom1_yaws = pd.DataFrame.to_numpy(odom_file1_steps["yaw"])
+
     feature_number_file = pd.read_csv(
         "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/feature_number_"+file_name+".csv", nrows=file_length
     )
@@ -826,8 +815,8 @@ if __name__ == "__main__":
     odom_c_timestamps = odom_c_timestamps - complete_timestamps[0]
     complete_timestamps = complete_timestamps - complete_timestamps[0]
 
-    # plot_values(True, "orb")
-    # plot_errors(True, False, "orb")
+    # plot_values(False, "orb")
+    # plot_errors(False, False, "orb")
     plot_trajectory(False, "orb")
 
     # calculation of average error:
@@ -845,6 +834,7 @@ if __name__ == "__main__":
     average_pitch = np.sum(np.abs(diffpitch))/(int(length)*10)
     average_yaw = np.sum(np.abs(diffyaw))/(int(length)*10)
 
+    print(file_name)
     print("Average diff x: ", average_x)
     print("Average diff y: ", average_y)
     print("Average diff z: ", average_z)

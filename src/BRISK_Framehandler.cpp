@@ -25,7 +25,7 @@ BRISK_Framehandler::BRISK_Framehandler(int _image_source,int START_POSE){
         fsSettings["octaves"] >> OCTAVES;
         fsSettings["pattern_scale"] >> PATTERN_SCALE;
 
-        fsSettings["brisk_FILE_PATH"] >> FILE_PATH;
+        fsSettings["brisk_file_path"] >> FILE_PATH;
         fsSettings["directory"] >> DIRECTORY;
 
         if(START_POSE == 0){

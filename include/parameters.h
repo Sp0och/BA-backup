@@ -76,7 +76,6 @@ extern string CLOUD_TOPIC;
 extern int IMAGE_WIDTH;
 extern int IMAGE_HEIGHT;
 extern int IMAGE_CROP;
-extern int NUM_THREADS;
 extern cv::Mat MASK;
 extern ofstream OUT;
 

@@ -19,7 +19,6 @@ std::string EXTRACTOR;
 int IMAGE_WIDTH;
 int IMAGE_HEIGHT;
 int IMAGE_CROP;
-int NUM_THREADS;
 int IMAGE_SOURCE;
 ofstream OUT;
 cv::Mat MASK;
@@ -39,7 +38,7 @@ double MAX_DEPTH_DISTANCE;
 int START_POSE;
 double START_TIMESTAMP;
 
-int BLURR_SIZE;
+bool SHOULD_STORE;
 
 //analysis
 int extracted_count;
@@ -76,7 +75,6 @@ void updateParams (ros::NodeHandle& n){
     fsSettings["image_height"] >> IMAGE_HEIGHT;
     fsSettings["image_crop"]   >> IMAGE_CROP;
     fsSettings["image_source"] >> IMAGE_SOURCE;
-    fsSettings["num_threads"]  >> NUM_THREADS;
     fsSettings["extractor"]  >> EXTRACTOR;
 
     fsSettings["duplicate_filtering_size"] >> DUPLICATE_FILTERING_SIZE;

@@ -21,7 +21,7 @@ ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
         fsSettings["scale_factor"] >> SCALE_FACTOR;
         fsSettings["levels"] >> LEVELS;
 
-        fsSettings["orb_FILE_PATH"] >> FILE_PATH;
+        fsSettings["orb_file_path"] >> FILE_PATH;
         fsSettings["directory"] >> DIRECTORY;
 
         image_source = _image_source;
@@ -130,19 +130,18 @@ void ORB_Framehandler::matches_filtering_motion(){
         matches.clear();
 
         //Publish matches before filtering:
-        // publish_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+        publish_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
         // cout << "right after matching: " << prev_SVD.cols() << " " << endl;
         unfiltered_count += cur_SVD.cols();
         
         if(APPLY_RANSAC_FILTERING){
             RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
-            // publish_matches_2F(&ransac_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+            publish_matches_2F(&ransac_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
             // cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
-        // std::cout << "size after ransac: " << sorted_2d_cur.size() << " " << std::endl;
         }
         ransac_filtered_count+=cur_SVD.cols();
 
-        // visualizer_3D(cur_SVD,prev_SVD,&pc_distance_publisher_c,&pc_distance_publisher_p,&line_distance_publisher);
+        visualizer_3D(cur_SVD,prev_SVD,&pc_distance_publisher_c,&pc_distance_publisher_p,&line_distance_publisher);
         
         if(APPLY_DISTANCE_FILTERING){
             filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
@@ -153,7 +152,7 @@ void ORB_Framehandler::matches_filtering_motion(){
         if(SHOULD_STORE)
         store_feature_number(cur_SVD);
 
-        // visualizer_3D(cur_SVD,prev_SVD,&kp_pc_publisher_cur,&kp_pc_publisher_prev,&line_publisher);
+        visualizer_3D(cur_SVD,prev_SVD,&kp_pc_publisher_cur,&kp_pc_publisher_prev,&line_publisher);
 
 
         //SVD Here
@@ -166,12 +165,12 @@ void ORB_Framehandler::matches_filtering_motion(){
 
         //First 2D match display option
         
-        // if(image_source == 1)
-        // publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
-        // else if(image_source == 2)
-        // publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
-        // else
-        // publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+        if(image_source == 1)
+        publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+        else if(image_source == 2)
+        publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+        else
+        publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
         
         //Second 2D match display option
 

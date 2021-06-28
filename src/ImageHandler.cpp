@@ -51,7 +51,6 @@ void ImageHandler::cloud_handler(const sensor_msgs::PointCloud2ConstPtr &cloud_m
         image_noise = cv::Mat(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC1, cv::Scalar(0));
         image_intensity = cv::Mat(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC1, cv::Scalar(0));
 
-        #pragma omp parallel for num_threads(NUM_THREADS)
         //create the images from the pointcloud
         for (int u = 0; u < IMAGE_HEIGHT; u++) 
         {

@@ -118,3 +118,8 @@ cv::Mat MASK;
         orb_accuracy: 31                
         scale_factor: 1.7               
         levels: 8  
+
+
+    git commit with good results:
+
+    48e8ed00fce71346ca3a419c3aea8291f8b87d10
