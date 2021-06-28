@@ -87,6 +87,8 @@ void updateParams (ros::NodeHandle& n){
 
     fsSettings["start_pose"] >> START_POSE;
     fsSettings["start_timestamp"] >> START_TIMESTAMP;
+
+    fsSettings["should_store"] >> SHOULD_STORE;
 }
 
 cv::Mat create_mask(){

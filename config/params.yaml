@@ -19,7 +19,7 @@ num_threads: 4                  # CPU thread number
 
 #IMAGE SOURCE AND EXTRACTOR
 image_source: 1                         #which image source to use  1 is int, 2 range, 3 ambient
-extractor: "klt"                #which extractor to use
+extractor: "orb"                #which extractor to use
 
 # Features and matching
 
@@ -51,8 +51,13 @@ apply_duplicate_filtering: 1
 apply_ransac_filtering: 1        #set filter active or not
 apply_distance_filtering: 1
 duplicate_filtering_size: 1      # (pixels) the circle patch size in which another point can not be located
-max_depth_distance: 0.8              # max ratio that match distance can be in comparision to point sensor difference
+max_depth_distance: 0.2              # max ratio that match distance can be in comparision to point sensor difference
 
 # Visualization
 blurr_size: 1                    # blurr strength
+should_store: 0                  # whether results should be stored
+orb_file_path: "orb_0.3"         # where orb results should be stored
+brisk_file_path: "brisk_0.3"         # where brisk results should be stored
+klt_file_path: "klt_0.3"         # where klt results should be stored
+directory: "output"              # storage directory
 

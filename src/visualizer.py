@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-file_name = "6"
+file_name = "orb_0.8_3"
 directory = "output"
 
 Data = "Intensity"
@@ -13,8 +13,8 @@ max_match_distance = "0.3m"
 min_distance = "0.1m"
 max_cos = "0.0"
 smoothing = "1"
-length = "1000"
-
+length = "150"
+file_length = 15000
 # orb parameters
 orb_max_features = "1000"
 orb_accuracy = "31"
@@ -744,7 +744,7 @@ def plot_trajectory(printBool, extractor):
 if __name__ == "__main__":
 
     prediction_pose = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/prediction_pose_"+file_name+".csv", nrows=10*int(length))
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/prediction_pose_"+file_name+".csv", nrows=file_length)
     prediction_xc = pd.DataFrame.to_numpy(prediction_pose["x"])
     prediction_yc = pd.DataFrame.to_numpy(prediction_pose["y"])
     prediction_zc = pd.DataFrame.to_numpy(prediction_pose["z"])
@@ -753,7 +753,7 @@ if __name__ == "__main__":
     prediction_yawc = pd.DataFrame.to_numpy(prediction_pose["yaw"])
 
     prediction_step = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/prediction_steps_"+file_name+".csv", nrows=10*int(length))
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/prediction_steps_"+file_name+".csv", nrows=file_length)
     prediction_xs = pd.DataFrame.to_numpy(prediction_step["x"])
     prediction_ys = pd.DataFrame.to_numpy(prediction_step["y"])
     prediction_zs = pd.DataFrame.to_numpy(prediction_step["z"])
@@ -762,7 +762,7 @@ if __name__ == "__main__":
     prediction_yaws = pd.DataFrame.to_numpy(prediction_step["yaw"])
 
     GT_steps = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_steps.csv", nrows=10*int(length)
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_steps.csv", nrows=file_length
     )
 
     GT_xs = pd.DataFrame.to_numpy(GT_steps["x"])
@@ -773,7 +773,7 @@ if __name__ == "__main__":
     GT_yaws = pd.DataFrame.to_numpy(GT_steps["yaw"])
 
     GT_overall = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_pose.csv", nrows=10*int(length)
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_pose.csv", nrows=file_length
     )
 
     GT_xc = pd.DataFrame.to_numpy(GT_overall["x"])
@@ -784,7 +784,7 @@ if __name__ == "__main__":
     GT_yawc = pd.DataFrame.to_numpy(GT_overall["yaw"])
 
     odom_file_complete = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_pose_scan_2_scan.csv", nrows=10*int(length)
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_pose_scan_2_scan.csv", nrows=file_length
     )
     odom_xc = pd.DataFrame.to_numpy(odom_file_complete["x"])
     odom_yc = pd.DataFrame.to_numpy(odom_file_complete["y"])
@@ -794,7 +794,7 @@ if __name__ == "__main__":
     odom_yawc = pd.DataFrame.to_numpy(odom_file_complete["yaw"])
 
     odom_file_steps = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_steps_scan_2_scan.csv", nrows=10*int(length)
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_steps_scan_2_scan.csv", nrows=file_length
     )
 
     odom_xs = pd.DataFrame.to_numpy(odom_file_steps["x"])
@@ -805,7 +805,7 @@ if __name__ == "__main__":
     odom_yaws = pd.DataFrame.to_numpy(odom_file_steps["yaw"])
 
     feature_number_file = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/feature_number_"+file_name+".csv", nrows=10*int(length)
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/feature_number_"+file_name+".csv", nrows=file_length
     )
 
     feature_number = pd.DataFrame.to_numpy(

@@ -75,6 +75,8 @@ class ORB_Framehandler{
     int ORB_ACCURACY;
     float SCALE_FACTOR;
     int LEVELS;
-    std::string path;
+
+    std::string FILE_PATH;
+    std::string DIRECTORY;
 
 };

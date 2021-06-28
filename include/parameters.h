@@ -89,6 +89,8 @@ extern bool APPLY_RANSAC_FILTERING;
 
 extern int START_POSE;
 
+extern bool SHOULD_STORE;
+
 
 
 

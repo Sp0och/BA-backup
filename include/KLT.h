@@ -91,6 +91,6 @@ class KLT {
     int ransac_filtered_count;
     int distance_filtered_count;
     int MATCH_COUNT;
-    std::string file_name;
-    std::string directory;
+    std::string FILE_PATH;
+    std::string DIRECTORY;
 };

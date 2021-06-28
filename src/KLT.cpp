@@ -8,8 +8,7 @@ KLT::KLT(int _image_source,int START_POSE){
         image_source = _image_source;
         COUNT = MATCH_COUNT = unfiltered_count = ransac_filtered_count = distance_filtered_count = extracted_count =  min_distance_filtered_count = 0;
 
-        file_name = "klt_0.25";
-        directory = "output";
+        DIRECTORY = "output";
 
         std::string config_file;
         n_KLT.getParam("parameter_file", config_file);
@@ -29,6 +28,9 @@ KLT::KLT(int _image_source,int START_POSE){
         fsSettings["quality_level"] >> QUALITY_LEVEL;
         fsSettings["min_klt_detection_distance"] >> MIN_KLT_DETECTION_DISTANCE;
         fsSettings["use_harris"] >> USE_HARRIS;
+
+        fsSettings["klt_FILE_PATH"] >> FILE_PATH;
+        fsSettings["directory"] >> DIRECTORY;
 
         prev_corners.resize(MAX_KLT_FEATURES);
         cur_corners.resize(MAX_KLT_FEATURES);
@@ -83,14 +85,20 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
     if(prev_image.rows == 0){
         prev_image = input_image.clone();
         prev_cloud = _cloud;
+
         cv::goodFeaturesToTrack(prev_image,prev_corners,MAX_KLT_FEATURES,QUALITY_LEVEL,MIN_KLT_DETECTION_DISTANCE,MASK,BLOCKSIZE,USE_HARRIS,0.04);
         extracted_count+=prev_corners.size();
+
         get_3D_points(prev_corners,prev_3D_points,prev_cloud);
         min_distance_filtered_count+=prev_corners.size();
-        publish_extraction(&extraction_publisher,prev_image,prev_corners,1);
-        set_plotting_columns_and_start_pose();
-        publish_tf();
         COUNT++;
+
+        publish_extraction(&extraction_publisher,prev_image,prev_corners,1);
+
+        if(SHOULD_STORE)
+        set_plotting_columns_and_start_pose();
+
+        publish_tf();
     }
     
     else {
@@ -129,6 +137,8 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
 
         //visualization
         // visualizer_3D(cur_3D_points,prev_3D_points);
+
+        if(SHOULD_STORE)
         store_feature_number(cur_3D_points);
 
         //SVD
@@ -317,7 +327,6 @@ void KLT::publish_tf(){
 //plotting functions
 
 void KLT::store_feature_number(const MatrixXd& cur_SVD){
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/feature_number_"+ file_name + ".csv",ios_base::app);
     OUT << cur_SVD.cols() << "," << raw_time <<  endl;
     OUT.close(); 
 }
@@ -354,16 +363,13 @@ void KLT::set_plotting_columns_and_start_pose(){
         
     string Param = to_string(CRITERIA_REPS);
 
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/prediction_pose_"+ file_name + ".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/prediction_steps_"+ file_name + ".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/feature_number_"+ file_name + ".csv",ios_base::app);
     OUT << "num_of_features" "," << "time" << endl;
     OUT.close(); 
 }
@@ -400,7 +406,6 @@ void KLT::store_coordinates(const Vector3d& t, const Matrix3d& R){
             ea = e1;
         else
             ea = e2;
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/prediction_steps_"+ file_name + ".csv",ios_base::app);
         OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << raw_time <<  endl;
         OUT.close(); 
 
@@ -433,7 +438,6 @@ void KLT::store_coordinates(const Vector3d& t, const Matrix3d& R){
         else
             eac = e2c;
         
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/prediction_pose_"+ file_name + ".csv",ios_base::app);
         OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
         OUT.close();
     }
@@ -497,6 +501,7 @@ void KLT::SVD(const MatrixXd& cur_3D,const MatrixXd& prev_3D){
         // cout << "my pose: " << my_pose << endl;
 
         //Storing the plot data
+        if(SHOULD_STORE)
         store_coordinates(t,R);
 
     }
