@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-file_name = "ambient_0.3_3_2"
+file_name = "range_0.3_3_2"
 directory = "output"
 
 Data = "Intensity"
@@ -13,8 +13,8 @@ max_match_distance = "0.3m"
 min_distance = "0.1m"
 max_cos = "0.0"
 smoothing = "1"
-length = "150"
-file_length = 11500
+length = "1000"
+file_length = 11480
 # orb parameters
 orb_max_features = "1000"
 orb_accuracy = "31"
@@ -151,6 +151,8 @@ def plot_values(printBool, extractor):
     # # feature_plot.legend(shadow=True)
     # plt.ylabel('Feature Number')
     # plt.grid(True, 'both')
+    plt.subplots_adjust(bottom=0.1,
+                        hspace=0.3)
 
     figs = plt.figure()
 
@@ -269,6 +271,8 @@ def plot_values(printBool, extractor):
     figs.set_figheight(15)
     figc.set_figwidth(15)
     figs.set_figwidth(15)
+    plt.subplots_adjust(bottom=0.1,
+                        hspace=0.3)
     plt.show()
     if(printBool):
         if(extractor == "orb"):
@@ -487,6 +491,9 @@ def plot_errors(printBool, show_errors, extractor):
     # plt.ylabel('Feature Number')
     # plt.grid(True, 'both')
 
+    plt.subplots_adjust(bottom=0.1,
+                        hspace=0.3)
+
     figs = plt.figure()
 
     step_graph_1 = plt.subplot(3, 2, 1)
@@ -590,6 +597,8 @@ def plot_errors(printBool, show_errors, extractor):
     figs.set_figheight(15)
     figc.set_figwidth(15)
     figs.set_figwidth(15)
+    plt.subplots_adjust(bottom=0.1,
+                        hspace=0.3)
     plt.show()
     if(printBool):
         if(show_errors):
@@ -700,9 +709,9 @@ def plot_trajectory(printBool, extractor):
     plt.xlabel('x[m]', fontsize=20)
     pathplot.legend(shadow=True)
     # plt.xlim(-250, 250)
-    # plt.ylim(-100, 300)
+    # plt.ylim(-100, 150)
     path_figure.set_figheight(20)
-    path_figure.set_figwidth(10)
+    path_figure.set_figwidth(20)
     plt.show()
     if(printBool):
         path_figure.savefig("pdfs/My_Method_Trajectory.pdf",
@@ -815,9 +824,9 @@ if __name__ == "__main__":
     odom_c_timestamps = odom_c_timestamps - complete_timestamps[0]
     complete_timestamps = complete_timestamps - complete_timestamps[0]
 
-    # plot_values(False, "orb")
-    # plot_errors(False, False, "orb")
-    plot_trajectory(False, "orb")
+    plot_values(True, "klt")
+    plot_errors(True, False, "klt")
+    # plot_trajectory(False, "klt")
 
     # calculation of average error:
     diffx = prediction_xs-GT_xs
@@ -827,17 +836,45 @@ if __name__ == "__main__":
     diffpitch = prediction_pitchs-GT_pitchs
     diffyaw = prediction_yaws-GT_yaws
 
-    average_x = np.sum(np.abs(diffx))/(int(length)*10)
-    average_y = np.sum(np.abs(diffy))/(int(length)*10)
-    average_z = np.sum(np.abs(diffz))/(int(length)*10)
-    average_roll = np.sum(np.abs(diffroll))/(int(length)*10)
-    average_pitch = np.sum(np.abs(diffpitch))/(int(length)*10)
-    average_yaw = np.sum(np.abs(diffyaw))/(int(length)*10)
+    # diffx = odom_xs-GT_xs
+    # diffy = odom_ys-GT_ys
+    # diffz = odom_zs-GT_zs
+    # diffroll = odom_rolls-GT_rolls
+    # diffpitch = odom_pitchs-GT_pitchs
+    # diffyaw = odom_yaws-GT_yaws
+
+    # average_x = np.sum(np.abs(diffx))/file_length
+    # average_y = np.sum(np.abs(diffy))/file_length
+    # average_z = np.sum(np.abs(diffz))/file_length
+    # average_roll = np.sum(np.abs(diffroll))/file_length
+    # average_pitch = np.sum(np.abs(diffpitch))/file_length
+    # average_yaw = np.sum(np.abs(diffyaw))/file_length
+
+    mean_x = np.mean(diffx)
+    mean_y = np.mean(diffy)
+    mean_z = np.mean(diffz)
+    mean_roll = np.mean(diffroll)
+    mean_pitch = np.mean(diffpitch)
+    mean_yaw = np.mean(diffyaw)
+
+    SD_x = np.sqrt(np.sum(diffx*diffx)/file_length)
+    SD_y = np.sqrt(np.sum(diffy*diffy)/file_length)
+    SD_z = np.sqrt(np.sum(diffz*diffz)/file_length)
+    SD_roll = np.sqrt(np.sum(diffroll*diffroll)/file_length)
+    SD_pitch = np.sqrt(np.sum(diffpitch*diffpitch)/file_length)
+    SD_yaw = np.sqrt(np.sum(diffyaw*diffyaw)/file_length)
 
     print(file_name)
-    print("Average diff x: ", average_x)
-    print("Average diff y: ", average_y)
-    print("Average diff z: ", average_z)
-    print("Average diff roll: ", average_roll)
-    print("Average diff pitch: ", average_pitch)
-    print("Average diff yaw: ", average_yaw)
+    print("Mean Error x: ", mean_x)
+    print("Mean Error y: ", mean_y)
+    print("Mean Error z: ", mean_z)
+    print("Mean Error roll: ", mean_roll)
+    print("Mean Error pitch: ", mean_pitch)
+    print("Mean Error yaw: ", mean_yaw)
+
+    print("Error SD x: ", SD_x)
+    print("Error SD y: ", SD_y)
+    print("Error SD z: ", SD_z)
+    print("Error SD roll: ", SD_roll)
+    print("Error SD pitch: ", SD_pitch)
+    print("Error SD yaw: ", SD_yaw)

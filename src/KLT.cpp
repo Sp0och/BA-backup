@@ -40,10 +40,10 @@ KLT::KLT(int _image_source,int START_POSE){
                     0,0,0,1;
         }
         else if(START_POSE == 1){
-            my_pose << 0.29824051, -0.94876171,  0.10442136, -0.03153784,
-            0.94640945,  0.27973465, -0.16142391,  0.74966328,
-            0.12394255,  0.14696851,  0.98134525,  0.08621409,
-            0,           0,           0,            1;
+            my_pose << -0.98877182,  0.14125801,  0.04874899, -0.03791867,
+                    -0.14255745, -0.9894887,  -0.02427929, -0.02220684,
+                    0.04480693, -0.03095621,  0.99851592, -0.01088667,
+                    0,          0,          0,          1; 
         }
         else{
             my_pose << 0.08959188, -0.99543686,  0.03284438,  0.17298461,
@@ -183,7 +183,7 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
             // std::cout << "All Goodie" << std::endl;
         }
         MATCH_COUNT++;
-        if(MATCH_COUNT >= 100){
+        if(MATCH_COUNT >= 50){
         cout << "average extracted is : " << 1.0*extracted_count/COUNT<< " " << endl;
         cout << "average min distance filtered is: " << 1.0*min_distance_filtered_count/COUNT<< " " << endl;
         cout << "average unfiltered matches is: " << 1.0*unfiltered_count/MATCH_COUNT<< " " << endl;

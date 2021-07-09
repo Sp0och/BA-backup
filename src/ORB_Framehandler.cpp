@@ -32,10 +32,10 @@ ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
                     0,0,0,1;
         }
         else if(START_POSE == 1){
-            my_pose << 0.29824051, -0.94876171,  0.10442136, -0.03153784,
-            0.94640945,  0.27973465, -0.16142391,  0.74966328,
-            0.12394255,  0.14696851,  0.98134525,  0.08621409,
-            0,           0,           0,            1;
+            my_pose << -0.98877182,  0.14125801,  0.04874899, -0.03791867,
+                    -0.14255745, -0.9894887,  -0.02427929, -0.02220684,
+                    0.04480693, -0.03095621,  0.99851592, -0.01088667,
+                    0,          0,          0,          1; 
         }
         else{
             my_pose << 0.08959188, -0.99543686,  0.03284438,  0.17298461,
@@ -49,9 +49,8 @@ ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
 
         POINT_COLOR = cv::Scalar(255,0,0);
         LINE_COLOR = cv::Scalar(0,255,0);
-        match_publisher = n_frame.advertise<sensor_msgs::Image>("orb_matches", 1);
+        match_publisher = n_frame.advertise<sensor_msgs::Image>("unfiltered_matches", 1);
         ransac_publisher = n_frame.advertise<sensor_msgs::Image>("RANSAC_filtered", 1);
-        duplicate_publisher = n_frame.advertise<sensor_msgs::Image>("DUPLICATE_filtered", 1);
 
         kp_pc_publisher_cur = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1);
         kp_pc_publisher_prev = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1);
@@ -161,6 +160,7 @@ void ORB_Framehandler::matches_filtering_motion(){
         else    
             std::cout << "ERROR: 3D Vectors weren't initialized properly" << std::endl;
 
+        //publish transformation
         publish_tf();
 
         //First 2D match display option
@@ -182,7 +182,7 @@ void ORB_Framehandler::matches_filtering_motion(){
         // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,1,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
         
         COUNT++;
-        if(COUNT >= 100){
+        if(COUNT >= 50){
         cout << "average_unfilterd is: " << 1.0*unfiltered_count/COUNT<< " " << endl;
         cout << "average ransac filtered is: " << 1.0*ransac_filtered_count/COUNT << " " << endl;
         cout << "average_filtered is : " << 1.0*filtered_count/COUNT<< " " << endl;

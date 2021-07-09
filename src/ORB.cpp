@@ -76,7 +76,7 @@ void ORB::create_descriptors(){
         publish_keypoints(&KP_pub_ambient, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),image_source);
 
         COUNT++;
-        if(COUNT >= 100){
+        if(COUNT >= 50){
         cout << "average extracted is : " << 1.0*extracted_count/COUNT<< " " << endl;
         cout << "average duplicate filtered is: " << 1.0*duplicate_filtered_count/COUNT << " " << endl;
         cout << "average min distance filtered is: " << 1.0*min_distance_filtered_count/COUNT<< " " << endl;

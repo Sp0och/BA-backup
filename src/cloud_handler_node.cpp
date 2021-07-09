@@ -109,7 +109,8 @@ class cloud_displayer{
 
     public:
     cloud_displayer(){
-    //create subscriber subscribing to topic "points_raw"
+        std::cout << "cloud displayer called" << endl;
+    //subscribe to topic "points_raw"
     CSub = nps.subscribe(CLOUD_TOPIC, 1000, &cloud_displayer::callback_c, this);
     }
     //callback fct for the cloud.

@@ -65,7 +65,7 @@ class ORB_Framehandler{
 
     ros::NodeHandle n_frame;
     ros::Publisher match_publisher,range_publisher, ambient_publisher, intensity_publisher, 
-    kp_pc_publisher_cur, kp_pc_publisher_prev,ransac_publisher,duplicate_publisher,
+    kp_pc_publisher_cur, kp_pc_publisher_prev,ransac_publisher,
     odom_publisher, line_publisher,pc_distance_publisher_p,pc_distance_publisher_c,line_distance_publisher;
     
     cv::Scalar POINT_COLOR;
