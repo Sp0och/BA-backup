@@ -6,10 +6,7 @@ using namespace std;
 //core member methods:
 
 ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
-        COUNT = 0;
-        filtered_count = 0;
-        ransac_filtered_count = 0;
-        unfiltered_count = 0;
+        
         std::string config_file;
         n_frame.getParam("parameter_file", config_file);
         cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
@@ -131,14 +128,12 @@ void ORB_Framehandler::matches_filtering_motion(){
         //Publish matches before filtering:
         publish_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
         // cout << "right after matching: " << prev_SVD.cols() << " " << endl;
-        unfiltered_count += cur_SVD.cols();
         
         if(APPLY_RANSAC_FILTERING){
             RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
             publish_matches_2F(&ransac_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
             // cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         }
-        ransac_filtered_count+=cur_SVD.cols();
 
         visualizer_3D(cur_SVD,prev_SVD,&pc_distance_publisher_c,&pc_distance_publisher_p,&line_distance_publisher);
         
@@ -146,7 +141,6 @@ void ORB_Framehandler::matches_filtering_motion(){
             filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
             // cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
         }
-        filtered_count += cur_SVD.cols();
 
         if(SHOULD_STORE)
         store_feature_number(cur_SVD);
@@ -181,13 +175,6 @@ void ORB_Framehandler::matches_filtering_motion(){
         // else
         // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,1,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
         
-        COUNT++;
-        if(COUNT >= 50){
-        cout << "average_unfilterd is: " << 1.0*unfiltered_count/COUNT<< " " << endl;
-        cout << "average ransac filtered is: " << 1.0*ransac_filtered_count/COUNT << " " << endl;
-        cout << "average_filtered is : " << 1.0*filtered_count/COUNT<< " " << endl;
-        cout << "TRUE POSITIVE MATCHING RATE IS: " << 100*(1.0*filtered_count/unfiltered_count)<< " " << endl;
-        }
     }
 
 //plotting functions

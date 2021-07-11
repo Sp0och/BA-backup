@@ -6,7 +6,6 @@
 KLT::KLT(int _image_source,int START_POSE){
 
         image_source = _image_source;
-        COUNT = MATCH_COUNT = unfiltered_count = ransac_filtered_count = distance_filtered_count = extracted_count =  min_distance_filtered_count = 0;
 
         std::string config_file;
         n_KLT.getParam("parameter_file", config_file);
@@ -85,11 +84,8 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         prev_cloud = _cloud;
 
         cv::goodFeaturesToTrack(prev_image,prev_corners,MAX_KLT_FEATURES,QUALITY_LEVEL,MIN_KLT_DETECTION_DISTANCE,MASK,BLOCKSIZE,USE_HARRIS,0.04);
-        extracted_count+=prev_corners.size();
 
         get_3D_points(prev_corners,prev_3D_points,prev_cloud);
-        min_distance_filtered_count+=prev_corners.size();
-        COUNT++;
 
         publish_extraction(&extraction_publisher,prev_image,prev_corners,1);
 
@@ -119,18 +115,15 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         trimVector(prev_corners,status);
         trim_matrix(prev_3D_points,status);
         
-        unfiltered_count += cur_3D_points.cols();
         // publish_tracking_2F(&match_publisher,cur_image,prev_image,cur_corners,prev_corners,2);
 
         //Filtering
         if(APPLY_RANSAC_FILTERING){
             RANSAC_filtering_f(cur_corners,prev_corners,cur_3D_points,prev_3D_points);
             // publish_tracking(&ransac_publisher,cur_image,cur_corners,prev_corners,2);
-            ransac_filtered_count += cur_3D_points.cols();
         }
         if(APPLY_DISTANCE_FILTERING){
             filtering_3D_f(cur_3D_points,prev_3D_points,cur_corners,prev_corners);
-            distance_filtered_count+= cur_3D_points.cols();
         }
 
         //visualization
@@ -172,24 +165,12 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
             std::cout << "GET NEW CORNERS" << std::endl;
             // std::cout << "size_before" << prev_corners.size() << " " <<::endl;
             cv::goodFeaturesToTrack(prev_image,prev_corners,MAX_KLT_FEATURES,QUALITY_LEVEL,MIN_KLT_DETECTION_DISTANCE,MASK,BLOCKSIZE,USE_HARRIS,0.04);
-            extracted_count += prev_corners.size();
             get_3D_points(prev_corners,prev_3D_points,prev_cloud);
-            min_distance_filtered_count += prev_corners.size();
-            // std::cout << "size_after" << prev_corners.size() << " " <<::endl;
+            //std::cout << "size_after" << prev_corners.size() << " " <<::endl;
             publish_extraction(&extraction_publisher,prev_image,prev_corners,1);
-            COUNT++;
         }
         else{
             // std::cout << "All Goodie" << std::endl;
-        }
-        MATCH_COUNT++;
-        if(MATCH_COUNT >= 50){
-        cout << "average extracted is : " << 1.0*extracted_count/COUNT<< " " << endl;
-        cout << "average min distance filtered is: " << 1.0*min_distance_filtered_count/COUNT<< " " << endl;
-        cout << "average unfiltered matches is: " << 1.0*unfiltered_count/MATCH_COUNT<< " " << endl;
-        cout << "average ransac filtered matches is: " << 1.0*ransac_filtered_count/MATCH_COUNT<< " " << endl;
-        cout << "average distance filtered matches is: " << 1.0*distance_filtered_count/MATCH_COUNT<< " " << endl;
-        cout << "TRUE POSITIVE MATCHING RATE IS: " << 100*(1.0*distance_filtered_count/unfiltered_count)<< " " << endl;
         }
     }
 }

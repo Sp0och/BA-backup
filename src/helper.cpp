@@ -32,7 +32,6 @@ static void trimVector(vector<Derived>& v,const vector<bool>& status)
     v.resize(j);
 }
 
-
 /**
  * Trim Eigen Matrix according to flag vector
  * */
@@ -47,6 +46,7 @@ static void trim_matrix(Eigen::MatrixXd& m, vector<bool>& status){
     m.conservativeResize(3,j);
 }
 
+//Acquisition of 3D information for the 2D key  points
 
 template <typename Derived1>
 /**
@@ -101,6 +101,7 @@ static void get_3D_points_adapt_status(vector<Derived2>& points_2D, Eigen::Matri
 
 
 //Filtering Functions:
+
 /**
  * Apply RANSAC filtering to the point clouds using the find Homography method
  * */
@@ -118,7 +119,6 @@ static void RANSAC_filtering(std::vector<cv::Point2d>& sorted_2d_cur, std::vecto
         trim_matrix(prev_SVD,status);
         trim_matrix(cur_SVD,status);
 }
-
 
 /**
  * Filter out all 3D points whoose difference in a coordinate dirction is more than half its effective value as well as points that are too close to the origin
@@ -178,9 +178,6 @@ static void filtering_3D(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, ve
     trimVector(cur,distance_flag);
     trimVector(prev,distance_flag);
 }
-
-
-
 
 /**
  * Apply RANSAC filtering to the point clouds using the find Homography method

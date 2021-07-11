@@ -83,14 +83,6 @@ class KLT {
     int NUM_PYRAMIDS;
     bool USE_HARRIS;
 
-    int extracted_count;
-    int min_distance_filtered_count;
-    int COUNT;
-    
-    int unfiltered_count;
-    int ransac_filtered_count;
-    int distance_filtered_count;
-    int MATCH_COUNT;
     std::string FILE_PATH;
     std::string DIRECTORY;
 };

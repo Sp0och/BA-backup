@@ -56,10 +56,6 @@ class ORB_Framehandler{
     vector<cv::DMatch> matches; 
     int image_source;
     Matrix4d my_pose;
-    int COUNT;
-    int unfiltered_count;
-    int ransac_filtered_count;
-    int filtered_count;
 
     ros::Time raw_time;
 

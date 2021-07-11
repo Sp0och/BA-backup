@@ -9,12 +9,6 @@ BRISK_Framehandler::BRISK_Framehandler(int _image_source,int START_POSE){
         cur_brisk = nullptr;
         prev_brisk = nullptr;
 
-        COUNT = 0;
-        unfiltered_count = 0;
-        ransac_filtered_count = 0;
-        filtered_count = 0;
-
-
         std::string config_file;
         n_frame.getParam("parameter_file", config_file);
         cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
@@ -124,7 +118,6 @@ void BRISK_Framehandler::matches_filtering_motion(){
             prev_SVD(1,i) = prev_brisk->brisk_points_3d.at(prev_index).y;
             prev_SVD(2,i) = prev_brisk->brisk_points_3d.at(prev_index).z;
         }
-        unfiltered_count += cur_SVD.cols();
         matches.clear();
         //Publish matches before RANSAC filtering:
         publish_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,2,cv::Scalar(0,255,0),1);
@@ -135,12 +128,10 @@ void BRISK_Framehandler::matches_filtering_motion(){
             publish_matches_2F(&ransac_publisher,sorted_2d_cur,sorted_2d_prev,2,cv::Scalar(0,255,0),1);
             cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         }
-        ransac_filtered_count += cur_SVD.cols();
         if(APPLY_DISTANCE_FILTERING){
             filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
             cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
         }
-        filtered_count += cur_SVD.cols();
 
         if(SHOULD_STORE)
         store_feature_number(cur_SVD);
@@ -173,13 +164,6 @@ void BRISK_Framehandler::matches_filtering_motion(){
         // else
         // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,2,true);
 
-        COUNT++;
-        if(COUNT >= 50){
-        cout << "average_unfilterd is: " << 1.0*unfiltered_count/COUNT<< " " << endl;
-        cout << "average ransac filtered is: " << 1.0*ransac_filtered_count/COUNT << " " << endl;
-        cout << "average_filtered is : " << 1.0*filtered_count/COUNT<< " " << endl;
-        cout << "TRUE POSITIVE MATCHING RATE IS: " << 100*(1.0*filtered_count/unfiltered_count)<< " " << endl;
-        }
     }
 
 //plotting functions
