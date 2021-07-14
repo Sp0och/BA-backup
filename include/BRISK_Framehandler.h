@@ -43,10 +43,10 @@ class BRISK_Framehandler{
     void visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD);
     //publish the 2D matches
     void publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
-    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines);
+    const std::vector<cv::Point2d>& sorted_KP_prev, cv::Scalar point_color, cv::Scalar line_color, int circle_size, bool draw_lines);
     //publish matches by indicating direction 
     void publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
-    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, bool draw_lines);
+    const std::vector<cv::Point2d>& sorted_KP_prev, cv::Scalar point_color, cv::Scalar line_color, int circle_size, bool draw_lines);
     //apply closed form solution to predict transform
     void SVD(MatrixXd& cur_SVD,MatrixXd& prev_SVD);
     

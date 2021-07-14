@@ -291,12 +291,12 @@ template <typename Keypoints>
 /**
  * Visualizing the 2D keypoints
  * */
-static void publish_keypoints (ros::Publisher* publisher, const cv::Mat& input_image, const vector<Keypoints>& keypoints, const int circle_size,const cv::Scalar line_color, int image_source){
+static void publish_keypoints (ros::Publisher* publisher, const cv::Mat& input_image, const vector<Keypoints>& keypoints, const int circle_size,const cv::Scalar point_color, int image_source){
     cv::Mat color_image;
     cv::cvtColor(input_image, color_image, CV_GRAY2RGB);
     for(int i = 0; i < (int)keypoints.size(); i++){
         cv::Point2d cur_pt = keypoints[i];
-        cv::circle(color_image,cur_pt,circle_size,line_color,2);
+        cv::circle(color_image,cur_pt,circle_size,point_color,2);
     }
     if(image_source == 1)
     cv::putText(color_image, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);

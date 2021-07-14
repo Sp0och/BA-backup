@@ -62,7 +62,9 @@ void ORB::create_descriptors(){
         publish_keypoints(&KP_pub_ambient, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),image_source);
 
     }
-
+/**
+ * Get 3D coordinates from the scanned points of the 2D matches and filter out too close points
+ * */
 void ORB::get_3D_data(){
 
         orb_points_3d.resize(orb_keypoints_2d.size());

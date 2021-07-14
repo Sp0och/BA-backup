@@ -37,14 +37,12 @@ class KLT {
      * publish the KLT trackings version with 1 image
      * */
     void publish_tracking(ros::Publisher* publisher, const cv::Mat& cur_image,
-        const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,
-        int circle_size);
+        const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,cv::Scalar point_color,cv::Scalar line_color, int circle_size, bool draw_lines);
     /**
      * publish tracked KLT points in the matching format with two concatenated images
      * */
     void publish_tracking_2F(ros::Publisher* publisher, const cv::Mat& cur_image, const cv::Mat& prev_image,
-        const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,
-        int circle_size);
+        const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,cv::Scalar point_color,cv::Scalar line_color, int circle_size, bool draw_lines);
 
     void visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD);
 

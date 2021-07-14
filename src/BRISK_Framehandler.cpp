@@ -126,13 +126,13 @@ void BRISK_Framehandler::matches_filtering_motion(){
         }
         unfiltered_count += cur_SVD.cols();
         matches.clear();
-        //Publish matches before RANSAC filtering:
-        publish_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,2,cv::Scalar(0,255,0),1);
+        //Publish matches before any filtering:
+        // publish_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,1);
         
         cout << "right after matching: " << prev_SVD.cols() << " " << endl;
         if(APPLY_RANSAC_FILTERING){
             RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
-            publish_matches_2F(&ransac_publisher,sorted_2d_cur,sorted_2d_prev,2,cv::Scalar(0,255,0),1);
+            publish_matches_2F(&ransac_publisher,sorted_2d_cur,sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,1);
             cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         }
         ransac_filtered_count += cur_SVD.cols();
@@ -158,20 +158,20 @@ void BRISK_Framehandler::matches_filtering_motion(){
         //First 2D match display option
         
         if(image_source == 1)
-        publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),5,true);
         else if(image_source == 2)
-        publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),5,true);
         else
-        publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,5,cv::Scalar(0,255,0),true);
+        publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),5,true);
         
         //Second 2D match display option
 
         // if(image_source == 1)
-        // publish_matches_1F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,2,true);
+        // publish_matches_1F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,true);
         // else if(image_source == 2)
-        // publish_matches_1F(&range_publisher, sorted_2d_cur, sorted_2d_prev,2,true);
+        // publish_matches_1F(&range_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,true);
         // else
-        // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,2,true);
+        // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,true);
 
         COUNT++;
         if(COUNT >= 50){
@@ -371,7 +371,7 @@ void BRISK_Framehandler::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& 
 }
 
 void BRISK_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
-    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar line_color, bool draw_lines){
+    const std::vector<cv::Point2d>& sorted_KP_prev, cv::Scalar point_color, cv::Scalar line_color, int circle_size,bool draw_lines){
     cv::Mat color_img,gray_img;
     const cv::Mat old_img = prev_brisk->input_image.clone();
     const cv::Mat new_img = cur_brisk->input_image.clone();
@@ -386,22 +386,22 @@ void BRISK_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const
     for(int i = 0; i< (int)sorted_KP_cur.size(); i++)
     {
         cv::Point2d cur_pt = sorted_KP_cur[i];
-        cv::circle(color_img, cur_pt, circle_size, cv::Scalar(255,0,0), 1);
+        cv::circle(color_img, cur_pt, circle_size, point_color, 1);
     }
     //indicate features in old image
     for(int i = 0; i< (int)sorted_KP_prev.size(); i++)
     {
         cv::Point2d old_pt = sorted_KP_prev[i];
         old_pt.y += new_img.size().height + gap;
-        cv::circle(color_img, old_pt, circle_size, cv::Scalar(255,0,0), 1);
+        cv::circle(color_img, old_pt, circle_size, point_color, 1);
     }
 
     if(draw_lines){
         for (int i = 0; i< (int)sorted_KP_cur.size(); i++)
         {
-            cv::Point2d old_pt = sorted_KP_prev[i] * 1;
+            cv::Point2d old_pt = sorted_KP_prev[i];
             old_pt.y += new_img.size().height + gap;
-            cv::line(color_img, sorted_KP_cur[i] * 1, old_pt, line_color, 1*2, 8, 0);
+            cv::line(color_img, sorted_KP_cur[i], old_pt, line_color, 2, 8, 0);
         }
     }
     if(image_source == 1)
@@ -417,7 +417,7 @@ void BRISK_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const
 }
 
 void BRISK_Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
-    const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, bool draw_lines){
+    const std::vector<cv::Point2d>& sorted_KP_prev, cv::Scalar point_color, cv::Scalar line_color, int circle_size, bool draw_lines){
         cv::Mat image = cur_brisk->input_image.clone();
         cv::cvtColor(image,image,CV_GRAY2RGB);
 
@@ -429,9 +429,9 @@ void BRISK_Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const
             unsigned int g = rand() % 256;
             unsigned int b = rand() % 256;
             cv::Scalar circle_col = cv::Scalar(r,g,b);
-            cv::circle(image, cur_pt, circle_size, cv::Scalar(255,0,0), 1);
-            cv::circle(image, old_pt, circle_size, cv::Scalar(255,0,0), 1);
-            cv::line(image, cur_pt * 1, old_pt, cv::Scalar(0,255,0), 1, 8, 0);
+            cv::circle(image, cur_pt, circle_size, point_color, 1);
+            cv::circle(image, old_pt, circle_size, point_color, 1);
+            cv::line(image, cur_pt * 1, old_pt, line_color, 1, 8, 0);
         }
         if(image_source == 1)
         cv::putText(image, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);

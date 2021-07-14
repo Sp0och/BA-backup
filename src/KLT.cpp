@@ -13,7 +13,6 @@ KLT::KLT(int _image_source,int START_POSE){
         if(!fsSettings.isOpened())
             std::cerr << "ERROR: Wrong path to settings" << std::endl;
         usleep(100);
-        fsSettings["min_klt_features"] >> MIN_KLT_FEATURES;
         //Extraction
         fsSettings["epsilon"] >> EPSILON;
         fsSettings["criteria_reps"] >> CRITERIA_REPS;
@@ -25,7 +24,8 @@ KLT::KLT(int _image_source,int START_POSE){
         fsSettings["quality_level"] >> QUALITY_LEVEL;
         fsSettings["min_klt_detection_distance"] >> MIN_KLT_DETECTION_DISTANCE;
         fsSettings["use_harris"] >> USE_HARRIS;
-
+        fsSettings["min_klt_features"] >> MIN_KLT_FEATURES;
+        //storage
         fsSettings["directory"] >> DIRECTORY;
         fsSettings["klt_file_path"] >> FILE_PATH;
 
@@ -134,20 +134,20 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
 
         //match publishing version one
         // if(image_source == 1)
-        // publish_tracking(&pub_KLT_int,cur_image,cur_corners,prev_corners,2);
+        // publish_tracking(&pub_KLT_int,cur_image,cur_corners,prev_corners,cv::Scalar(0,255,0),cv::Scalar(255,0,0),2,1);
         // else if(image_source == 2)
-        // publish_tracking(&pub_KLT_ran,cur_image,cur_corners,prev_corners,2);
+        // publish_tracking(&pub_KLT_ran,cur_image,cur_corners,prev_corners,cv::Scalar(0,255,0),cv::Scalar(255,0,0),2,1);
         // else
-        // publish_tracking(&pub_KLT_amb,cur_image,cur_corners,prev_corners,2);
+        // publish_tracking(&pub_KLT_amb,cur_image,cur_corners,prev_corners,cv::Scalar(0,255,0),cv::Scalar(255,0,0),2,1);
         
         
         //match publishing version two with both images displayed
-        // if(image_source == 1)
-        // publish_tracking_2F(&pub_KLT_int,cur_image,prev_image,cur_corners,prev_corners,2);
-        // else if(image_source == 2)
-        // publish_tracking_2F(&pub_KLT_ran,cur_image,prev_image,cur_corners,prev_corners,2);
-        // else
-        // publish_tracking_2F(&pub_KLT_amb,cur_image,prev_image,cur_corners,prev_corners,2);
+        if(image_source == 1)
+        publish_tracking_2F(&pub_KLT_int,cur_image,prev_image,cur_corners,prev_corners,cv::Scalar(0,255,0),cv::Scalar(255,0,0),2,1);
+        else if(image_source == 2)
+        publish_tracking_2F(&pub_KLT_ran,cur_image,prev_image,cur_corners,prev_corners,cv::Scalar(0,255,0),cv::Scalar(255,0,0),2,1);
+        else
+        publish_tracking_2F(&pub_KLT_amb,cur_image,prev_image,cur_corners,prev_corners,cv::Scalar(0,255,0),cv::Scalar(255,0,0),2,1);
         
         prev_image = cur_image.clone();
         prev_cloud = cur_cloud;
@@ -167,71 +167,6 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
 
 //visualization methods:
 
-void KLT::publish_tracking(ros::Publisher* publisher, const cv::Mat& cur_image,
-        const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,
-        int circle_size){
-        cv::Mat image = cur_image.clone();
-        cv::cvtColor(image,image,CV_GRAY2RGB);
-        for(int i = 0; i < cur_keypoints.size();i++){
-            cv::circle(image,cur_keypoints.at(i),circle_size,cv::Scalar(255,0,0),2,8,0);
-            cv::circle(image,prev_keypoints.at(i),circle_size,cv::Scalar(255,0,0),2,8,0);
-            cv::line(image,cur_keypoints.at(i),prev_keypoints[i],cv::Scalar(0,255,0),1,8,0);
-        }
-        if(image_source == 1)
-        cv::putText(image, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-        else if (image_source == 2)
-        cv::putText(image, "Range",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-        else
-        cv::putText(image, "Ambient",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(),
-        "bgr8", image).toImageMsg();
-        publisher->publish(msg);
-    }
-
-void KLT::publish_tracking_2F(ros::Publisher* publisher, const cv::Mat& cur_image, const cv::Mat& prev_image,const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,
-int circle_size){
-    cv::Mat color_img,gray_img;
-    const cv::Mat old_img = prev_image.clone();
-    const cv::Mat new_img = cur_image.clone();
-    int gap = 1;
-    cv::Mat gap_img(gap, new_img.size().width, CV_8UC1, cv::Scalar(255, 255, 255));
-    //create colored concatenated image with gap inbetween
-    cv::vconcat(new_img,gap_img,gap_img);
-    cv::vconcat(gap_img,old_img,gray_img);
-
-    cv::cvtColor(gray_img,color_img,CV_GRAY2RGB);
-    //indicate features in new image
-    for(int i = 0; i< (int)cur_corners.size(); i++)
-    {
-        cv::Point2d cur_pt = cur_corners[i] ;
-        cv::circle(color_img, cur_pt, circle_size, cv::Scalar(255,0,0), 2);
-    }
-    //indicate features in old image
-    for(int i = 0; i< (int)prev_corners.size(); i++)
-    {
-        cv::Point2d old_pt = prev_corners[i];
-        old_pt.y += new_img.size().height + gap;
-        cv::circle(color_img, old_pt, circle_size, cv::Scalar(255,0,0), 2);
-    }
-
-    for (int i = 0; i< (int)cur_corners.size(); i++)
-    {
-        cv::Point2d old_pt = prev_corners[i] * 1;
-        old_pt.y += new_img.size().height + gap;
-        cv::line(color_img, cur_corners[i] * 1, old_pt, cv::Scalar(0,255,0), 1*2, 8, 0);
-    }
-    if(image_source == 1)
-    cv::putText(color_img, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-    else if (image_source == 2)
-    cv::putText(color_img, "Range",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-    else
-    cv::putText(color_img, "Ambient",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-
-    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", color_img).toImageMsg();
-    publisher->publish(msg);
-
-}
-
 void KLT::publish_extraction(ros::Publisher* publisher, const cv::Mat& input_image,
     const vector<cv::Point2f>& keypoints,cv::Scalar point_color,int circle_size){
     cv::Mat image = input_image.clone();
@@ -249,6 +184,72 @@ void KLT::publish_extraction(ros::Publisher* publisher, const cv::Mat& input_ima
     "bgr8", image).toImageMsg();
     publisher->publish(msg);
 }
+
+void KLT::publish_tracking(ros::Publisher* publisher, const cv::Mat& cur_image,
+        const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,cv::Scalar point_color, cv::Scalar line_color, int circle_size, bool draw_lines){
+        cv::Mat image = cur_image.clone();
+        cv::cvtColor(image,image,CV_GRAY2RGB);
+        for(int i = 0; i < cur_keypoints.size();i++){
+            cv::circle(image,cur_keypoints.at(i),circle_size,point_color,2,8,0);
+            cv::circle(image,prev_keypoints.at(i),circle_size,point_color,2,8,0);
+            if(draw_lines)
+            cv::line(image,cur_keypoints.at(i),prev_keypoints[i],line_color,1,8,0);
+        }
+        if(image_source == 1)
+        cv::putText(image, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+        else if (image_source == 2)
+        cv::putText(image, "Range",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+        else
+        cv::putText(image, "Ambient",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+        sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(),
+        "bgr8", image).toImageMsg();
+        publisher->publish(msg);
+    }
+
+void KLT::publish_tracking_2F(ros::Publisher* publisher, const cv::Mat& cur_image, const cv::Mat& prev_image,const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,cv::Scalar point_color, cv::Scalar line_color, int circle_size, bool draw_lines){
+    cv::Mat color_img,gray_img;
+    const cv::Mat old_img = prev_image.clone();
+    const cv::Mat new_img = cur_image.clone();
+    int gap = 1;
+    cv::Mat gap_img(gap, new_img.size().width, CV_8UC1, cv::Scalar(255, 255, 255));
+    //create colored concatenated image with gap inbetween
+    cv::vconcat(new_img,gap_img,gap_img);
+    cv::vconcat(gap_img,old_img,gray_img);
+
+    cv::cvtColor(gray_img,color_img,CV_GRAY2RGB);
+    //indicate features in new image
+    for(int i = 0; i< (int)cur_corners.size(); i++)
+    {
+        cv::Point2d cur_pt = cur_corners[i] ;
+        cv::circle(color_img, cur_pt, circle_size, point_color, 2);
+    }
+    //indicate features in old image
+    for(int i = 0; i< (int)prev_corners.size(); i++)
+    {
+        cv::Point2d old_pt = prev_corners[i];
+        old_pt.y += new_img.size().height + gap;
+        cv::circle(color_img, old_pt, circle_size, point_color, 2);
+    }
+    if(draw_lines){
+        for (int i = 0; i< (int)cur_corners.size(); i++)
+        {
+            cv::Point2d old_pt = prev_corners[i] * 1;
+            old_pt.y += new_img.size().height + gap;
+            cv::line(color_img, cur_corners[i] * 1, old_pt,line_color, 2, 8, 0);
+        }
+    }
+    if(image_source == 1)
+    cv::putText(color_img, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    else if (image_source == 2)
+    cv::putText(color_img, "Range",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+    else
+    cv::putText(color_img, "Ambient",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
+
+    sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", color_img).toImageMsg();
+    publisher->publish(msg);
+
+}
+
 
 void KLT::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD){
         publish_3D_keypoints(cur_SVD, &kp_pc_publisher_cur, raw_time);
