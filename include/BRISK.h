@@ -24,7 +24,7 @@ class BRISK
      * */
     BRISK(const cv::Mat &_input_image, 
         const pcl::PointCloud<PointType>::Ptr _cloud,
-        int _image_source,int& ec,int& dfc,int& mdfc,int& count);
+        int _image_source);
 
     /**
      * Stores the BRISK keypoints in the vector in the std::vector format, creates the descriptors around the keypoints and calls the ransac point creator
@@ -52,10 +52,6 @@ class BRISK
     int OCTAVES;
     float PATTERN_SCALE;
 
-    int extracted_count;
-    int duplicate_filtered_count;
-    int min_distance_filtered_count;
-    int COUNT;
 };
 
 

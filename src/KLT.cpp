@@ -6,7 +6,6 @@
 KLT::KLT(int _image_source,int START_POSE){
 
         image_source = _image_source;
-        COUNT = MATCH_COUNT = unfiltered_count = ransac_filtered_count = distance_filtered_count = extracted_count =  min_distance_filtered_count = 0;
 
         std::string config_file;
         n_KLT.getParam("parameter_file", config_file);
@@ -52,15 +51,7 @@ KLT::KLT(int _image_source,int START_POSE){
             0,0,0,1;
         }
         
-        for(int i = 0; i < 100; i++){
-            int r = rand()%256;
-            int g = rand()%256;
-            int b = rand()%256;
-            cv::Scalar color = cv::Scalar(r,g,b);
-            color_vector.push_back(color);
-        }
         kp_pc_publisher_cur = n_KLT.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1);
-        gotten_KP = n_KLT.advertise<PointCloud>("Gotten_KP", 1);
         kp_pc_publisher_prev = n_KLT.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1);
         mid_point_line_publisher = n_KLT.advertise<visualization_msgs::Marker>("connection_lines", 1);
         odom_publisher = n_KLT.advertise<nav_msgs::Odometry>("Odometry", 1);
@@ -85,13 +76,10 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         prev_cloud = _cloud;
 
         cv::goodFeaturesToTrack(prev_image,prev_corners,MAX_KLT_FEATURES,QUALITY_LEVEL,MIN_KLT_DETECTION_DISTANCE,MASK,BLOCKSIZE,USE_HARRIS,0.04);
-        extracted_count+=prev_corners.size();
 
         get_3D_points(prev_corners,prev_3D_points,prev_cloud);
-        min_distance_filtered_count+=prev_corners.size();
-        COUNT++;
 
-        publish_extraction(&extraction_publisher,prev_image,prev_corners,1);
+        publish_extraction(&extraction_publisher,prev_image,prev_corners,cv::Scalar(0,255,0),1);
 
         if(SHOULD_STORE)
         set_plotting_columns_and_start_pose();
@@ -119,18 +107,15 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         trimVector(prev_corners,status);
         trim_matrix(prev_3D_points,status);
         
-        unfiltered_count += cur_3D_points.cols();
         // publish_tracking_2F(&match_publisher,cur_image,prev_image,cur_corners,prev_corners,2);
 
         //Filtering
         if(APPLY_RANSAC_FILTERING){
             RANSAC_filtering_f(cur_corners,prev_corners,cur_3D_points,prev_3D_points);
             // publish_tracking(&ransac_publisher,cur_image,cur_corners,prev_corners,2);
-            ransac_filtered_count += cur_3D_points.cols();
         }
         if(APPLY_DISTANCE_FILTERING){
             filtering_3D_f(cur_3D_points,prev_3D_points,cur_corners,prev_corners);
-            distance_filtered_count+= cur_3D_points.cols();
         }
 
         //visualization
@@ -172,24 +157,9 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
             std::cout << "GET NEW CORNERS" << std::endl;
             // std::cout << "size_before" << prev_corners.size() << " " <<::endl;
             cv::goodFeaturesToTrack(prev_image,prev_corners,MAX_KLT_FEATURES,QUALITY_LEVEL,MIN_KLT_DETECTION_DISTANCE,MASK,BLOCKSIZE,USE_HARRIS,0.04);
-            extracted_count += prev_corners.size();
             get_3D_points(prev_corners,prev_3D_points,prev_cloud);
-            min_distance_filtered_count += prev_corners.size();
             // std::cout << "size_after" << prev_corners.size() << " " <<::endl;
-            publish_extraction(&extraction_publisher,prev_image,prev_corners,1);
-            COUNT++;
-        }
-        else{
-            // std::cout << "All Goodie" << std::endl;
-        }
-        MATCH_COUNT++;
-        if(MATCH_COUNT >= 50){
-        cout << "average extracted is : " << 1.0*extracted_count/COUNT<< " " << endl;
-        cout << "average min distance filtered is: " << 1.0*min_distance_filtered_count/COUNT<< " " << endl;
-        cout << "average unfiltered matches is: " << 1.0*unfiltered_count/MATCH_COUNT<< " " << endl;
-        cout << "average ransac filtered matches is: " << 1.0*ransac_filtered_count/MATCH_COUNT<< " " << endl;
-        cout << "average distance filtered matches is: " << 1.0*distance_filtered_count/MATCH_COUNT<< " " << endl;
-        cout << "TRUE POSITIVE MATCHING RATE IS: " << 100*(1.0*distance_filtered_count/unfiltered_count)<< " " << endl;
+            publish_extraction(&extraction_publisher,prev_image,prev_corners,cv::Scalar(0,255,0),1);
         }
     }
 }
@@ -262,13 +232,12 @@ int circle_size){
 
 }
 
-    
 void KLT::publish_extraction(ros::Publisher* publisher, const cv::Mat& input_image,
-    const vector<cv::Point2f>& keypoints,int circle_size){
+    const vector<cv::Point2f>& keypoints,cv::Scalar point_color,int circle_size){
     cv::Mat image = input_image.clone();
     cv::cvtColor(image,image,CV_GRAY2RGB);
     for(int i = 0; i < keypoints.size();i++){
-        cv::circle(image,keypoints.at(i),circle_size,cv::Scalar(0,255,0),2,8,0);
+        cv::circle(image,keypoints.at(i),circle_size,point_color,2,8,0);
     }
     if(image_source == 1)
     cv::putText(image, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);

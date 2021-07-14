@@ -20,41 +20,53 @@ using namespace Eigen;
 class KLT {
     public:
     
+    // core methods
+
     KLT(int image_source,int START_POSE);
 
     void KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointType>::Ptr _cloud,ros::Time _raw_time);
 
-    void store_coordinates(const Vector3d& t_input, const Matrix3d& R);
-
-    void SVD(const MatrixXd& cur_SVD,const MatrixXd& prev_SVD);
+    // visualization methods
 
     /**
      * Publish the extracted points
      * */
     void publish_extraction(ros::Publisher* publisher, const cv::Mat& cur_image,
-        const vector<cv::Point2f>& cur_keypoints,int circle_size);
+        const vector<cv::Point2f>& cur_keypoints,cv::Scalar point_color,int circle_size);
     /**
      * publish the KLT trackings version with 1 image
      * */
     void publish_tracking(ros::Publisher* publisher, const cv::Mat& cur_image,
         const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,
         int circle_size);
-
+    /**
+     * publish tracked KLT points in the matching format with two concatenated images
+     * */
     void publish_tracking_2F(ros::Publisher* publisher, const cv::Mat& cur_image, const cv::Mat& prev_image,
         const vector<cv::Point2f>& cur_keypoints, const vector<cv::Point2f>& prev_keypoints,
         int circle_size);
 
-    void store_feature_number(const MatrixXd& cur_SVD);
+    void visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD);
+
+    // data storage methods
 
     void set_plotting_columns_and_start_pose();
 
-    void visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD);
+    void store_coordinates(const Vector3d& t_input, const Matrix3d& R);
+
+    void store_feature_number(const MatrixXd& cur_SVD);
+
+    // Closed form application
+
+    void SVD(const MatrixXd& cur_SVD,const MatrixXd& prev_SVD);
+
+    // publishing estimated transform
 
     void publish_tf();
 
     private:
     ros::NodeHandle n_KLT;
-    ros::Publisher pub_KLT_int,pub_KLT_ran,pub_KLT_amb,pub_KLT_tf,kp_pc_publisher_cur,kp_pc_publisher_prev,mid_point_line_publisher,odom_publisher,gotten_KP,extraction_publisher,ransac_publisher,duplicate_publisher,match_publisher;
+    ros::Publisher pub_KLT_int,pub_KLT_ran,pub_KLT_amb,pub_KLT_tf,kp_pc_publisher_cur,kp_pc_publisher_prev,mid_point_line_publisher,odom_publisher,extraction_publisher,ransac_publisher,duplicate_publisher,match_publisher;
     
     cv::Mat cur_image;
     cv::Mat prev_image;
@@ -83,14 +95,6 @@ class KLT {
     int NUM_PYRAMIDS;
     bool USE_HARRIS;
 
-    int extracted_count;
-    int min_distance_filtered_count;
-    int COUNT;
-    
-    int unfiltered_count;
-    int ransac_filtered_count;
-    int distance_filtered_count;
-    int MATCH_COUNT;
     std::string FILE_PATH;
     std::string DIRECTORY;
 };

@@ -20,7 +20,7 @@ class ORB
     //Set up Constructor
     ORB(const cv::Mat &_input_image, 
         const pcl::PointCloud<PointType>::Ptr _cloud,
-        int _image_source,int& ec,int& dfc, int& mdfc, int& count);
+        int _image_source);
 
     /**
      * Stores the ORB keypoints in the vector in the std::vector format, creates the descriptors around the keypoints and calls the ransac point creator
@@ -40,7 +40,7 @@ class ORB
     
     private:
     ros::NodeHandle n;
-    ros::Publisher KP_pub_intensity,KP_pub_range,KP_pub_ambient,dupl_publisher,pub_3D,before_3D,after_3D;
+    ros::Publisher KP_pub_intensity,KP_pub_range,KP_pub_ambient,dupl_publisher,pub_3D;
     
     int image_source;
 
@@ -49,11 +49,5 @@ class ORB
     float SCALE_FACTOR;
     int LEVELS;
     ros::Time RAW_TIME;
-
-    int extracted_count;
-    int duplicate_filtered_count;
-    int min_distance_filtered_count;
-    int COUNT;
-
 
 };

@@ -151,9 +151,10 @@ class cloud_displayer{
             // ORB* orb1 = new ORB(input_image2,image_handler->cloud_track,2);
             // ORB* orb2 = new ORB(input_image3,image_handler->cloud_track,3);
             
+            //ORB with frame comparison (different instances for possible visual performance comparison)
             std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,IMAGE_SOURCE);
-            // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2,extracted_count,duplicate_filtered_count,min_distance_filtered_count,COUNT);
-            // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3,extracted_count,duplicate_filtered_count,min_distance_filtered_count,COUNT);
+            // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
+            // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
             // Matches
             orb_frame_handler->newIteration(orb,raw_time);
             // orb_frame_handler2->newIteration(orb2,raw_time);
@@ -162,9 +163,14 @@ class cloud_displayer{
 
             //BRISK:
             if((EXTRACTOR == "brisk")){
-            std::shared_ptr<BRISK> brisk = std::make_shared<BRISK>(input_image,image_handler->cloud_track,IMAGE_SOURCE);
             //Brisk alone
             // BRISK* brisk = new BRISK(input_image,image_handler->cloud_track,IMAGE_SOURCE);
+            // BRISK* brisk2 = new BRISK(input_image2,image_handler->cloud_track,2);
+            // BRISK* brisk3 = new BRISK(input_image3,image_handler->cloud_track,3);
+            //BRISK and frame comparison
+            std::shared_ptr<BRISK> brisk = std::make_shared<BRISK>(input_image,image_handler->cloud_track,IMAGE_SOURCE);
+            // std::shared_ptr<BRISK> brisk2 = std::make_shared<BRISK>(input_image2,image_handler->cloud_track,2);
+            // std::shared_ptr<BRISK> brisk3 = std::make_shared<BRISK>(input_image3,image_handler->cloud_track,3);
             //Matches
             brisk_frame_handler->newIteration(brisk,raw_time);
             }
@@ -180,7 +186,7 @@ class cloud_displayer{
 
     
     private:
-  //predeclaration of subscribers and nodehandle
+    //predeclaration of subscribers and nodehandle
     ros::NodeHandle nps;
     ros::Subscriber CSub;
   };
@@ -194,12 +200,14 @@ ros::NodeHandle n;
     assert(EXTRACTOR == "orb" || EXTRACTOR == "brisk" || EXTRACTOR == "klt");
     image_handler = new ImageHandler();
     orb_frame_handler = new ORB_Framehandler(IMAGE_SOURCE,START_POSE);
-    orb_frame_handler2 = new ORB_Framehandler(2,START_POSE);
-    orb_frame_handler3 = new ORB_Framehandler(3,START_POSE);
+    // orb_frame_handler2 = new ORB_Framehandler(2,START_POSE);
+    // orb_frame_handler3 = new ORB_Framehandler(3,START_POSE);
     brisk_frame_handler = new BRISK_Framehandler(IMAGE_SOURCE,START_POSE);
     // frame_handler2 = new Framehandler(2);
     // frame_handler3 = new Framehandler(3);
     klt = new KLT(IMAGE_SOURCE,START_POSE);
+    // klt1 = new KLT(2,START_POSE);
+    // klt2 = new KLT(3,START_POSE);
     cloud_displayer cloudDisplayer;
   
     ros::spin();

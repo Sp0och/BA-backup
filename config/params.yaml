@@ -7,12 +7,12 @@ project_name: "descriptor_and_image"
 cloud_topic: "points_raw"                     # point cloud input topic
 image_width: 1024                             # image horitontal resolution
 image_height: 128                             # image vertical resolution
-image_crop: 225                               # normally 225, mask for blocking feature extraction; indoor/handheld=196-256; jackal=0
+image_crop: 225                               # normally 225, mask for blocking feature extraction; indoor/handheld=196-256
 image_source: 1                               #which image source to use  1 is int, 2 range, 3 ambient
 
 #start time and pose:
-start_pose: 1                                 #0 for identity, 1 for indoor and 2 for handheld at 3s
-start_timestamp: 0                            # first timestamp on which to display tf and store coord.
+start_pose: 2                                 #0 for identity, 1 for indoor and 2 for handheld at 3s
+start_timestamp: 1598537681.4                 # first timestamp on which to display tf and store coord.
                                               #1598537681.4 for 3s in (start of lio-sam pose estimation dataset)
 
 #Extractor choice
@@ -21,7 +21,7 @@ extractor: "orb"                              #which extractor to use
 #ORB:
 num_orb_features: 1000                        # maximal feature num for ORB
 orb_accuracy: 31                              # ORB extractor threshold for letting the points pass
-scale_factor: 1.7                             # greater than 1, if smaller-> more expensive but good, if higher less quality
+scale_factor: 1.7                             # scale factor in between levels
 levels: 8                                     # number of pyramid levels
 
 #brisk
