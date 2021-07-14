@@ -39,15 +39,15 @@ class ORB
 
     
     private:
-    ros::NodeHandle n;
-    ros::Publisher KP_pub_intensity,KP_pub_range,KP_pub_ambient,dupl_publisher,pub_3D;
+    ros::NodeHandle M_n;
+    ros::Publisher M_KP_pub_intensity,M_KP_pub_range,M_KP_pub_ambient,M_dupl_publisher,M_pub_3D;
     
-    int image_source;
+    int M_image_source;
 
-    int NUM_ORB_FEATURES;
-    int ORB_ACCURACY;
-    float SCALE_FACTOR;
-    int LEVELS;
-    ros::Time RAW_TIME;
+    int M_NUM_ORB_FEATURES;
+    int M_ORB_ACCURACY;
+    float M_SCALE_FACTOR;
+    int M_LEVELS;
+    ros::Time M_RAW_TIME;
 
 };

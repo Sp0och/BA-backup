@@ -122,7 +122,7 @@ class cloud_displayer{
         ros::Time first_timestamp(START_TIMESTAMP);
         
         
-        // set input image variant 1: choice by parameter server
+        // Case 1: image source choice by parameter server
         cv::Mat& input_image = image_handler->image_intensity;
         if(IMAGE_SOURCE == 1);
         else if(IMAGE_SOURCE == 2)
@@ -130,7 +130,7 @@ class cloud_displayer{
         else
         input_image = image_handler->image_noise;
         
-        // set input image variant 2: all 3 for comparison
+        // Case 2: all 3 for comparison
         // cv::Mat& input_image = image_handler->image_intensity;
         // cv::Mat& input_image2 = image_handler->image_range;
         // cv::Mat& input_image3 = image_handler->image_noise;
@@ -140,47 +140,44 @@ class cloud_displayer{
             // cout << "this TS: " << raw_time << " " << endl;
 
             //KLT:
-            if((EXTRACTOR == "klt"))
-            klt->KLT_Iteration(input_image,image_handler->cloud_track,raw_time);
+            if((EXTRACTOR == "klt")){
+                klt->KLT_Iteration(input_image,image_handler->cloud_track,raw_time);
+                // klt->KLT_Iteration(input_image2,image_handler->cloud_track,raw_time);
+                // klt->KLT_Iteration(input_image3,image_handler->cloud_track,raw_time);
+            }
 
 
             //ORB:
             if((EXTRACTOR == "orb")){
-            //test ORB alone:
-            // ORB* orb = new ORB(input_image,image_handler->cloud_track,IMAGE_SOURCE);
-            // ORB* orb1 = new ORB(input_image2,image_handler->cloud_track,2);
-            // ORB* orb2 = new ORB(input_image3,image_handler->cloud_track,3);
-            
-            //ORB with frame comparison (different instances for possible visual performance comparison)
-            std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,IMAGE_SOURCE);
-            // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
-            // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
-            // Matches
-            orb_frame_handler->newIteration(orb,raw_time);
-            // orb_frame_handler2->newIteration(orb2,raw_time);
-            // orb_frame_handler3->newIteration(orb3,raw_time);
+                //test ORB alone:
+                // ORB* orb = new ORB(input_image,image_handler->cloud_track,IMAGE_SOURCE);
+                // ORB* orb1 = new ORB(input_image2,image_handler->cloud_track,2);
+                // ORB* orb2 = new ORB(input_image3,image_handler->cloud_track,3);
+                
+                //ORB with frame comparison (different instances for possible visual performance comparison)
+                std::shared_ptr<ORB> orb = std::make_shared<ORB>(input_image,image_handler->cloud_track,IMAGE_SOURCE);
+                // std::shared_ptr<ORB> orb2 = std::make_shared<ORB>(input_image2,image_handler->cloud_track,2);
+                // std::shared_ptr<ORB> orb3 = std::make_shared<ORB>(input_image3,image_handler->cloud_track,3);
+                // Matches
+                orb_frame_handler->newIteration(orb,raw_time);
+                // orb_frame_handler2->newIteration(orb2,raw_time);
+                // orb_frame_handler3->newIteration(orb3,raw_time);
             }
 
             //BRISK:
             if((EXTRACTOR == "brisk")){
-            //Brisk alone
-            // BRISK* brisk = new BRISK(input_image,image_handler->cloud_track,IMAGE_SOURCE);
-            // BRISK* brisk2 = new BRISK(input_image2,image_handler->cloud_track,2);
-            // BRISK* brisk3 = new BRISK(input_image3,image_handler->cloud_track,3);
-            //BRISK and frame comparison
-            std::shared_ptr<BRISK> brisk = std::make_shared<BRISK>(input_image,image_handler->cloud_track,IMAGE_SOURCE);
-            // std::shared_ptr<BRISK> brisk2 = std::make_shared<BRISK>(input_image2,image_handler->cloud_track,2);
-            // std::shared_ptr<BRISK> brisk3 = std::make_shared<BRISK>(input_image3,image_handler->cloud_track,3);
-            //Matches
-            brisk_frame_handler->newIteration(brisk,raw_time);
+                //Brisk alone
+                // BRISK* brisk = new BRISK(input_image,image_handler->cloud_track,IMAGE_SOURCE);
+                // BRISK* brisk2 = new BRISK(input_image2,image_handler->cloud_track,2);
+                // BRISK* brisk3 = new BRISK(input_image3,image_handler->cloud_track,3);
+                //BRISK and frame comparison
+                std::shared_ptr<BRISK> brisk = std::make_shared<BRISK>(input_image,image_handler->cloud_track,IMAGE_SOURCE);
+                // std::shared_ptr<BRISK> brisk2 = std::make_shared<BRISK>(input_image2,image_handler->cloud_track,2);
+                // std::shared_ptr<BRISK> brisk3 = std::make_shared<BRISK>(input_image3,image_handler->cloud_track,3);
+                //Matches
+                brisk_frame_handler->newIteration(brisk,raw_time);
             }
 
-
-
-            // Matches
-            // frame_handler->newIteration(orb,raw_time);
-            // frame_handler2->newIteration(orb2);
-            // frame_handler3->newIteration(orb3);
         }
     }
 
@@ -193,8 +190,8 @@ class cloud_displayer{
 
 int main(int argc, char **argv){
 
-ros::init(argc, argv, "cloud_projection");
-ros::NodeHandle n;
+    ros::init(argc, argv, "cloud_projection");
+    ros::NodeHandle n;
     updateParams(n);
     assert(IMAGE_SOURCE == 1 || IMAGE_SOURCE == 2 || IMAGE_SOURCE == 3);
     assert(EXTRACTOR == "orb" || EXTRACTOR == "brisk" || EXTRACTOR == "klt");

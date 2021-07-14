@@ -52,7 +52,6 @@ max_depth_distance: 0.3                       # max ratio that match distance ca
 # Visualization
 blurr_size: 2                                 # blurring kernel size
 
-
 # Data Storage
 should_store: 0                               # whether pose results should be stored in csv files
 orb_file_path: "orb_indoor_intensity"         # where orb results should be stored

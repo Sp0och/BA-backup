@@ -43,14 +43,14 @@ class BRISK
     void duplicate_filtering();
     
     private:
-    ros::NodeHandle n;
-    ros::Publisher KP_pub_intensity,KP_pub_range,KP_pub_ambient,dupl_publisher,pub_3D;
-    int image_source;
+    ros::NodeHandle M_n;
+    ros::Publisher M_KP_pub_intensity,M_KP_pub_range,M_KP_pub_ambient,M_dupl_publisher,M_pub_3D;
+    int M_image_source;
     
 
-    int BRISK_THRESHOLD;
-    int OCTAVES;
-    float PATTERN_SCALE;
+    int M_BRISK_THRESHOLD;
+    int M_OCTAVES;
+    float M_PATTERN_SCALE;
 
 };
 

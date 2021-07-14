@@ -63,36 +63,35 @@ class KLT {
     void publish_tf();
 
     private:
-    ros::NodeHandle n_KLT;
-    ros::Publisher pub_KLT_int,pub_KLT_ran,pub_KLT_amb,pub_KLT_tf,kp_pc_publisher_cur,kp_pc_publisher_prev,mid_point_line_publisher,odom_publisher,extraction_publisher,ransac_publisher,duplicate_publisher,match_publisher;
+    ros::NodeHandle M_n_KLT;
+    ros::Publisher M_pub_KLT_int,M_pub_KLT_ran,M_pub_KLT_amb,M_pub_KLT_tf,M_kp_pc_publisher_cur,M_kp_pc_publisher_prev,M_line_publisher,M_odom_publisher,M_extraction_publisher,M_ransac_publisher,M_duplicate_publisher,M_match_publisher;
     
-    cv::Mat cur_image;
-    cv::Mat prev_image;
-    std::vector<cv::Point2f> cur_corners;
-    std::vector<cv::Point2f> prev_corners;
-    MatrixXd prev_3D_points;
-    MatrixXd cur_3D_points;
-    pcl::PointCloud<PointType>::Ptr prev_cloud;
-    pcl::PointCloud<PointType>::Ptr cur_cloud;
-    Matrix4d my_pose;
+    cv::Mat M_cur_image;
+    cv::Mat M_prev_image;
+    std::vector<cv::Point2f> M_cur_corners;
+    std::vector<cv::Point2f> M_prev_corners;
+    MatrixXd M_prev_3D_points;
+    MatrixXd M_cur_3D_points;
+    pcl::PointCloud<PointType>::Ptr M_prev_cloud;
+    pcl::PointCloud<PointType>::Ptr M_cur_cloud;
+    Matrix4d M_my_pose;
 
-    int image_source;
-    std::vector<cv::Scalar> color_vector;
-    bool comparison;
-    ros::Time raw_time;
-    int MIN_KLT_FEATURES;
+    int M_image_source;
+    ros::Time M_raw_time;  //timestamps of the bagfile
+    int M_MIN_KLT_FEATURES;
+
     //goodFeaturesToTrack
-    double QUALITY_LEVEL;
-    double MIN_KLT_DETECTION_DISTANCE;
-    int BLOCKSIZE;
-    int MAX_KLT_FEATURES;
+    double M_QUALITY_LEVEL;
+    double M_MIN_KLT_DETECTION_DISTANCE;
+    int M_BLOCKSIZE;
+    int M_MAX_KLT_FEATURES;
     //OpticalFlowPyr
-    double EPSILON;
-    int CRITERIA_REPS;
-    int OPT_SIZE;
-    int NUM_PYRAMIDS;
-    bool USE_HARRIS;
+    double M_EPSILON;
+    int M_CRITERIA_REPS;
+    int M_OPT_SIZE;
+    int M_NUM_PYRAMIDS;
+    bool M_USE_HARRIS;
 
-    std::string FILE_PATH;
-    std::string DIRECTORY;
+    std::string M_FILE_PATH;
+    std::string M_DIRECTORY;
 };

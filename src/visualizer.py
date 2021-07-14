@@ -2,308 +2,252 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-file_name = "range_0.3_3_2"
+file_name = "orb_0.3_3_2"
 directory = "output"
 
 Data = "Intensity"
-Extractor = "KLT"
-MASK = "ON"
-duplicate_size = "1"
-max_match_distance = "0.3m"
+Extractor = "orb"
+duplicate_size = "3"
+max_depth_distance = "0.3m"
 min_distance = "0.1m"
-max_cos = "0.0"
-smoothing = "1"
-length = "1000"
-file_length = 11480
+smoothing = "2"
+length = "11983"  # steps (10Hz), not seconds
+file_length = 11983
+
 # orb parameters
 orb_max_features = "1000"
 orb_accuracy = "31"
 orb_scale_factor = "1.7"
 orb_levels = "8"
+
 # brisk parameters
-brisk_threshold = "60"
+brisk_threshold = "45"
 brisk_octaves = "3"
-brisk_pattern_scale = "1.0"
+brisk_pattern_scale = "0.5"
+
 # klt parameters
 klt_min_tracked = "70"
 klt_quality_level = "0.05"
-klt_block_size = "7"
-klt_min_klt_distance = "1"
+klt_block_size = "3"
+klt_min_klt_distance = "3"
 
-klt_epsilon = "0.03"
-klt_criteria_reps = "100"
-klt_opt_size = "15"
+klt_epsilon = "0.005"
+klt_criteria_reps = "10"
+klt_opt_size = "17"
 klt_num_pyramids = "2"
 
 
-def plot_values(printBool, extractor):
+def plot_values(storeBool, showLegend, extractor):
     figc = plt.figure()
-    overall_plot_1 = plt.subplot(3, 2, 1)
+    overall_plot_1 = plt.subplot(4, 2, 1)
     plt.title("X")
-    plt.plot(odom_c_timestamps, odom_xc, 'y', label='LOAM S2S')
-    plt.plot(complete_timestamps, prediction_xc, 'b', label='My Method')
-    plt.plot(complete_timestamps, GT_xc, 'g', label='Lio-Sam GT')
-    # overall_plot_1.legend(shadow=True)
-    # plt.plot(complete_timestamps, prediction_xc -
-    #          GT_xc, 'r', label='error pred - GT')
-    # plt.plot(complete_timestamps, odom_xc-GT_xc,
-    #          'c--', label='error odom - GT')
-    # overall_plot_1.legend(
-    #     ["error pred - GT\nmean: %.5f" % mean_ep_x+" std: %.5f" % SD_ep_x, "error odom - GT\nmean: %.5f" % mean_eo_x+" std: %.5f" % SD_eo_x], shadow=True)
+    plt.plot(loam_p_timestamps, loam_xp, 'y', label='LOAM S2S')
+    plt.plot(pose_timestamps, prediction_xc, 'b', label='My Method')
+    plt.plot(pose_timestamps, GT_xc, 'g', label='Lio-Sam GT')
+    if(showLegend):
+        overall_plot_1.legend(shadow=True)
     plt.ylabel('Total Transl x [m]')
     plt.grid(True, 'both')
 
-    overall_plot_2 = plt.subplot(3, 2, 3)
+    overall_plot_2 = plt.subplot(4, 2, 3)
     plt.title("Y")
-    plt.plot(odom_c_timestamps, odom_yc, 'y', label='LOAM S2S')
-    plt.plot(complete_timestamps, prediction_yc, 'b', label='My Method')
-    plt.plot(complete_timestamps, GT_yc, 'g', label='Lio-Sam GT')
-    # overall_plot_2.legend(shadow=True)
-    # plt.plot(complete_timestamps, prediction_yc -
-    #          GT_yc, 'r', label='error pred - GT')
-    # plt.plot(complete_timestamps, odom_yc-GT_yc,
-    #          'c--', label='error odom - GT')
-    # overall_plot_2.legend(["error pred - GT\nmean: %.5f" % mean_ep_y +
-    #                       " std: %.5f" % SD_ep_y, "error odom - GT\nmean: %.5f" % mean_eo_y+" std: %.5f" % SD_eo_y], shadow=True)
+    plt.plot(loam_p_timestamps, loam_yp, 'y', label='LOAM S2S')
+    plt.plot(pose_timestamps, prediction_yc, 'b', label='My Method')
+    plt.plot(pose_timestamps, GT_yc, 'g', label='Lio-Sam GT')
+    if(showLegend):
+        overall_plot_2.legend(shadow=True)
     plt.ylabel('Total Transl y [m]')
     plt.grid(True, 'both')
 
-    overall_plot_3 = plt.subplot(3, 2, 5)
+    overall_plot_3 = plt.subplot(4, 2, 5)
     plt.title("Z")
-    plt.plot(odom_c_timestamps, odom_zc, 'y', label='LOAM S2S')
-    plt.plot(complete_timestamps, prediction_zc, 'b', label='My Method')
-    plt.plot(complete_timestamps, GT_zc, 'g', label='Lio-Sam GT')
-    # overall_plot_3.legend(shadow=True)
-    # plt.plot(complete_timestamps, prediction_zc -
-    #          GT_zc, 'r', label='error pred - GT')
-    # plt.plot(complete_timestamps, odom_zc-GT_zc,
-    #          'c--', label='error odom - GT')
-    # overall_plot_3.legend(["error pred - GT\nmean: %.5f" % mean_ep_z +
-    #                       " std: %.5f" % SD_ep_z, "error odom - GT\nmean: %.5f" % mean_eo_z+" std: %.5f" % SD_eo_z], shadow=True)
+    plt.plot(loam_p_timestamps, loam_zp, 'y', label='LOAM S2S')
+    plt.plot(pose_timestamps, prediction_zc, 'b', label='My Method')
+    plt.plot(pose_timestamps, GT_zc, 'g', label='Lio-Sam GT')
+    if(showLegend):
+        overall_plot_3.legend(shadow=True)
     plt.ylabel('Total Transl z [m]')
     plt.grid(True, 'both')
 
-    overall_plot_4 = plt.subplot(3, 2, 2)
+    overall_plot_4 = plt.subplot(4, 2, 2)
     plt.title("Roll")
-    plt.plot(odom_c_timestamps, 57.2858*odom_rollc,
+    plt.plot(loam_p_timestamps, 57.2858*loam_rollp,
              'y', label='LOAM S2S')
-    plt.plot(complete_timestamps, 57.2858 *
+    plt.plot(pose_timestamps, 57.2858 *
              prediction_rollc, 'b', label='My Method')
-    plt.plot(complete_timestamps, 57.2858 *
+    plt.plot(pose_timestamps, 57.2858 *
              GT_rollc, 'g', label='Lio-Sam GT')
-    # overall_plot_4.legend(shadow=True)
-    # plt.plot(complete_timestamps, prediction_rollc -
-    #          GT_rollc, 'r', label='error pred - GT')
-    # plt.plot(complete_timestamps, odom_rollc -
-    #          GT_rollc, 'c--', label='error odom - GT')
-    # overall_plot_4.legend(["error pred - GT\nmean: %.5f" % mean_ep_roll +
-    #                       " std: %.5f" % SD_ep_roll, "error odom - GT\nmean: %.5f" % mean_eo_roll+" std: %.5f" % SD_eo_roll], shadow=True)
+    if(showLegend):
+        overall_plot_4.legend(shadow=True)
     plt.ylabel('Total row angle [°]')
     plt.grid(True, 'both')
 
-    overall_plot_5 = plt.subplot(3, 2, 4)
+    overall_plot_5 = plt.subplot(4, 2, 4)
     plt.title("Pitch")
-    plt.plot(odom_c_timestamps, 57.2858*odom_pitchc,
+    plt.plot(loam_p_timestamps, 57.2858*loam_pitchp,
              'y', label='LOAM S2S')
-    plt.plot(complete_timestamps, 57.2858 *
+    plt.plot(pose_timestamps, 57.2858 *
              prediction_pitchc, 'b', label='My Method')
-    plt.plot(complete_timestamps, 57.2858 *
+    plt.plot(pose_timestamps, 57.2858 *
              GT_pitchc, 'g', label='Lio-Sam GT')
-    # overall_plot_5.legend(shadow=True)
-    # plt.plot(complete_timestamps, prediction_pitchc -
-    #          GT_pitchc, 'r', label='error pred - GT')
-    # plt.plot(complete_timestamps, odom_pitchc -
-    #          GT_pitchc, 'c--', label='error odom - GT')
-    # overall_plot_5.legend(["error pred - GT\nmean: %.5f" % mean_ep_pitch +
-    #                       " std: %.5f" % SD_ep_pitch, "error odom - GT\nmean: %.5f" % mean_eo_pitch+" std: %.5f" % SD_eo_pitch], shadow=True)
+    if(showLegend):
+        overall_plot_5.legend(shadow=True)
     plt.ylabel('Total pitch angle [°]')
     plt.grid(True, 'both')
 
-    overall_plot_6 = plt.subplot(3, 2, 6)
+    overall_plot_6 = plt.subplot(4, 2, 6)
     plt.title("Yaw")
-    plt.plot(odom_c_timestamps, 57.2858*odom_yawc,
+    plt.plot(loam_p_timestamps, 57.2858*loam_yawp,
              'y', label='LOAM S2S')
-    plt.plot(complete_timestamps, 57.2858 *
+    plt.plot(pose_timestamps, 57.2858 *
              prediction_yawc, 'b', label='My Method')
-    plt.plot(complete_timestamps, 57.2858*GT_yawc, 'g', label='Lio-Sam GT')
-    # overall_plot_6.legend(shadow=True)
-    # plt.plot(complete_timestamps, prediction_yawc -
-    #          GT_yawc, 'r', label='error pred - GT')
-    # plt.plot(complete_timestamps, odom_yawc -
-    #          GT_yawc, 'c--', label='error odom - GT')
-    # overall_plot_6.legend(["error pred - GT\nmean: %.5f" % mean_ep_yaw +
-    #                       " std: %.5f" % SD_ep_yaw, "error odom - GT\nmean: %.5f" % mean_eo_yaw+" std: %.5f" % SD_eo_yaw], shadow=True)
+    plt.plot(pose_timestamps, 57.2858*GT_yawc, 'g', label='Lio-Sam GT')
+    if(showLegend):
+        overall_plot_6.legend(shadow=True)
     plt.ylabel('Total yaw angle [°]')
     plt.grid(True, 'both')
 
-    # feature_plot = plt.subplot(4, 2, 7)
-    # plt.title("Matches", fontsize=11)
-    # plt.plot(feature_timestamps, feature_number,
-    #          'm', label="# of Features per step")
-    # # feature_plot.legend(shadow=True)
-    # plt.ylabel('Feature Number')
-    # plt.grid(True, 'both')
+    feature_plot = plt.subplot(4, 2, 7)
+    plt.title("Matches", fontsize=11)
+    plt.plot(feature_timestamps, feature_number,
+             'm', label="# of Features per step")
+    if(showLegend):
+        feature_plot.legend(shadow=True)
+    plt.ylabel('Feature Number')
+    plt.grid(True, 'both')
 
-    # feature_plot = plt.subplot(4, 2, 8)
-    # plt.title("Matches", fontsize=11)
-    # plt.plot(feature_timestamps, feature_number,
-    #          'm', label="# of Features per step")
-    # # feature_plot.legend(shadow=True)
-    # plt.ylabel('Feature Number')
-    # plt.grid(True, 'both')
-    plt.subplots_adjust(bottom=0.1,
-                        hspace=0.3)
+    feature_plot = plt.subplot(4, 2, 8)
+    plt.title("Matches", fontsize=11)
+    plt.plot(feature_timestamps, feature_number,
+             'm', label="# of Features per step")
+    if(showLegend):
+        feature_plot.legend(shadow=True)
+    plt.ylabel('Feature Number')
+    plt.grid(True, 'both')
 
     figs = plt.figure()
 
-    step_graph_1 = plt.subplot(3, 2, 1)
+    step_graph_1 = plt.subplot(4, 2, 1)
     plt.title("X")
-    plt.plot(odom_s_timestamps, odom_xs, 'y', label='LOAM S2S')
+    plt.plot(loam_s_timestamps, loam_xs, 'y', label='LOAM S2S')
     plt.plot(step_timestamps, prediction_xs, 'b--', label='My Method')
     plt.plot(step_timestamps, GT_xs, 'g--', label='Lio-Sam GT')
-    # step_graph_1.legend(shadow=True)
-    # plt.plot(step_timestamps, prediction_xs -
-    #          GT_xs, 'r', label='error pred - GT')
-    # plt.plot(step_timestamps, odom_xs-GT_xs, 'c--', label='error odom - GT')
-    # step_graph_1.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_x +
-    #                     " std: %.5f" % step_SD_ep_x, "error odom - GT\nmean: %.5f" % step_mean_eo_x+" std: %.5f" % step_SD_eo_x], shadow=True)
+    if(showLegend):
+        step_graph_1.legend(shadow=True)
     plt.ylabel('step Transl x [m]')
     plt.grid(True, 'both')
 
-    step_graph_2 = plt.subplot(3, 2, 3)
+    step_graph_2 = plt.subplot(4, 2, 3)
     plt.title("Y")
-    plt.plot(odom_s_timestamps, odom_ys, 'y', label='LOAM S2S')
+    plt.plot(loam_s_timestamps, loam_ys, 'y', label='LOAM S2S')
     plt.plot(step_timestamps, prediction_ys, 'b--', label='My Method')
     plt.plot(step_timestamps, GT_ys, 'g--', label='Lio-Sam GT')
-    # step_graph_2.legend(shadow=True)
-    # plt.plot(step_timestamps, prediction_ys -
-    #          GT_ys, 'r', label='error pred - GT')
-    # plt.plot(step_timestamps, odom_ys-GT_ys, 'c--', label='error odom - GT')
-    # step_graph_2.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_y +
-    #                     " std: %.5f" % step_SD_ep_y, "error odom - GT\nmean: %.5f" % step_mean_eo_y+" std: %.5f" % step_SD_eo_y], shadow=True)
+    if(showLegend):
+        step_graph_2.legend(shadow=True)
     plt.ylabel('step Transl y [m]')
     plt.grid(True, 'both')
 
-    step_graph_3 = plt.subplot(3, 2, 5)
+    step_graph_3 = plt.subplot(4, 2, 5)
     plt.title("Z")
-    plt.plot(odom_s_timestamps, odom_zs, 'y', label='LOAM S2S')
+    plt.plot(loam_s_timestamps, loam_zs, 'y', label='LOAM S2S')
     plt.plot(step_timestamps, prediction_zs, 'b--', label='My Method')
     plt.plot(step_timestamps, GT_zs, 'g--', label='Lio-Sam GT')
-    # step_graph_3.legend(shadow=True)
-    # plt.plot(step_timestamps, prediction_zs -
-    #          GT_zs, 'r', label='error pred - GT')
-    # plt.plot(step_timestamps, odom_zs-GT_zs, 'c--', label='error odom - GT')
-    # step_graph_3.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_z +
-    #                     " std: %.5f" % step_SD_ep_z, "error odom - GT\nmean: %.5f" % step_mean_eo_z+" std: %.5f" % step_SD_eo_z], shadow=True)
+    if(showLegend):
+        step_graph_3.legend(shadow=True)
     plt.ylabel('step Transl z [m]')
     plt.grid(True, 'both')
 
-    step_graph_4 = plt.subplot(3, 2, 2)
+    step_graph_4 = plt.subplot(4, 2, 2)
     plt.title("Roll")
     plt.plot(step_timestamps, 57.2858 *
              GT_rolls, 'g--', label='Lio-Sam GT')
     plt.plot(step_timestamps, 57.2858 *
              prediction_rolls, 'b--', label='My Method')
-    plt.plot(odom_s_timestamps, 57.2858*odom_rolls,
+    plt.plot(loam_s_timestamps, 57.2858*loam_rolls,
              'y', label='LOAM S2S')
-    # step_graph_4.legend(shadow=True)
-    # plt.plot(step_timestamps, prediction_rolls -
-    #          GT_rolls, 'r', label='error pred - GT')
-    # plt.plot(step_timestamps, odom_rolls-GT_rolls,
-    #          'c--', label='error odom - GT')
-    # step_graph_4.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_roll +
-    #                     " std: %.5f" % step_SD_ep_roll, "error odom - GT\nmean: %.5f" % step_mean_eo_roll+" std: %.5f" % step_SD_eo_roll], shadow=True)
+    if(showLegend):
+        step_graph_4.legend(shadow=True)
     plt.ylabel('step row angle [°]')
     plt.grid(True, 'both')
 
-    step_graph_5 = plt.subplot(3, 2, 4)
+    step_graph_5 = plt.subplot(4, 2, 4)
     plt.title("Pitch")
     plt.plot(step_timestamps, 57.2858 *
              GT_pitchs, 'g--', label='Lio-Sam GT')
     plt.plot(step_timestamps, 57.2858 *
              prediction_pitchs, 'b--', label='My Method')
-    plt.plot(odom_s_timestamps, 57.2858*odom_pitchs,
+    plt.plot(loam_s_timestamps, 57.2858*loam_pitchs,
              'y', label='LOAM S2S')
-    # step_graph_5.legend(shadow=True)
-    # plt.plot(step_timestamps, prediction_pitchs -
-    #          GT_pitchs, 'r', label='error pred - GT')
-    # plt.plot(step_timestamps, odom_pitchs -
-    #          GT_pitchs, 'c--', label='error odom - GT')
-    # step_graph_5.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_pitch +
-    #                     " std: %.5f" % step_SD_ep_pitch, "error odom - GT\nmean: %.5f" % step_mean_eo_pitch+" std: %.5f" % step_SD_eo_pitch], shadow=True)
+    if(showLegend):
+        step_graph_5.legend(shadow=True)
     plt.ylabel('step pitch angle [°]')
     plt.grid(True, 'both')
 
-    step_graph_6 = plt.subplot(3, 2, 6)
+    step_graph_6 = plt.subplot(4, 2, 6)
     plt.title("Yaw")
     plt.plot(step_timestamps, 57.2858*GT_yaws, 'g--', label='Lio-Sam GT')
     plt.plot(step_timestamps, 57.2858 *
              prediction_yaws, 'b--', label='My Method')
-    plt.plot(odom_s_timestamps, 57.2858*odom_yaws,
+    plt.plot(loam_s_timestamps, 57.2858*loam_yaws,
              'y', label='LOAM S2S')
-    # step_graph_6.legend(shadow=True)
-    # plt.plot(step_timestamps, prediction_yaws -
-    #          GT_yaws, 'r', label='error pred - GT')
-    # plt.plot(step_timestamps, odom_yaws-GT_yaws,
-    #          'c--', label='error odom - GT')
-    # step_graph_6.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_yaw +
-    #                     " std: %.5f" % step_SD_ep_yaw, "error odom - GT\nmean: %.5f" % step_mean_eo_yaw+" std: %.5f" % step_SD_eo_yaw], shadow=True)
+    if(showLegend):
+        step_graph_6.legend(shadow=True)
     plt.ylabel('step yaw angle [°]')
     plt.grid(True, 'both')
 
-    # feature_plot = plt.subplot(4, 2, 7)
-    # plt.title("Matches", fontsize=11)
-    # plt.plot(feature_timestamps, feature_number,
-    #          'm', label="# of Features per step")
-    # # feature_plot.legend(shadow=True)
-    # plt.ylabel('Feature Number')
-    # plt.grid(True, 'both')
+    feature_plot = plt.subplot(4, 2, 7)
+    plt.title("Matches", fontsize=11)
+    plt.plot(feature_timestamps, feature_number,
+             'm', label="# of Features per step")
+    if(showLegend):
+        feature_plot.legend(shadow=True)
+    plt.ylabel('Feature Number')
+    plt.grid(True, 'both')
 
-    # feature_plot = plt.subplot(4, 2, 8)
-    # plt.title("Matches", fontsize=11)
-    # plt.plot(feature_timestamps, feature_number,
-    #          'm', label="# of Features per step")
-    # # feature_plot.legend(shadow=True)
-    # plt.ylabel('Feature Number')
-    # plt.grid(True, 'both')
+    feature_plot = plt.subplot(4, 2, 8)
+    plt.title("Matches", fontsize=11)
+    plt.plot(feature_timestamps, feature_number,
+             'm', label="# of Features per step")
+    if(showLegend):
+        feature_plot.legend(shadow=True)
+    plt.ylabel('Feature Number')
+    plt.grid(True, 'both')
 
     figc.set_figheight(15)
     figs.set_figheight(15)
     figc.set_figwidth(15)
     figs.set_figwidth(15)
-    plt.subplots_adjust(bottom=0.1,
-                        hspace=0.3)
     plt.show()
-    if(printBool):
+    if(storeBool):
         if(extractor == "orb"):
-            figc.savefig("pdfs/Pose" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-                         min_distance + "_max_dist:" + max_match_distance + "_max_cos:" + max_cos + "_smooth:" + smoothing+"_length:" +
+            figc.savefig("pdfs/Pose" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                         min_distance + "_max_dist:" + max_depth_distance + "_smooth:" + smoothing+"_length:" +
                          length + "max_orb_feat:" + orb_max_features +
                          "orb_acc:" + orb_accuracy + "orb_Sc_Fa:"
                          + orb_scale_factor + "orb_levels:" + orb_levels+".pdf", bbox_inches='tight')
-            figs.savefig("pdfs/Steps" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-                         min_distance + "_max_dist:" + max_match_distance + "_max_cos:" + max_cos + "_smooth:" + smoothing+"_length:" +
+            figs.savefig("pdfs/Steps" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                         min_distance + "_max_dist:" + max_depth_distance + "_smooth:" + smoothing+"_length:" +
                          length + "max_orb_feat:" + orb_max_features+"orb_acc:" + orb_accuracy + "orb_Sc_Fa:" +
                          orb_scale_factor + "orb_levels:" + orb_levels+".pdf", bbox_inches='tight')
         elif(extractor == "brisk"):
-            figc.savefig("pdfs/Pose" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-                         min_distance + "_max_dist:" + max_match_distance + "_max_cos:" + max_cos + "_smooth:" + smoothing+"_length:" + length + "brisk_thresh:"+brisk_threshold + "octaves:" + brisk_octaves + "brisk_P_S:"+brisk_pattern_scale+".pdf", bbox_inches='tight')
-            figs.savefig("pdfs/Steps" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-                         min_distance + "_max_dist:" + max_match_distance + "_max_cos:" + max_cos + "_smooth:" + smoothing+"_length:" + length + "brisk_thresh:"+brisk_threshold + "octaves:" + brisk_octaves + "brisk_P_S:"+brisk_pattern_scale+".pdf", bbox_inches='tight')
+            figc.savefig("pdfs/Pose" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                         min_distance + "_max_dist:" + max_depth_distance + "_smooth:" + smoothing+"_length:" + length + "brisk_thresh:"+brisk_threshold + "octaves:" + brisk_octaves + "brisk_P_S:"+brisk_pattern_scale+".pdf", bbox_inches='tight')
+            figs.savefig("pdfs/Steps" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                         min_distance + "_max_dist:" + max_depth_distance + "_smooth:" + smoothing+"_length:" + length + "brisk_thresh:"+brisk_threshold + "octaves:" + brisk_octaves + "brisk_P_S:"+brisk_pattern_scale+".pdf", bbox_inches='tight')
         else:
-            figc.savefig("pdfs/Pose" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-                         min_distance + "_max_dist:" + max_match_distance + "_max_cos:" + max_cos + "_smooth:" + smoothing+"_length:" + length +
+            figc.savefig("pdfs/Pose" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                         min_distance + "_max_dist:" + max_depth_distance + "_smooth:" + smoothing+"_length:" + length +
                          "_minTracked:"+klt_min_tracked + "_det_Quality:"+klt_quality_level + "_block_size:"+klt_block_size +
                          "_min_Det_Dist:"+klt_min_klt_distance+"_Error_thresh:" + klt_epsilon+"_matchingReps:"+klt_criteria_reps +
                          "_sizePerPyr:"+klt_opt_size+"_PyrLevels:"+klt_num_pyramids+".pdf", bbox_inches='tight')
-            figs.savefig("pdfs/Steps" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-                         min_distance + "_max_dist:" + max_match_distance + "_max_cos:" + max_cos + "_smooth:" + smoothing+"_length:" + length +
+            figs.savefig("pdfs/Steps" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                         min_distance + "_max_dist:" + max_depth_distance + "_smooth:" + smoothing+"_length:" + length +
                          "_minTracked:"+klt_min_tracked + "_det_Quality:"+klt_quality_level + "_block_size:"+klt_block_size +
                          "_min_Det_Dist:"+klt_min_klt_distance+"_Error_thresh:" + klt_epsilon+"_matchingReps:"+klt_criteria_reps +
                          "_sizePerPyr:"+klt_opt_size+"_PyrLevels:"+klt_num_pyramids+".pdf", bbox_inches='tight')
 
 
-def plot_errors(printBool, show_errors, extractor):
+def plot_errors(storeBool, showLegend, show_errors, extractor):
 
     error_prediction_x = np.abs(prediction_xc - GT_xc)
     error_prediction_y = np.abs(prediction_yc - GT_yc)
@@ -312,12 +256,12 @@ def plot_errors(printBool, show_errors, extractor):
     error_prediction_pitch = np.abs(57.2858*(prediction_pitchc - GT_pitchc))
     error_prediction_yaw = np.abs(57.2858*(prediction_yawc - GT_yawc))
 
-    error_odom_x = np.abs(odom_xc - GT_xc)
-    error_odom_y = np.abs(odom_yc - GT_yc)
-    error_odom_z = np.abs(odom_zc - GT_zc)
-    error_odom_roll = np.abs(57.2858*(odom_rollc - GT_rollc))
-    error_odom_pitch = np.abs(57.2858*(odom_pitchc - GT_pitchc))
-    error_odom_yaw = np.abs(57.2858*(odom_yawc - GT_yawc))
+    error_odom_x = np.abs(loam_xp - GT_xc)
+    error_odom_y = np.abs(loam_yp - GT_yc)
+    error_odom_z = np.abs(loam_zp - GT_zc)
+    error_odom_roll = np.abs(57.2858*(loam_rollp - GT_rollc))
+    error_odom_pitch = np.abs(57.2858*(loam_pitchp - GT_pitchc))
+    error_odom_yaw = np.abs(57.2858*(loam_yawp - GT_yawc))
 
     mean_ep_x = np.mean(error_prediction_x)
     mean_ep_y = np.mean(error_prediction_y)
@@ -355,12 +299,12 @@ def plot_errors(printBool, show_errors, extractor):
         57.2858*(prediction_pitchs - GT_pitchs))
     step_error_prediction_yaw = np.abs(57.2858*(prediction_yaws - GT_yaws))
 
-    step_error_odom_x = np.abs(odom_xs - GT_xs)
-    step_error_odom_y = np.abs(odom_ys - GT_ys)
-    step_error_odom_z = np.abs(odom_zs - GT_zs)
-    step_error_odom_roll = np.abs(57.2858*(odom_rolls - GT_rolls))
-    step_error_odom_pitch = np.abs(57.2858*(odom_pitchs - GT_pitchs))
-    step_error_odom_yaw = np.abs(57.2858*(odom_yaws - GT_yaws))
+    step_error_odom_x = np.abs(loam_xs - GT_xs)
+    step_error_odom_y = np.abs(loam_ys - GT_ys)
+    step_error_odom_z = np.abs(loam_zs - GT_zs)
+    step_error_odom_roll = np.abs(57.2858*(loam_rolls - GT_rolls))
+    step_error_odom_pitch = np.abs(57.2858*(loam_pitchs - GT_pitchs))
+    step_error_odom_yaw = np.abs(57.2858*(loam_yaws - GT_yaws))
 
     step_mean_ep_x = np.mean(step_error_prediction_x)
     step_mean_ep_y = np.mean(step_error_prediction_y)
@@ -391,331 +335,321 @@ def plot_errors(printBool, show_errors, extractor):
     step_SD_eo_yaw = np.std(step_error_odom_yaw)
 
     figc = plt.figure()
-    overall_plot_1 = plt.subplot(3, 2, 1)
+    overall_plot_1 = plt.subplot(4, 2, 1)
     plt.title("X")
-    plt.plot(complete_timestamps, prediction_xc -
+    plt.plot(pose_timestamps, prediction_xc -
              GT_xc, 'r', label='error My Method vs Lio-Sam GT')
-    plt.plot(complete_timestamps, odom_xc-GT_xc,
+    plt.plot(pose_timestamps, loam_xp-GT_xc,
              'c--', label='error LOAM S2S vs  - Lio-Sam GT')
-    # if(show_errors):
-    #     overall_plot_1.legend(
-    #         ["error pred - GT\nmean: %.5f" % mean_ep_x+" std: %.5f" % SD_ep_x, "error odom - GT\nmean: %.5f" % mean_eo_x+" std: %.5f" % SD_eo_x], shadow=True)
-    # else:
-    # overall_plot_1.legend(shadow=True)
+    if(showLegend):
+        if(show_errors):
+            overall_plot_1.legend(
+                ["error pred - GT\nmean: %.5f" % mean_ep_x+" std: %.5f" % SD_ep_x, "error odom - GT\nmean: %.5f" % mean_eo_x+" std: %.5f" % SD_eo_x], shadow=True)
+        else:
+            overall_plot_1.legend(shadow=True)
     plt.ylabel('Total Transl x [m]')
     plt.grid(True, 'both')
 
-    overall_plot_2 = plt.subplot(3, 2, 3)
+    overall_plot_2 = plt.subplot(4, 2, 3)
     plt.title("Y")
-    plt.plot(complete_timestamps, prediction_yc -
+    plt.plot(pose_timestamps, prediction_yc -
              GT_yc, 'r', label='error pred - GT')
-    plt.plot(complete_timestamps, odom_yc-GT_yc,
+    plt.plot(pose_timestamps, loam_yp-GT_yc,
              'c--', label='error odom - GT')
-    # if(show_errors):
-    #     overall_plot_2.legend(["error pred - GT\nmean: %.5f" % mean_ep_y +
-    #                            " std: %.5f" % SD_ep_y, "error odom - GT\nmean: %.5f" % mean_eo_y+" std: %.5f" % SD_eo_y], shadow=True)
-    # else:
-    # overall_plot_2.legend(shadow=True)
+    if(showLegend):
+        if(show_errors):
+            overall_plot_2.legend(["error pred - GT\nmean: %.5f" % mean_ep_y +
+                                   " std: %.5f" % SD_ep_y, "error odom - GT\nmean: %.5f" % mean_eo_y+" std: %.5f" % SD_eo_y], shadow=True)
+        else:
+            overall_plot_2.legend(shadow=True)
     plt.ylabel('Total Transl y [m]')
     plt.grid(True, 'both')
 
-    overall_plot_3 = plt.subplot(3, 2, 5)
+    overall_plot_3 = plt.subplot(4, 2, 5)
     plt.title("Z")
-    plt.plot(complete_timestamps, prediction_zc -
+    plt.plot(pose_timestamps, prediction_zc -
              GT_zc, 'r', label='error pred - GT')
-    plt.plot(complete_timestamps, odom_zc-GT_zc,
+    plt.plot(pose_timestamps, loam_zp-GT_zc,
              'c--', label='error odom - GT')
-    # if(show_errors):
-    #     overall_plot_3.legend(["error pred - GT\nmean: %.5f" % mean_ep_z +
-    #                            " std: %.5f" % SD_ep_z, "error odom - GT\nmean: %.5f" % mean_eo_z+" std: %.5f" % SD_eo_z], shadow=True)
-    # else:
-    # overall_plot_3.legend(shadow=True)
+    if(showLegend):
+        if(show_errors):
+            overall_plot_3.legend(["error pred - GT\nmean: %.5f" % mean_ep_z +
+                                   " std: %.5f" % SD_ep_z, "error odom - GT\nmean: %.5f" % mean_eo_z+" std: %.5f" % SD_eo_z], shadow=True)
+        else:
+            overall_plot_3.legend(shadow=True)
     plt.ylabel('Total Transl z [m]')
     plt.grid(True, 'both')
 
-    overall_plot_4 = plt.subplot(3, 2, 2)
+    overall_plot_4 = plt.subplot(4, 2, 2)
     plt.title("Roll")
-    plt.plot(complete_timestamps, prediction_rollc -
+    plt.plot(pose_timestamps, prediction_rollc -
              GT_rollc, 'r', label='error pred - GT')
-    plt.plot(complete_timestamps, odom_rollc -
+    plt.plot(pose_timestamps, loam_rollp -
              GT_rollc, 'c--', label='error odom - GT')
-    # if(show_errors):
-    #     overall_plot_4.legend(["error pred - GT\nmean: %.5f" % mean_ep_roll +
-    #                            " std: %.5f" % SD_ep_roll, "error odom - GT\nmean: %.5f" % mean_eo_roll+" std: %.5f" % SD_eo_roll], shadow=True)
-    # else:
-    # overall_plot_4.legend(shadow=True)
+    if(showLegend):
+        if(show_errors):
+            overall_plot_4.legend(["error pred - GT\nmean: %.5f" % mean_ep_roll +
+                                   " std: %.5f" % SD_ep_roll, "error odom - GT\nmean: %.5f" % mean_eo_roll+" std: %.5f" % SD_eo_roll], shadow=True)
+        else:
+            overall_plot_4.legend(shadow=True)
     plt.ylabel('Total row angle [°]')
     plt.grid(True, 'both')
 
-    overall_plot_5 = plt.subplot(3, 2, 4)
+    overall_plot_5 = plt.subplot(4, 2, 4)
     plt.title("Pitch")
-    plt.plot(complete_timestamps, prediction_pitchc -
+    plt.plot(pose_timestamps, prediction_pitchc -
              GT_pitchc, 'r', label='error pred - GT')
-    plt.plot(complete_timestamps, odom_pitchc -
+    plt.plot(pose_timestamps, loam_pitchp -
              GT_pitchc, 'c--', label='error odom - GT')
-    # if(show_errors):
-    #     overall_plot_5.legend(["error pred - GT\nmean: %.5f" % mean_ep_pitch +
-    #                            " std: %.5f" % SD_ep_pitch, "error odom - GT\nmean: %.5f" % mean_eo_pitch+" std: %.5f" % SD_eo_pitch], shadow=True)
-    # else:
-    # overall_plot_5.legend(shadow=True)
+    if(showLegend):
+        if(show_errors):
+            overall_plot_5.legend(["error pred - GT\nmean: %.5f" % mean_ep_pitch +
+                                   " std: %.5f" % SD_ep_pitch, "error odom - GT\nmean: %.5f" % mean_eo_pitch+" std: %.5f" % SD_eo_pitch], shadow=True)
+        else:
+            overall_plot_5.legend(shadow=True)
     plt.ylabel('Total pitch angle [°]')
     plt.grid(True, 'both')
 
-    overall_plot_6 = plt.subplot(3, 2, 6)
+    overall_plot_6 = plt.subplot(4, 2, 6)
     plt.title("Yaw")
-    plt.plot(complete_timestamps, prediction_yawc -
+    plt.plot(pose_timestamps, prediction_yawc -
              GT_yawc, 'r', label='error pred - GT')
-    plt.plot(complete_timestamps, odom_yawc -
+    plt.plot(pose_timestamps, loam_yawp -
              GT_yawc, 'c--', label='error odom - GT')
-    # if(show_errors):
-    #     overall_plot_6.legend(["error pred - GT\nmean: %.5f" % mean_ep_yaw +
-    #                            " std: %.5f" % SD_ep_yaw, "error odom - GT\nmean: %.5f" % mean_eo_yaw+" std: %.5f" % SD_eo_yaw], shadow=True)
-    # else:
-    # overall_plot_6.legend(shadow=True)
+    if(showLegend):
+        if(show_errors):
+            overall_plot_6.legend(["error pred - GT\nmean: %.5f" % mean_ep_yaw +
+                                   " std: %.5f" % SD_ep_yaw, "error odom - GT\nmean: %.5f" % mean_eo_yaw+" std: %.5f" % SD_eo_yaw], shadow=True)
+        else:
+            overall_plot_6.legend(shadow=True)
     plt.ylabel('Total yaw angle [°]')
     plt.grid(True, 'both')
 
-    # feature_plot = plt.subplot(4, 2, 7)
-    # plt.title("Matches", fontsize=11)
-    # plt.plot(feature_timestamps, feature_number,
-    #          'm', label="# of Features per step")
-    # # feature_plot.legend(shadow=True)
-    # plt.ylabel('Feature Number')
-    # plt.grid(True, 'both')
+    feature_plot = plt.subplot(4, 2, 7)
+    plt.title("Matches", fontsize=11)
+    plt.plot(feature_timestamps, feature_number,
+             'm', label="# of Features per step")
+    if(showLegend):
+        feature_plot.legend(shadow=True)
+    plt.ylabel('Feature Number')
+    plt.grid(True, 'both')
 
-    # feature_plot = plt.subplot(4, 2, 8)
-    # plt.title("Matches", fontsize=11)
-    # plt.plot(feature_timestamps, feature_number,
-    #          'm', label="# of Features per step")
-    # # feature_plot.legend(shadow=True)
-    # plt.ylabel('Feature Number')
-    # plt.grid(True, 'both')
-
-    plt.subplots_adjust(bottom=0.1,
-                        hspace=0.3)
+    feature_plot = plt.subplot(4, 2, 8)
+    plt.title("Matches", fontsize=11)
+    plt.plot(feature_timestamps, feature_number,
+             'm', label="# of Features per step")
+    if(showLegend):
+        feature_plot.legend(shadow=True)
+    plt.ylabel('Feature Number')
+    plt.grid(True, 'both')
 
     figs = plt.figure()
 
-    step_graph_1 = plt.subplot(3, 2, 1)
+    step_graph_1 = plt.subplot(4, 2, 1)
     plt.title("X")
     plt.plot(step_timestamps, prediction_xs -
              GT_xs, 'r', label='error pred - GT')
-    plt.plot(step_timestamps, odom_xs-GT_xs, 'c--', label='error odom - GT')
-    # if(show_errors):
-    #     step_graph_1.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_x +
-    #                         " std: %.5f" % step_SD_ep_x, "error odom - GT\nmean: %.5f" % step_mean_eo_x+" std: %.5f" % step_SD_eo_x], shadow=True)
-    # else:
-    #     step_graph_1.legend(shadow=True)
+    plt.plot(step_timestamps, loam_xs-GT_xs, 'c--', label='error odom - GT')
+    if(showLegend):
+        if(show_errors):
+            step_graph_1.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_x +
+                                " std: %.5f" % step_SD_ep_x, "error odom - GT\nmean: %.5f" % step_mean_eo_x+" std: %.5f" % step_SD_eo_x], shadow=True)
+        else:
+            step_graph_1.legend(shadow=True)
     plt.ylabel('step Transl x [m]')
     plt.grid(True, 'both')
 
-    step_graph_2 = plt.subplot(3, 2, 3)
+    step_graph_2 = plt.subplot(4, 2, 3)
     plt.title("Y")
     plt.plot(step_timestamps, prediction_ys -
              GT_ys, 'r', label='error pred - GT')
-    plt.plot(step_timestamps, odom_ys-GT_ys, 'c--', label='error odom - GT')
-    # if(show_errors):
-    #     step_graph_2.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_y +
-    #                         " std: %.5f" % step_SD_ep_y, "error odom - GT\nmean: %.5f" % step_mean_eo_y+" std: %.5f" % step_SD_eo_y], shadow=True)
-    # else:
-    #     step_graph_2.legend(shadow=True)
+    plt.plot(step_timestamps, loam_ys-GT_ys, 'c--', label='error odom - GT')
+    if(showLegend):
+        if(show_errors):
+            step_graph_2.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_y +
+                                " std: %.5f" % step_SD_ep_y, "error odom - GT\nmean: %.5f" % step_mean_eo_y+" std: %.5f" % step_SD_eo_y], shadow=True)
+        else:
+            step_graph_2.legend(shadow=True)
     plt.ylabel('step Transl y [m]')
     plt.grid(True, 'both')
 
-    step_graph_3 = plt.subplot(3, 2, 5)
+    step_graph_3 = plt.subplot(4, 2, 5)
     plt.title("Z")
     plt.plot(step_timestamps, prediction_zs -
              GT_zs, 'r', label='error pred - GT')
-    plt.plot(step_timestamps, odom_zs-GT_zs, 'c--', label='error odom - GT')
-    # if(show_errors):
-    #     step_graph_3.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_z +
-    #                         " std: %.5f" % step_SD_ep_z, "error odom - GT\nmean: %.5f" % step_mean_eo_z+" std: %.5f" % step_SD_eo_z], shadow=True)
-    # else:
-    #     step_graph_3.legend(shadow=True)
+    plt.plot(step_timestamps, loam_zs-GT_zs, 'c--', label='error odom - GT')
+    if(showLegend):
+        if(show_errors):
+            step_graph_3.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_z +
+                                " std: %.5f" % step_SD_ep_z, "error odom - GT\nmean: %.5f" % step_mean_eo_z+" std: %.5f" % step_SD_eo_z], shadow=True)
+        else:
+            step_graph_3.legend(shadow=True)
     plt.ylabel('step Transl z [m]')
     plt.grid(True, 'both')
 
-    step_graph_4 = plt.subplot(3, 2, 2)
+    step_graph_4 = plt.subplot(4, 2, 2)
     plt.title("Roll")
     plt.plot(step_timestamps, prediction_rolls -
              GT_rolls, 'r', label='error pred - GT')
-    plt.plot(step_timestamps, odom_rolls-GT_rolls,
+    plt.plot(step_timestamps, loam_rolls-GT_rolls,
              'c--', label='error odom - GT')
-    # if(show_errors):
-    #     step_graph_4.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_roll +
-    #                         " std: %.5f" % step_SD_ep_roll, "error odom - GT\nmean: %.5f" % step_mean_eo_roll+" std: %.5f" % step_SD_eo_roll], shadow=True)
-    # else:
-    #     step_graph_4.legend(shadow=True)
+    if(showLegend):
+        if(show_errors):
+            step_graph_4.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_roll +
+                                " std: %.5f" % step_SD_ep_roll, "error odom - GT\nmean: %.5f" % step_mean_eo_roll+" std: %.5f" % step_SD_eo_roll], shadow=True)
+        else:
+            step_graph_4.legend(shadow=True)
     plt.ylabel('step row angle [°]')
     plt.grid(True, 'both')
 
-    step_graph_5 = plt.subplot(3, 2, 4)
+    step_graph_5 = plt.subplot(4, 2, 4)
     plt.title("Pitch")
     plt.plot(step_timestamps, prediction_pitchs -
              GT_pitchs, 'r', label='error pred - GT')
-    plt.plot(step_timestamps, odom_pitchs -
+    plt.plot(step_timestamps, loam_pitchs -
              GT_pitchs, 'c--', label='error odom - GT')
-    # if(show_errors):
-    #     step_graph_5.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_pitch +
-    #                         " std: %.5f" % step_SD_ep_pitch, "error odom - GT\nmean: %.5f" % step_mean_eo_pitch+" std: %.5f" % step_SD_eo_pitch], shadow=True)
-    # else:
-    # step_graph_5.legend(shadow=True)
+    if(showLegend):
+        if(show_errors):
+            step_graph_5.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_pitch +
+                                " std: %.5f" % step_SD_ep_pitch, "error odom - GT\nmean: %.5f" % step_mean_eo_pitch+" std: %.5f" % step_SD_eo_pitch], shadow=True)
+        else:
+            step_graph_5.legend(shadow=True)
     plt.ylabel('step pitch angle [°]')
     plt.grid(True, 'both')
 
-    step_graph_6 = plt.subplot(3, 2, 6)
+    step_graph_6 = plt.subplot(4, 2, 6)
     plt.title("Yaw")
     plt.plot(step_timestamps, prediction_yaws -
              GT_yaws, 'r', label='error pred - GT')
-    plt.plot(step_timestamps, odom_yaws-GT_yaws,
+    plt.plot(step_timestamps, loam_yaws-GT_yaws,
              'c--', label='error odom - GT')
-    # if(show_errors):
-    #     step_graph_6.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_yaw +
-    #                         " std: %.5f" % step_SD_ep_yaw, "error odom - GT\nmean: %.5f" % step_mean_eo_yaw+" std: %.5f" % step_SD_eo_yaw], shadow=True)
-    # else:
-    #     step_graph_6.legend(shadow=True)
+    if(showLegend):
+        if(show_errors):
+            step_graph_6.legend(["error pred - GT\nmean: %.5f" % step_mean_ep_yaw +
+                                " std: %.5f" % step_SD_ep_yaw, "error odom - GT\nmean: %.5f" % step_mean_eo_yaw+" std: %.5f" % step_SD_eo_yaw], shadow=True)
+        else:
+            step_graph_6.legend(shadow=True)
     plt.ylabel('step yaw angle [°]')
     plt.grid(True, 'both')
 
-    # feature_plot = plt.subplot(4, 2, 7)
-    # plt.title("Matches", fontsize=11)
-    # plt.plot(feature_timestamps, feature_number,
-    #          'm', label="# of Features per step")
-    # # feature_plot.legend(shadow=True)
-    # plt.ylabel('Feature Number')
-    # plt.grid(True, 'both')
+    feature_plot = plt.subplot(4, 2, 7)
+    plt.title("Matches", fontsize=11)
+    plt.plot(feature_timestamps, feature_number,
+             'm', label="# of Features per step")
+    if(showLegend):
+        feature_plot.legend(shadow=True)
+    plt.ylabel('Feature Number')
+    plt.grid(True, 'both')
 
-    # feature_plot = plt.subplot(4, 2, 8)
-    # plt.title("Matches", fontsize=11)
-    # plt.plot(feature_timestamps, feature_number,
-    #          'm', label="# of Features per step")
-    # # feature_plot.legend(shadow=True)
-    # plt.ylabel('Feature Number')
-    # plt.grid(True, 'both')
+    feature_plot = plt.subplot(4, 2, 8)
+    plt.title("Matches", fontsize=11)
+    plt.plot(feature_timestamps, feature_number,
+             'm', label="# of Features per step")
+    if(showLegend):
+        feature_plot.legend(shadow=True)
+    plt.ylabel('Feature Number')
+    plt.grid(True, 'both')
 
     figc.set_figheight(15)
     figs.set_figheight(15)
     figc.set_figwidth(15)
     figs.set_figwidth(15)
-    plt.subplots_adjust(bottom=0.1,
-                        hspace=0.3)
     plt.show()
-    if(printBool):
+    if(storeBool):
         if(show_errors):
             if(extractor == "orb"):
-                figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length + "max_orb_feat:" + orb_max_features +
+                figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_min_dist:" +
+                             min_distance + "_max_distance:" + max_depth_distance + "_length:" + length + "max_orb_feat:" + orb_max_features +
                              "orb_accuracy:" + orb_accuracy + "orb_Sc_Fa:"
                              + orb_scale_factor + "orb_levels:" + orb_levels+".pdf", bbox_inches='tight')
-                figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" +
+                figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_min_dist:" +
+                             min_distance + "_max_distance:" + max_depth_distance + "_length:" +
                              length + "max_orb_feat:" + orb_max_features +
                              "orb_accuracy:" + orb_accuracy + "orb_Sc_Fa:"
                              + orb_scale_factor + "orb_levels:" + orb_levels+".pdf", bbox_inches='tight')
             elif(extractor == "brisk"):
-                figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" +
+                figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_min_dist:" +
+                             min_distance + "_max_distance:" + max_depth_distance + "_length:" +
                              length + "brisk_thresh:"+brisk_threshold + "octaves:" + brisk_octaves + "brisk_Pa_Sca:" +
                              brisk_pattern_scale+".pdf", bbox_inches='tight')
-                figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length +
+                figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_min_dist:" +
+                             min_distance + "_max_distance:" + max_depth_distance + "_length:" + length +
                              "brisk_thresh:"+brisk_threshold + "octaves:" + brisk_octaves + "brisk_Pa_Sca:"+brisk_pattern_scale+".pdf", bbox_inches='tight')
             else:
-                figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_smooth:" + smoothing+"_length:" + length +
+                figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_min_dist:" +
+                             min_distance + "_max_distance:" + max_depth_distance + "_smooth:" + smoothing+"_length:" + length +
                              "_minTracked:"+klt_min_tracked + "_detQual:"+klt_quality_level + "_blocksize:"+klt_block_size +
                              "_min_det_dist:"+klt_min_klt_distance+"_Error_thresh:" + klt_epsilon+"_reps:"+klt_criteria_reps +
                              "_sizePerPyr:"+klt_opt_size+"_PyrLevels:"+klt_num_pyramids+".pdf", bbox_inches='tight')
-                figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "_min_dist:" +
-                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_smooth:" + smoothing+"_length:" + length +
+                figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_min_dist:" +
+                             min_distance + "_max_distance:" + max_depth_distance + "_smooth:" + smoothing+"_length:" + length +
                              "_minTracked:"+klt_min_tracked + "_detQual:"+klt_quality_level + "_blocksize:"+klt_block_size +
                              "_min_det_dist:"+klt_min_klt_distance+"_Error_thresh:" + klt_epsilon+"_reps:"+klt_criteria_reps +
                              "_sizePerPyr:"+klt_opt_size+"_PyrLevels:"+klt_num_pyramids+".pdf", bbox_inches='tight')
 
         else:
             if(extractor == "orb"):
-                figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length + "max_orb_feat:" + orb_max_features +
+                figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                             min_distance + "_max_distance:" + max_depth_distance + "_length:" + length + "max_orb_feat:" + orb_max_features +
                              "orb_accuracy:" + orb_accuracy + "orb_Sc_Fa:"
                              + orb_scale_factor + "orb_levels:" + orb_levels+".pdf", bbox_inches='tight')
-                figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" +
+                figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                             min_distance + "_max_distance:" + max_depth_distance + "_length:" +
                              length + "max_orb_feat:" + orb_max_features +
                              "orb_accuracy:" + orb_accuracy + "orb_Sc_Fa:"
                              + orb_scale_factor + "orb_levels:" + orb_levels+".pdf", bbox_inches='tight')
             elif(extractor == "brisk"):
-                figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" +
+                figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                             min_distance + "_max_distance:" + max_depth_distance + "_length:" +
                              length + "brisk_thresh:"+brisk_threshold + "octaves:" + brisk_octaves + "brisk_Pa_Sca:" +
                              brisk_pattern_scale+".pdf", bbox_inches='tight')
-                figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_length:" + length +
+                figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                             min_distance + "_max_distance:" + max_depth_distance + "_length:" + length +
                              "brisk_thresh:"+brisk_threshold + "octaves:" + brisk_octaves + "brisk_Pa_Sca:"+brisk_pattern_scale+".pdf", bbox_inches='tight')
             else:
-                figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_smooth:" + smoothing+"_length:" + length +
+                figc.savefig("pdfs/Path_error" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                             min_distance + "_max_distance:" + max_depth_distance + "_smooth:" + smoothing+"_length:" + length +
                              "_minTracked:"+klt_min_tracked + "_detQual:"+klt_quality_level + "_blocksize:"+klt_block_size +
                              "_min_det_dist:"+klt_min_klt_distance+"_Error_thresh:" + klt_epsilon+"_reps:"+klt_criteria_reps +
                              "_sizePerPyr:"+klt_opt_size+"_PyrLevels:"+klt_num_pyramids+".pdf", bbox_inches='tight')
-                figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_smooth:" + smoothing+"_length:" + length +
+                figs.savefig("pdfs/Step_error" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                             min_distance + "_max_distance:" + max_depth_distance + "_smooth:" + smoothing+"_length:" + length +
                              "_minTracked:"+klt_min_tracked + "_detQual:"+klt_quality_level + "_blocksize:"+klt_block_size +
                              "_min_det_dist:"+klt_min_klt_distance+"_Error_thresh:" + klt_epsilon+"_reps:"+klt_criteria_reps +
                              "_sizePerPyr:"+klt_opt_size+"_PyrLevels:"+klt_num_pyramids+".pdf", bbox_inches='tight')
 
 
-# def plot_trajectory(printBool, extractor):
-    # path_figure = plt.figure()
-    # pathplot = plt.subplot(1, 1, 1)
-    # plt.title("Path Plot")
-    # plt.plot(prediction_xc, prediction_yc, 'b', label='x vs y Prediction')
-    # plt.plot(GT_xc, GT_yc, 'g', label='x vs y GT')
-    # plt.plot(odom_xc, odom_yc, 'y', label='x vs y Odom')
-    # plt.ylabel('y')
-    # pathplot.legend(shadow=True)
-    # path_figure.set_figheight(15)
-    # path_figure.set_figwidth(15)
-    # plt.show()
-    # if(printBool):
-    #     if(extractor == "orb"):
-    #         path_figure.savefig("pdfs/Traj" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-    #                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "_smooth:" + smoothing+"_length:" + length +
-    #                             "_minTracked:"+klt_min_tracked + "detQuality:"+klt_quality_level + "blocksize:"+klt_block_size +
-    #                             "minDist:"+klt_min_klt_distance+"ErrorThresh:" + klt_epsilon+"_matchingReps:"+klt_criteria_reps +
-    #                             "_sizePerPyr:"+klt_opt_size+"_PyrLevels:"+klt_num_pyramids + ".pdf", bbox_inches='tight')
-    #     elif(extractor == "brisk"):
-    #         path_figure.savefig("pdfs/Traj" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-    #                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "smooth:" + smoothing+"_length:" + length +
-    #                             "_minTracked:"+klt_min_tracked + "detQuality:"+klt_quality_level + "blocksize:"+klt_block_size +
-    #                             "minDist:"+klt_min_klt_distance+"ErrorThresh:" + klt_epsilon+"_matchingReps:"+klt_criteria_reps +
-    #                             "_sizePerPyr:"+klt_opt_size+"_PyrLevels:"+klt_num_pyramids + ".pdf", bbox_inches='tight')
-    #     else:
-    #         path_figure.savefig("pdfs/Traj" + "_Data:" + Data + "_Extr.:" + Extractor + "_Mask:" + MASK + "dupl_size:"+duplicate_size+"_min_dist:" +
-    #                             min_distance + "_max_distance:" + max_match_distance + "_max_cos:" + max_cos + "smooth:" + smoothing+"_length:" + length +
-    #                             "_minTracked:"+klt_min_tracked + "detQuality:"+klt_quality_level + "blocksize:"+klt_block_size +
-    #                             "minDist:"+klt_min_klt_distance+"ErrorThresh:" + klt_epsilon+"_matchingReps:"+klt_criteria_reps +
-    #                             "_sizePerPyr:"+klt_opt_size+"_PyrLevels:"+klt_num_pyramids + ".pdf", bbox_inches='tight')
-
-
-def plot_trajectory(printBool, extractor):
+def plot_trajectory(storeBool, extractor):
     path_figure = plt.figure()
     pathplot = plt.subplot(1, 1, 1)
-    plt.title("My Method", fontsize=20)
-    plt.plot(prediction_xc, prediction_yc, 'b', label='My Method')
-    plt.plot(GT_xc, GT_yc, 'g', label='Lio Sam Ground Truth')
-    # plt.plot(odom_xc, odom_yc, 'y', label='LOAM Scan2Scan')
-    # plt.plot(odom1_xc, odom1_yc, 'r', label='LOAM Scan2Map')
-    plt.ylabel('y[m]', fontsize=20)
-    plt.xlabel('x[m]', fontsize=20)
+    plt.title("Path Plot")
+    plt.plot(prediction_xc, prediction_yc, 'b', label='x vs y Prediction')
+    plt.plot(GT_xc, GT_yc, 'g', label='x vs y GT')
+    plt.plot(loam_xp, loam_yp, 'y', label='x vs y Odom')
+    plt.ylabel('y')
     pathplot.legend(shadow=True)
-    # plt.xlim(-250, 250)
-    # plt.ylim(-100, 150)
-    path_figure.set_figheight(20)
-    path_figure.set_figwidth(20)
+    path_figure.set_figheight(15)
+    path_figure.set_figwidth(15)
     plt.show()
-    if(printBool):
-        path_figure.savefig("pdfs/My_Method_Trajectory.pdf",
-                            bbox_inches='tight')
+    if(storeBool):
+        if(extractor == "orb"):
+            path_figure.savefig("pdfs/Traj" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                                min_distance + "_max_distance:" + max_depth_distance + "_smooth:" + smoothing+"_length:" + length +
+                                "_minTracked:"+klt_min_tracked + "detQuality:"+klt_quality_level + "blocksize:"+klt_block_size +
+                                "minDist:"+klt_min_klt_distance+"ErrorThresh:" + klt_epsilon+"_matchingReps:"+klt_criteria_reps +
+                                "_sizePerPyr:"+klt_opt_size+"_PyrLevels:"+klt_num_pyramids + ".pdf", bbox_inches='tight')
+        elif(extractor == "brisk"):
+            path_figure.savefig("pdfs/Traj" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                                min_distance + "_max_distance:" + max_depth_distance + "smooth:" + smoothing+"_length:" + length +
+                                "_minTracked:"+klt_min_tracked + "detQuality:"+klt_quality_level + "blocksize:"+klt_block_size +
+                                "minDist:"+klt_min_klt_distance+"ErrorThresh:" + klt_epsilon+"_matchingReps:"+klt_criteria_reps +
+                                "_sizePerPyr:"+klt_opt_size+"_PyrLevels:"+klt_num_pyramids + ".pdf", bbox_inches='tight')
+        else:
+            path_figure.savefig("pdfs/Traj" + "_Data:" + Data + "_Extr.:" + Extractor + "dupl_size:"+duplicate_size+"_min_dist:" +
+                                min_distance + "_max_distance:" + max_depth_distance + "smooth:" + smoothing+"_length:" + length +
+                                "_minTracked:"+klt_min_tracked + "detQuality:"+klt_quality_level + "blocksize:"+klt_block_size +
+                                "minDist:"+klt_min_klt_distance+"ErrorThresh:" + klt_epsilon+"_matchingReps:"+klt_criteria_reps +
+                                "_sizePerPyr:"+klt_opt_size+"_PyrLevels:"+klt_num_pyramids + ".pdf", bbox_inches='tight')
 
 
 if __name__ == "__main__":
@@ -749,58 +683,58 @@ if __name__ == "__main__":
     GT_pitchs = pd.DataFrame.to_numpy(GT_steps["pitch"])
     GT_yaws = pd.DataFrame.to_numpy(GT_steps["yaw"])
 
-    GT_overall = pd.read_csv(
+    GT_pose = pd.read_csv(
         "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_pose.csv", nrows=file_length
     )
 
-    GT_xc = pd.DataFrame.to_numpy(GT_overall["x"])
-    GT_yc = pd.DataFrame.to_numpy(GT_overall["y"])
-    GT_zc = pd.DataFrame.to_numpy(GT_overall["z"])
-    GT_rollc = pd.DataFrame.to_numpy(GT_overall["roll"])
-    GT_pitchc = pd.DataFrame.to_numpy(GT_overall["pitch"])
-    GT_yawc = pd.DataFrame.to_numpy(GT_overall["yaw"])
+    GT_xc = pd.DataFrame.to_numpy(GT_pose["x"])
+    GT_yc = pd.DataFrame.to_numpy(GT_pose["y"])
+    GT_zc = pd.DataFrame.to_numpy(GT_pose["z"])
+    GT_rollc = pd.DataFrame.to_numpy(GT_pose["roll"])
+    GT_pitchc = pd.DataFrame.to_numpy(GT_pose["pitch"])
+    GT_yawc = pd.DataFrame.to_numpy(GT_pose["yaw"])
 
-    odom_file_complete = pd.read_csv(
+    loam_pose_file = pd.read_csv(
         "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_pose_scan_2_scan.csv", nrows=file_length
     )
-    odom_xc = pd.DataFrame.to_numpy(odom_file_complete["x"])
-    odom_yc = pd.DataFrame.to_numpy(odom_file_complete["y"])
-    odom_zc = pd.DataFrame.to_numpy(odom_file_complete["z"])
-    odom_rollc = pd.DataFrame.to_numpy(odom_file_complete["roll"])
-    odom_pitchc = pd.DataFrame.to_numpy(odom_file_complete["pitch"])
-    odom_yawc = pd.DataFrame.to_numpy(odom_file_complete["yaw"])
+    loam_xp = pd.DataFrame.to_numpy(loam_pose_file["x"])
+    loam_yp = pd.DataFrame.to_numpy(loam_pose_file["y"])
+    loam_zp = pd.DataFrame.to_numpy(loam_pose_file["z"])
+    loam_rollp = pd.DataFrame.to_numpy(loam_pose_file["roll"])
+    loam_pitchp = pd.DataFrame.to_numpy(loam_pose_file["pitch"])
+    loam_yawp = pd.DataFrame.to_numpy(loam_pose_file["yaw"])
 
-    odom_file_steps = pd.read_csv(
+    loam_file_steps = pd.read_csv(
         "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_steps_scan_2_scan.csv", nrows=file_length
     )
 
-    odom_xs = pd.DataFrame.to_numpy(odom_file_steps["x"])
-    odom_ys = pd.DataFrame.to_numpy(odom_file_steps["y"])
-    odom_zs = pd.DataFrame.to_numpy(odom_file_steps["z"])
-    odom_rolls = pd.DataFrame.to_numpy(odom_file_steps["roll"])
-    odom_pitchs = pd.DataFrame.to_numpy(odom_file_steps["pitch"])
-    odom_yaws = pd.DataFrame.to_numpy(odom_file_steps["yaw"])
+    loam_xs = pd.DataFrame.to_numpy(loam_file_steps["x"])
+    loam_ys = pd.DataFrame.to_numpy(loam_file_steps["y"])
+    loam_zs = pd.DataFrame.to_numpy(loam_file_steps["z"])
+    loam_rolls = pd.DataFrame.to_numpy(loam_file_steps["roll"])
+    loam_pitchs = pd.DataFrame.to_numpy(loam_file_steps["pitch"])
+    loam_yaws = pd.DataFrame.to_numpy(loam_file_steps["yaw"])
 
-    odom_file1_complete = pd.read_csv(
+    loam_map_file = pd.read_csv(
         "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_pose_scan_2_map.csv", nrows=file_length
     )
-    odom1_xc = pd.DataFrame.to_numpy(odom_file1_complete["x"])
-    odom1_yc = pd.DataFrame.to_numpy(odom_file1_complete["y"])
-    odom1_zc = pd.DataFrame.to_numpy(odom_file1_complete["z"])
-    odom1_rollc = pd.DataFrame.to_numpy(odom_file1_complete["roll"])
-    odom1_pitchc = pd.DataFrame.to_numpy(odom_file1_complete["pitch"])
-    odom1_yawc = pd.DataFrame.to_numpy(odom_file1_complete["yaw"])
+    loam_map_xp = pd.DataFrame.to_numpy(loam_map_file["x"])
+    loam_map_yp = pd.DataFrame.to_numpy(loam_map_file["y"])
+    loam_map_zp = pd.DataFrame.to_numpy(loam_map_file["z"])
+    loam_map_rollp = pd.DataFrame.to_numpy(loam_map_file["roll"])
+    loam_map_pitchp = pd.DataFrame.to_numpy(loam_map_file["pitch"])
+    loam_map_yawp = pd.DataFrame.to_numpy(loam_map_file["yaw"])
 
-    odom_file1_steps = pd.read_csv(
+    loam_map_steps = pd.read_csv(
         "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_steps_scan_2_map.csv", nrows=file_length
     )
 
-    odom1_xs = pd.DataFrame.to_numpy(odom_file1_steps["x"])
-    odom1_ys = pd.DataFrame.to_numpy(odom_file1_steps["y"])
-    odom1_zs = pd.DataFrame.to_numpy(odom_file1_steps["z"])
-    odom1_rolls = pd.DataFrame.to_numpy(odom_file1_steps["roll"])
-    odom1_pitchs = pd.DataFrame.to_numpy(odom_file1_steps["pitch"])
-    odom1_yaws = pd.DataFrame.to_numpy(odom_file1_steps["yaw"])
+    loam_map_xs = pd.DataFrame.to_numpy(loam_map_steps["x"])
+    loam_map_ys = pd.DataFrame.to_numpy(loam_map_steps["y"])
+    loam_map_zs = pd.DataFrame.to_numpy(loam_map_steps["z"])
+    loam_map_rolls = pd.DataFrame.to_numpy(loam_map_steps["roll"])
+    loam_map_pitchs = pd.DataFrame.to_numpy(loam_map_steps["pitch"])
+    loam_map_yaws = pd.DataFrame.to_numpy(loam_map_steps["yaw"])
 
     feature_number_file = pd.read_csv(
         "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/feature_number_"+file_name+".csv", nrows=file_length
@@ -809,24 +743,24 @@ if __name__ == "__main__":
     feature_number = pd.DataFrame.to_numpy(
         feature_number_file["num_of_features"])
 
-    # create timestamps
+    # timestamps
 
-    complete_timestamps = pd.DataFrame.to_numpy(
+    pose_timestamps = pd.DataFrame.to_numpy(
         prediction_pose["time"])
     step_timestamps = pd.DataFrame.to_numpy(prediction_step["time"])
-    odom_s_timestamps = pd.DataFrame.to_numpy(odom_file_steps["time"])
-    odom_c_timestamps = pd.DataFrame.to_numpy(odom_file_complete["time"])
+    loam_s_timestamps = pd.DataFrame.to_numpy(loam_file_steps["time"])
+    loam_p_timestamps = pd.DataFrame.to_numpy(loam_pose_file["time"])
 
     feature_timestamps = pd.DataFrame.to_numpy(feature_number_file["time"])
-    feature_timestamps = feature_timestamps - complete_timestamps[0]
-    step_timestamps = step_timestamps - complete_timestamps[0]
-    odom_s_timestamps = odom_s_timestamps - complete_timestamps[0]
-    odom_c_timestamps = odom_c_timestamps - complete_timestamps[0]
-    complete_timestamps = complete_timestamps - complete_timestamps[0]
+    feature_timestamps = feature_timestamps - pose_timestamps[0]
+    step_timestamps = step_timestamps - pose_timestamps[0]
+    loam_s_timestamps = loam_s_timestamps - pose_timestamps[0]
+    loam_p_timestamps = loam_p_timestamps - pose_timestamps[0]
+    pose_timestamps = pose_timestamps - pose_timestamps[0]
 
-    plot_values(True, "klt")
-    plot_errors(True, False, "klt")
-    # plot_trajectory(False, "klt")
+    plot_values(False, True,  Extractor)
+    plot_errors(False, True, False, Extractor)
+    plot_trajectory(False, Extractor)
 
     # calculation of average error:
     diffx = prediction_xs-GT_xs
@@ -836,12 +770,14 @@ if __name__ == "__main__":
     diffpitch = prediction_pitchs-GT_pitchs
     diffyaw = prediction_yaws-GT_yaws
 
-    # diffx = odom_xs-GT_xs
-    # diffy = odom_ys-GT_ys
-    # diffz = odom_zs-GT_zs
-    # diffroll = odom_rolls-GT_rolls
-    # diffpitch = odom_pitchs-GT_pitchs
-    # diffyaw = odom_yaws-GT_yaws
+    # calculate loam error
+
+    # diffx = loam_xs-GT_xs
+    # diffy = loam_ys-GT_ys
+    # diffz = loam_zs-GT_zs
+    # diffroll = loam_rolls-GT_rolls
+    # diffpitch = loam_pitchs-GT_pitchs
+    # diffyaw = loam_yaws-GT_yaws
 
     # average_x = np.sum(np.abs(diffx))/file_length
     # average_y = np.sum(np.abs(diffy))/file_length
@@ -849,6 +785,8 @@ if __name__ == "__main__":
     # average_roll = np.sum(np.abs(diffroll))/file_length
     # average_pitch = np.sum(np.abs(diffpitch))/file_length
     # average_yaw = np.sum(np.abs(diffyaw))/file_length
+
+    # calculate this methods error
 
     mean_x = np.mean(diffx)
     mean_y = np.mean(diffy)

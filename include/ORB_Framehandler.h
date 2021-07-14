@@ -52,31 +52,31 @@ class ORB_Framehandler{
     
     private:
 
-    std::shared_ptr<ORB> cur_orb, prev_orb;
-    vector<cv::DMatch> matches; 
-    int image_source;
-    Matrix4d my_pose;
-    int COUNT;
-    int unfiltered_count;
-    int ransac_filtered_count;
-    int filtered_count;
+    std::shared_ptr<ORB> M_cur_orb, M_prev_orb;
+    vector<cv::DMatch> M_matches; 
+    int M_image_source;
+    Matrix4d M_my_pose;
+    int M_COUNT;
+    int M_unfiltered_count;
+    int M_ransac_filtered_count;
+    int M_filtered_count;
 
-    ros::Time raw_time;
+    ros::Time M_raw_time;
 
-    ros::NodeHandle n_frame;
-    ros::Publisher match_publisher,range_publisher, ambient_publisher, intensity_publisher, 
-    kp_pc_publisher_cur, kp_pc_publisher_prev,ransac_publisher,
-    odom_publisher, line_publisher,pc_distance_publisher_p,pc_distance_publisher_c,line_distance_publisher;
+    ros::NodeHandle M_n_frame;
+    ros::Publisher M_match_publisher,M_range_publisher, M_ambient_publisher, M_intensity_publisher, 
+    M_kp_pc_publisher_cur, M_kp_pc_publisher_prev,M_ransac_publisher,
+    M_odom_publisher, M_line_publisher,M_pc_distance_publisher_p,M_pc_distance_publisher_c,M_line_distance_publisher;
     
-    cv::Scalar POINT_COLOR;
-    cv::Scalar LINE_COLOR;
+    int M_NUM_ORB_FEATURES;
+    int M_ORB_ACCURACY;
+    float M_SCALE_FACTOR;
+    int M_LEVELS;
 
-    int NUM_ORB_FEATURES;
-    int ORB_ACCURACY;
-    float SCALE_FACTOR;
-    int LEVELS;
+    cv::Scalar M_POINT_COLOR;
+    cv::Scalar M_LINE_COLOR;
 
-    std::string FILE_PATH;
-    std::string DIRECTORY;
+    std::string M_FILE_PATH;
+    std::string M_DIRECTORY;
 
 };

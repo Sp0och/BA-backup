@@ -52,25 +52,21 @@ class BRISK_Framehandler{
     
     private:
 
-    std::shared_ptr<BRISK> cur_brisk, prev_brisk;
-    vector<cv::DMatch> matches; 
-    int image_source;
-    Matrix4d my_pose;
-    std::string FILE_PATH;
-    std::string DIRECTORY;
+    std::shared_ptr<BRISK> M_cur_brisk, M_prev_brisk;
+    vector<cv::DMatch> M_matches; 
+    int M_image_source;
+    Matrix4d M_my_pose;
+    std::string M_FILE_PATH;
+    std::string M_DIRECTORY;
 
-    ros::Time raw_time;
+    ros::Time M_raw_time;
 
-    ros::NodeHandle n_frame;
-    ros::Publisher match_publisher, range_publisher, ambient_publisher, intensity_publisher, 
-    kp_pc_publisher_cur, kp_pc_publisher_prev, midpoint_publisher, odom_publisher, line_publisher,ransac_publisher,duplicate_publisher;
+    ros::NodeHandle M_n_frame;
+    ros::Publisher M_match_publisher, M_range_publisher, M_ambient_publisher, M_intensity_publisher, 
+    M_kp_pc_publisher_cur, M_kp_pc_publisher_prev, M_midpoint_publisher, M_odom_publisher, M_line_publisher,M_ransac_publisher,M_duplicate_publisher;
     
-    int BRISK_THRESHOLD;
-    int OCTAVES;
-    float PATTERN_SCALE;
+    int M_BRISK_THRESHOLD;
+    int M_OCTAVES;
+    float M_PATTERN_SCALE;
 
-    int COUNT;
-    int unfiltered_count;
-    int ransac_filtered_count;
-    int filtered_count;
 };

@@ -5,78 +5,74 @@
 //core member methods:
 
 BRISK_Framehandler::BRISK_Framehandler(int _image_source,int START_POSE){
-        image_source = _image_source;
-        cur_brisk = nullptr;
-        prev_brisk = nullptr;
-
-        COUNT = 0;
-        unfiltered_count = 0;
-        ransac_filtered_count = 0;
-        filtered_count = 0;
-
+        M_image_source = _image_source;
+        M_cur_brisk = nullptr;
+        M_prev_brisk = nullptr;
 
         std::string config_file;
-        n_frame.getParam("parameter_file", config_file);
+        M_n_frame.getParam("parameter_file", config_file);
         cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
         if(!fsSettings.isOpened())
             std::cerr << "ERROR: Wrong path to settings" << std::endl;
         usleep(100);
-        fsSettings["brisk_threshold"] >> BRISK_THRESHOLD;
-        fsSettings["octaves"] >> OCTAVES;
-        fsSettings["pattern_scale"] >> PATTERN_SCALE;
+        fsSettings["brisk_threshold"] >> M_BRISK_THRESHOLD;
+        fsSettings["octaves"] >> M_OCTAVES;
+        fsSettings["pattern_scale"] >> M_PATTERN_SCALE;
 
-        fsSettings["brisk_file_path"] >> FILE_PATH;
-        fsSettings["directory"] >> DIRECTORY;
+        fsSettings["brisk_file_path"] >> M_FILE_PATH;
+        fsSettings["directory"] >> M_DIRECTORY;
+
 
         if(START_POSE == 0){
-            my_pose << 1,0,0,0,
+            M_my_pose << 1,0,0,0,
                     0,1,0,0,
                     0,0,1,0,
                     0,0,0,1;
         }
         else if(START_POSE == 1){
-            my_pose << -0.98877182,  0.14125801,  0.04874899, -0.03791867,
+            M_my_pose << -0.98877182,  0.14125801,  0.04874899, -0.03791867,
                     -0.14255745, -0.9894887,  -0.02427929, -0.02220684,
                     0.04480693, -0.03095621,  0.99851592, -0.01088667,
                     0,          0,          0,          1; 
         }
         else{
-            my_pose << 0.08959188, -0.99543686,  0.03284438,  0.17298461,
+            M_my_pose << 0.08959188, -0.99543686,  0.03284438,  0.17298461,
         0.96004952,  0.07753545, -0.26887389,  1.35417363,
         0.26510037,  0.05562115,  0.96261523,  0.42004326,
         0,0,0,1;
         }
         
-        match_publisher = n_frame.advertise<sensor_msgs::Image>("brisk_matches", 1);
+        M_match_publisher = M_n_frame.advertise<sensor_msgs::Image>("brisk_M_matches", 1);
 
-        kp_pc_publisher_cur = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1);
-        kp_pc_publisher_prev = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1);
-        midpoint_publisher = n_frame.advertise<PointCloud>("KP_PC_Midpoints", 1);
-        line_publisher = n_frame.advertise<visualization_msgs::Marker>("connection_lines", 1);
-        odom_publisher = n_frame.advertise<nav_msgs::Odometry>("Odometry", 1);
-        ransac_publisher = n_frame.advertise<sensor_msgs::Image>("RANSAC_filtered", 1);
-        duplicate_publisher = n_frame.advertise<sensor_msgs::Image>("DUPLICATE_filtered", 1);
-        if(image_source == 1)
-            intensity_publisher = n_frame.advertise<sensor_msgs::Image>("intensity_matches", 1);
-        else if(image_source == 2)
-            range_publisher = n_frame.advertise<sensor_msgs::Image>("range_matches", 1);
+        M_kp_pc_publisher_cur = M_n_frame.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1);
+        M_kp_pc_publisher_prev = M_n_frame.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1);
+        M_midpoint_publisher = M_n_frame.advertise<PointCloud>("KP_PC_Midpoints", 1);
+        M_line_publisher = M_n_frame.advertise<visualization_msgs::Marker>("connection_lines", 1);
+        M_odom_publisher = M_n_frame.advertise<nav_msgs::Odometry>("Odometry", 1);
+        M_ransac_publisher = M_n_frame.advertise<sensor_msgs::Image>("RANSAC_filtered", 1);
+        M_duplicate_publisher = M_n_frame.advertise<sensor_msgs::Image>("DUPLICATE_filtered", 1);
+        
+        if(M_image_source == 1)
+            M_intensity_publisher = M_n_frame.advertise<sensor_msgs::Image>("intensity_M_matches", 1);
+        else if(M_image_source == 2)
+            M_range_publisher = M_n_frame.advertise<sensor_msgs::Image>("range_M_matches", 1);
         else
-            ambient_publisher = n_frame.advertise<sensor_msgs::Image>("ambient_matches", 1);
+            M_ambient_publisher = M_n_frame.advertise<sensor_msgs::Image>("ambient_M_matches", 1);
     }
 
 void BRISK_Framehandler::newIteration(const std::shared_ptr<BRISK> new_frame, ros::Time _raw_time){
-        raw_time = _raw_time;
+        M_raw_time = _raw_time;
         //if first iteration
-        if(cur_brisk == nullptr){
-            cur_brisk = new_frame;
+        if(M_cur_brisk == nullptr){
+            M_cur_brisk = new_frame;
             //Set up plot files, store the inital pose and feature num and publish the transform of the first frame
             publish_tf();
             if(SHOULD_STORE)
             set_plotting_columns_and_start_pose();
         }
         else{
-            prev_brisk = cur_brisk;
-            cur_brisk = new_frame;
+            M_prev_brisk = M_cur_brisk;
+            M_cur_brisk = new_frame;
             matches_filtering_motion();
         }
     }
@@ -84,63 +80,60 @@ void BRISK_Framehandler::newIteration(const std::shared_ptr<BRISK> new_frame, ro
 void BRISK_Framehandler::matches_filtering_motion(){
         static cv::Ptr<cv::BFMatcher> matcher = cv::BFMatcher::create(cv::NORM_HAMMING);
 
-        //create matches
+        //create M_matches
         bool cur_first = false;
-        if(cur_brisk->brisk_keypoints_2d.size() < prev_brisk->brisk_keypoints_2d.size()){
+        if(M_cur_brisk->brisk_keypoints_2d.size() < M_prev_brisk->brisk_keypoints_2d.size()){
             cur_first = true;
-            matcher->match(cur_brisk->brisk_descriptors,prev_brisk->brisk_descriptors,matches);
+            matcher->match(M_cur_brisk->brisk_descriptors,M_prev_brisk->brisk_descriptors,M_matches);
         }
         else{
-            matcher->match(prev_brisk->brisk_descriptors,cur_brisk->brisk_descriptors,matches);
+            matcher->match(M_prev_brisk->brisk_descriptors,M_cur_brisk->brisk_descriptors,M_matches);
         }
-        //sort matches in ascending order (concerning distance)
-        std::sort(matches.begin(),matches.end());
+        //sort M_matches in ascending order (concerning distance)
+        std::sort(M_matches.begin(),M_matches.end());
         std::vector<cv::Point2d> sorted_2d_cur, sorted_2d_prev;
-        MatrixXd prev_SVD(3,matches.size()),cur_SVD(3,matches.size());
+        MatrixXd prev_SVD(3,M_matches.size()),cur_SVD(3,M_matches.size());
 
-        //pair the keypoints up according to the matches:
-        for (size_t i = 0; i < matches.size(); i++)
+        //pair the keypoints up according to the M_matches:
+        for (size_t i = 0; i < M_matches.size(); i++)
         {
             //the match indexes for point association
             int cur_index;
             int prev_index;
             if(cur_first){
-                cur_index = matches.at(i).queryIdx;
-                prev_index = matches.at(i).trainIdx;
+                cur_index = M_matches.at(i).queryIdx;
+                prev_index = M_matches.at(i).trainIdx;
             }
             else{
-                cur_index = matches.at(i).trainIdx;
-                prev_index = matches.at(i).queryIdx;
+                cur_index = M_matches.at(i).trainIdx;
+                prev_index = M_matches.at(i).queryIdx;
             }
             
             //create sorted keypoint vectors
-            sorted_2d_cur.push_back(cur_brisk->brisk_keypoints_2d.at(cur_index));
-            sorted_2d_prev.push_back(prev_brisk->brisk_keypoints_2d.at(prev_index));
+            sorted_2d_cur.push_back(M_cur_brisk->brisk_keypoints_2d.at(cur_index));
+            sorted_2d_prev.push_back(M_prev_brisk->brisk_keypoints_2d.at(prev_index));
             //create sorted 3d keypoint vectors
-            cur_SVD(0,i) = cur_brisk->brisk_points_3d.at(cur_index).x;
-            cur_SVD(1,i) = cur_brisk->brisk_points_3d.at(cur_index).y;
-            cur_SVD(2,i) = cur_brisk->brisk_points_3d.at(cur_index).z;
-            prev_SVD(0,i) = prev_brisk->brisk_points_3d.at(prev_index).x;
-            prev_SVD(1,i) = prev_brisk->brisk_points_3d.at(prev_index).y;
-            prev_SVD(2,i) = prev_brisk->brisk_points_3d.at(prev_index).z;
+            cur_SVD(0,i) = M_cur_brisk->brisk_points_3d.at(cur_index).x;
+            cur_SVD(1,i) = M_cur_brisk->brisk_points_3d.at(cur_index).y;
+            cur_SVD(2,i) = M_cur_brisk->brisk_points_3d.at(cur_index).z;
+            prev_SVD(0,i) = M_prev_brisk->brisk_points_3d.at(prev_index).x;
+            prev_SVD(1,i) = M_prev_brisk->brisk_points_3d.at(prev_index).y;
+            prev_SVD(2,i) = M_prev_brisk->brisk_points_3d.at(prev_index).z;
         }
-        unfiltered_count += cur_SVD.cols();
-        matches.clear();
-        //Publish matches before any filtering:
-        // publish_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,1);
+        M_matches.clear();
+        //Publish M_matches before any filtering:
+        // publish_M_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,1);
         
         cout << "right after matching: " << prev_SVD.cols() << " " << endl;
         if(APPLY_RANSAC_FILTERING){
             RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
-            publish_matches_2F(&ransac_publisher,sorted_2d_cur,sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,1);
+            publish_matches_2F(&M_ransac_publisher,sorted_2d_cur,sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,1);
             cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         }
-        ransac_filtered_count += cur_SVD.cols();
         if(APPLY_DISTANCE_FILTERING){
             filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
             cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
         }
-        filtered_count += cur_SVD.cols();
 
         if(SHOULD_STORE)
         store_feature_number(cur_SVD);
@@ -157,29 +150,22 @@ void BRISK_Framehandler::matches_filtering_motion(){
 
         //First 2D match display option
         
-        if(image_source == 1)
-        publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),5,true);
-        else if(image_source == 2)
-        publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),5,true);
+        if(M_image_source == 1)
+        publish_matches_2F(&M_intensity_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),5,true);
+        else if(M_image_source == 2)
+        publish_matches_2F(&M_range_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),5,true);
         else
-        publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),5,true);
+        publish_matches_2F(&M_ambient_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),5,true);
         
         //Second 2D match display option
 
-        // if(image_source == 1)
-        // publish_matches_1F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,true);
-        // else if(image_source == 2)
-        // publish_matches_1F(&range_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,true);
+        // if(M_image_source == 1)
+        // publish_matches_1F(&M_intensity_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,true);
+        // else if(M_image_source == 2)
+        // publish_matches_1F(&M_range_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,true);
         // else
-        // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,true);
+        // publish_matches_1F(&M_ambient_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,true);
 
-        COUNT++;
-        if(COUNT >= 50){
-        cout << "average_unfilterd is: " << 1.0*unfiltered_count/COUNT<< " " << endl;
-        cout << "average ransac filtered is: " << 1.0*ransac_filtered_count/COUNT << " " << endl;
-        cout << "average_filtered is : " << 1.0*filtered_count/COUNT<< " " << endl;
-        cout << "TRUE POSITIVE MATCHING RATE IS: " << 100*(1.0*filtered_count/unfiltered_count)<< " " << endl;
-        }
     }
 
 //plotting functions
@@ -187,7 +173,7 @@ void BRISK_Framehandler::matches_filtering_motion(){
 void BRISK_Framehandler::set_plotting_columns_and_start_pose(){
 
     // store the start pose (either their start or identity)
-        Matrix3d R_complete = my_pose.topLeftCorner(3,3);
+        Matrix3d R_complete = M_my_pose.topLeftCorner(3,3);
         Quaterniond q_complete(R_complete);
         tfScalar xqc = q_complete.x();
         tfScalar yqc = q_complete.y();
@@ -199,9 +185,9 @@ void BRISK_Framehandler::set_plotting_columns_and_start_pose(){
         qtfc.setZ(zqc);
         qtfc.setW(wqc);
 
-        tfScalar xc = my_pose(0,3);
-        tfScalar yc = my_pose(1,3);
-        tfScalar zc = my_pose(2,3);
+        tfScalar xc = M_my_pose(0,3);
+        tfScalar yc = M_my_pose(1,3);
+        tfScalar zc = M_my_pose(2,3);
         tf::Vector3 tc_fill = tf::Vector3(xc,yc,zc);
         tf::Transform odom_t_velo_complete = tf::Transform(qtfc,tc_fill);
         Eigen::Vector3d e1c, e2c;
@@ -214,25 +200,25 @@ void BRISK_Framehandler::set_plotting_columns_and_start_pose(){
         else
             eac = e2c;
         
-    string Param = to_string(OCTAVES);
+    string Param = to_string(M_OCTAVES);
 
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + DIRECTORY + "/prediction_pose_" + FILE_PATH + ".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_pose_" + M_FILE_PATH + ".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
-    OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
+    OUT << M_my_pose(0,3) << "," << M_my_pose(1,3) << "," << M_my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << M_raw_time << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + DIRECTORY + "/prediction_steps_" + FILE_PATH + ".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_steps_" + M_FILE_PATH + ".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + DIRECTORY + "/feature_number_" + FILE_PATH + ".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/feature_number_" + M_FILE_PATH + ".csv",ios_base::app);
     OUT << "num_of_features" "," << "time" << endl;
     OUT.close(); 
 }
 
 void BRISK_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
 
-        string Param = to_string(OCTAVES);
+        string Param = to_string(M_OCTAVES);
 
         //step changes:
         Quaterniond q(R);
@@ -262,15 +248,15 @@ void BRISK_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R)
             ea = e1;
         else
             ea = e2;
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_steps_" + FILE_PATH + ".csv",ios_base::app);
-        OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << raw_time <<  endl;
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_steps_" + M_FILE_PATH + ".csv",ios_base::app);
+        OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << M_raw_time <<  endl;
         OUT.close(); 
 
 
 
 
         // overall
-        Matrix3d R_complete = my_pose.topLeftCorner(3,3);
+        Matrix3d R_complete = M_my_pose.topLeftCorner(3,3);
         Quaterniond q_complete(R_complete);
         tfScalar xqc = q_complete.x();
         tfScalar yqc = q_complete.y();
@@ -282,9 +268,9 @@ void BRISK_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R)
         qtfc.setZ(zqc);
         qtfc.setW(wqc);
 
-        tfScalar xc = my_pose(0,3);
-        tfScalar yc = my_pose(1,3);
-        tfScalar zc = my_pose(2,3);
+        tfScalar xc = M_my_pose(0,3);
+        tfScalar yc = M_my_pose(1,3);
+        tfScalar zc = M_my_pose(2,3);
         tf::Vector3 tc_fill = tf::Vector3(xc,yc,zc);
         tf::Transform odom_t_velo_complete = tf::Transform(qtfc,tc_fill);
         Eigen::Vector3d e1c, e2c;
@@ -297,14 +283,14 @@ void BRISK_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R)
         else
             eac = e2c;
         
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/prediction_pose_" + FILE_PATH + ".csv",ios_base::app);
-        OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_pose_" + M_FILE_PATH + ".csv",ios_base::app);
+        OUT << M_my_pose(0,3) << "," << M_my_pose(1,3) << "," << M_my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << M_raw_time << endl;
         OUT.close();
     }
 
 void BRISK_Framehandler::store_feature_number(const MatrixXd& cur_SVD){
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/feature_number_" + FILE_PATH + ".csv",ios_base::app);
-    OUT << cur_SVD.cols() << "," << raw_time <<  endl;
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/feature_number_" + M_FILE_PATH + ".csv",ios_base::app);
+    OUT << cur_SVD.cols() << "," << M_raw_time <<  endl;
     OUT.close(); 
 }
 
@@ -314,7 +300,7 @@ void BRISK_Framehandler::publish_tf(){
         cout << "TF Publisher " << endl;
         tf::TransformBroadcaster odom_t_velo_b;
         //Create Eigen Quaternion
-        Matrix3d R = my_pose.topLeftCorner(3,3);
+        Matrix3d R = M_my_pose.topLeftCorner(3,3);
         Quaterniond q(R);
         tfScalar xq = q.x();
         tfScalar yq = q.y();
@@ -328,53 +314,47 @@ void BRISK_Framehandler::publish_tf(){
         qtf.setW(wq);
 
         //Create translational part of transform
-        tfScalar x = my_pose(0,3);
-        tfScalar y = my_pose(1,3);
-        tfScalar z = my_pose(2,3);
+        tfScalar x = M_my_pose(0,3);
+        tfScalar y = M_my_pose(1,3);
+        tfScalar z = M_my_pose(2,3);
         tf::Vector3 t = tf::Vector3(x,y,z);
 
         // std::cout << "translation: [" << t.getX() << ", " << t.getY() << ", " << t.getZ() << "]" << std::endl;
         // std::cout << "rotation tf: [" << qtf.x() << ", " << qtf.y() << ", " << qtf.z() <<  ", " << qtf.w() << "]" << std::endl;
         tf::Transform odom_t_velo = tf::Transform(qtf,t);
-        // cout << "t: " << t.getX() << ", "<< t.getY() << ", "<< t.getZ() << " " << endl;
-        // ros::Duration delay(252940.892);
-        // ros::Time now_p_delay = raw_time + delay;
-        // cout << "my translation: " << COUNT << "(" << odom_t_velo.getOrigin().getX() << ", " << odom_t_velo.getOrigin().getY() << ", " << odom_t_velo.getOrigin().getZ() << ") " << endl;
-        // cout << "my rotation: " << COUNT << "(" << odom_t_velo.getRotation().getX() << ", " << odom_t_velo.getRotation().getY() << ", " << odom_t_velo.getRotation().getZ() << ", " << odom_t_velo.getRotation().getW() << ") " << endl;
-        // COUNT++;
-        odom_t_velo_b.sendTransform(tf::StampedTransform(odom_t_velo,raw_time,"odom","my_velo"));
+        odom_t_velo_b.sendTransform(tf::StampedTransform(odom_t_velo,M_raw_time,"odom","my_velo"));
     }
 
 void BRISK_Framehandler::publish_odom(){
         nav_msgs::Odometry odom;
         //translation
-        odom.pose.pose.position.x = my_pose(0,3);
-        odom.pose.pose.position.y = my_pose(1,3);
-        odom.pose.pose.position.z = my_pose(2,3);
+        odom.pose.pose.position.x = M_my_pose(0,3);
+        odom.pose.pose.position.y = M_my_pose(1,3);
+        odom.pose.pose.position.z = M_my_pose(2,3);
         //Quaternions (rotation)
-        Matrix3d R = my_pose.topLeftCorner(3,3);
+        Matrix3d R = M_my_pose.topLeftCorner(3,3);
         Quaterniond q(R);
         odom.pose.pose.orientation.x = q.x();
         odom.pose.pose.orientation.y = q.y();
         odom.pose.pose.orientation.z = q.z();
         odom.pose.pose.orientation.w = q.w();
         odom.header.frame_id = "odom";
-        odom_publisher.publish(odom);
+        M_odom_publisher.publish(odom);
     }
 
 //member visualization functions
 
 void BRISK_Framehandler::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD){
-        publish_3D_keypoints(cur_SVD, &kp_pc_publisher_cur, raw_time);
-        publish_3D_keypoints(prev_SVD, &kp_pc_publisher_prev, raw_time);
-        publish_lines_3D(cur_SVD, prev_SVD, &line_publisher, raw_time);
+        publish_3D_keypoints(cur_SVD, &M_kp_pc_publisher_cur, M_raw_time);
+        publish_3D_keypoints(prev_SVD, &M_kp_pc_publisher_prev, M_raw_time);
+        publish_lines_3D(cur_SVD, prev_SVD, &M_line_publisher, M_raw_time);
 }
 
 void BRISK_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
     const std::vector<cv::Point2d>& sorted_KP_prev, cv::Scalar point_color, cv::Scalar line_color, int circle_size,bool draw_lines){
     cv::Mat color_img,gray_img;
-    const cv::Mat old_img = prev_brisk->input_image.clone();
-    const cv::Mat new_img = cur_brisk->input_image.clone();
+    const cv::Mat old_img = M_prev_brisk->input_image.clone();
+    const cv::Mat new_img = M_cur_brisk->input_image.clone();
     int gap = 1;
     cv::Mat gap_img(gap, new_img.size().width, CV_8UC1, cv::Scalar(255, 255, 255));
     //create colored concatenated image with gap inbetween
@@ -404,9 +384,9 @@ void BRISK_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const
             cv::line(color_img, sorted_KP_cur[i], old_pt, line_color, 2, 8, 0);
         }
     }
-    if(image_source == 1)
+    if(M_image_source == 1)
     cv::putText(color_img, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-    else if (image_source == 2)
+    else if (M_image_source == 2)
     cv::putText(color_img, "Range",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
     else
     cv::putText(color_img, "Ambient",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
@@ -418,7 +398,7 @@ void BRISK_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const
 
 void BRISK_Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
     const std::vector<cv::Point2d>& sorted_KP_prev, cv::Scalar point_color, cv::Scalar line_color, int circle_size, bool draw_lines){
-        cv::Mat image = cur_brisk->input_image.clone();
+        cv::Mat image = M_cur_brisk->input_image.clone();
         cv::cvtColor(image,image,CV_GRAY2RGB);
 
         for (int i = 0; i< (int)sorted_KP_cur.size(); i++)
@@ -433,9 +413,9 @@ void BRISK_Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const
             cv::circle(image, old_pt, circle_size, point_color, 1);
             cv::line(image, cur_pt * 1, old_pt, line_color, 1, 8, 0);
         }
-        if(image_source == 1)
+        if(M_image_source == 1)
         cv::putText(image, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-        else if (image_source == 2)
+        else if (M_image_source == 2)
         cv::putText(image, "Range",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
         else
         cv::putText(image, "Ambient",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
@@ -494,7 +474,7 @@ void BRISK_Framehandler::SVD(MatrixXd& cur_SVD,MatrixXd& prev_SVD){
         current_iteration.block<3,1>(0,3) = t;
 
 
-        my_pose = my_pose*current_iteration;
+        M_my_pose = M_my_pose*current_iteration;
 
         //Storing the plot data
         if(SHOULD_STORE)

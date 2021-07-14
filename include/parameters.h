@@ -79,7 +79,6 @@ extern int IMAGE_CROP;
 extern cv::Mat MASK;
 extern ofstream OUT;
 
-extern int MIN_LOOP_FEATURE_NUM;
 extern int DUPLICATE_FILTERING_SIZE;
 extern double MAX_DEPTH_DISTANCE;
 extern bool APPLY_DUPLICATE_FILTERING;

@@ -12,13 +12,14 @@ packages
 
 General architecture:
 
--The main node is in the main_node.cpp file
--h files with the declarations are in the include folder while the definitions are in src
--ImageHandler creates the projections from the rosbag data
--ORB and BRISK are split into extractor and matching file (ORB / ORB_Framehandler)
-- notice that everything that needs consideration of two pointclouds or images is in the framehandler files while anything feature related is in the files named after the descriptors
--most helping functions are defined in the helper.cpp file
-- finally KLT is implemented directly and completely in the KLT.cpp file.
+    -The main node is in the main_node.cpp file
+    -h files with the declarations are in the include folder while the definitions are in src
+    -ImageHandler creates the projections from the rosbag data
+    -ORB and BRISK are split into extractor and matching file (ORB / ORB_Framehandler)
+    - notice that everything that needs consideration of two pointclouds or images is in the framehandler files while anything feature related is in the files named after the descriptors
+    -most helping functions are defined in the helper.cpp file
+    - finally KLT is implemented directly and completely in the KLT.cpp file.
+    - variables beginning with M_ are member variables.
 
 
 Filtering:
