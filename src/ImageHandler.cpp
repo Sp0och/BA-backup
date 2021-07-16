@@ -1,4 +1,4 @@
-#include "../include/ImageHandler.h"
+#include "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/include/ImageHandler.h"
 
 struct PointOuster {
     PCL_ADD_POINT4D;
@@ -100,7 +100,7 @@ void ImageHandler::cloud_handler(const sensor_msgs::PointCloud2ConstPtr &cloud_m
 
 
         //APPLY BLUR HERE:
-        if(BLURR_SIZE>0){
+        if(BLURR_SIZE>1){
             cv::blur(image_intensity,image_intensity,cv::Size(BLURR_SIZE,BLURR_SIZE));
             cv::blur(image_noise,image_noise,cv::Size(BLURR_SIZE,BLURR_SIZE));
             cv::blur(image_range,image_range,cv::Size(BLURR_SIZE,BLURR_SIZE));

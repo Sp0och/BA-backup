@@ -1,5 +1,5 @@
 #pragma once
-#include "../include/parameters.h"
+#include "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/include/parameters.h"
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
