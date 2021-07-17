@@ -53,6 +53,7 @@ add_library(${PROJECT_NAME}_lib
             ${LIBRARY_FILES})
 
  target_compile_options(${PROJECT_NAME}_main PRIVATE ${OpenMP_CXX_FLAGS})
+ 
  target_link_libraries(${PROJECT_NAME}_main ${catkin_LIBRARIES}
                                             ${PCL_LIBRARIES} 
                                             ${OpenCV_LIBRARIES} 
