@@ -7,7 +7,6 @@ project(descriptor_and_image)
 
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
-  # dbow3
   geometry_msgs
   nav_msgs
   pcl_conversions
@@ -29,24 +28,35 @@ catkin_package(
   DEPENDS PCL
 )
 
+
 include_directories(
   ${catkin_INCLUDE_DIRS}
   ${PCL_LIBRARY_DIRS}
   ${OpenCV_LIBRARY_DIRS}
-)
-# add_library(xfeatures
-#   "opencv_xfeaturesd420.lib"
-# )
+  "include"
+  )
 
-file(GLOB all_source_files 
-"src/cloud_handler_node.cpp"
+set(LIBRARY_FILES
+    "src/ImageHandler.cpp"
+    "src/helper.cpp"
+    "src/ORB.cpp"
+    "src/ORB_Framehandler"
+    "src/BRISK.cpp"
+    "src/BRISK_Framehandler"
+    "src/KLT.cpp"
 )
+    
 
- add_executable(${PROJECT_NAME}_main ${all_source_files})
+add_executable(${PROJECT_NAME}_main "src/main_node.cpp")
+
+add_library(${PROJECT_NAME}_lib 
+            ${LIBRARY_FILES})
+
  target_compile_options(${PROJECT_NAME}_main PRIVATE ${OpenMP_CXX_FLAGS})
+ 
  target_link_libraries(${PROJECT_NAME}_main ${catkin_LIBRARIES}
-                                             ${PCL_LIBRARIES} 
-                                             ${OpenCV_LIBRARIES} 
-                                             ${DBoW3_LIBRARIES} 
-                                             ${OpenMP_CXX_FLAGS} 
+                                            ${PCL_LIBRARIES} 
+                                            ${OpenCV_LIBRARIES} 
+                                            ${OpenMP_CXX_FLAGS}
+                                            ${PROJECT_NAME}_lib
                                             )

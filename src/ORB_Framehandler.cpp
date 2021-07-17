@@ -1,4 +1,4 @@
-#include "../include/ORB_Framehandler.h"
+#include "package_BA_LF/ORB_Framehandler.h"
 #include "helper.cpp"
 
 using namespace std;
@@ -6,77 +6,82 @@ using namespace std;
 //core member methods:
 
 ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
+<<<<<<< HEAD
         
+=======
+>>>>>>> cmake
         std::string config_file;
-        n_frame.getParam("parameter_file", config_file);
+        M_n_frame.getParam("parameter_file", config_file);
         cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
         if(!fsSettings.isOpened())
             std::cerr << "ERROR: Wrong path to settings" << std::endl;
         usleep(100);
-        fsSettings["num_orb_features"] >> NUM_ORB_FEATURES;
-        fsSettings["orb_accuracy"] >> ORB_ACCURACY;
-        fsSettings["scale_factor"] >> SCALE_FACTOR;
-        fsSettings["levels"] >> LEVELS;
+        fsSettings["num_orb_features"] >> M_NUM_ORB_FEATURES;
+        fsSettings["orb_accuracy"] >> M_ORB_ACCURACY;
+        fsSettings["scale_factor"] >> M_SCALE_FACTOR;
+        fsSettings["levels"] >> M_LEVELS;
 
-        fsSettings["orb_file_path"] >> FILE_PATH;
-        fsSettings["directory"] >> DIRECTORY;
+        fsSettings["orb_file_path"] >> M_FILE_PATH;
+        fsSettings["directory"] >> M_DIRECTORY;
 
-        image_source = _image_source;
+        M_image_source = _image_source;
+
+        M_POINT_COLOR = cv::Scalar(255,0,0);
+        M_LINE_COLOR = cv::Scalar(255,0,0);
+
         if(START_POSE == 0){
-            my_pose << 1,0,0,0,
+            M_my_pose << 1,0,0,0,
                     0,1,0,0,
                     0,0,1,0,
                     0,0,0,1;
         }
         else if(START_POSE == 1){
-            my_pose << -0.98877182,  0.14125801,  0.04874899, -0.03791867,
+            M_my_pose << -0.98877182,  0.14125801,  0.04874899, -0.03791867,
                     -0.14255745, -0.9894887,  -0.02427929, -0.02220684,
                     0.04480693, -0.03095621,  0.99851592, -0.01088667,
                     0,          0,          0,          1; 
         }
         else{
-            my_pose << 0.08959188, -0.99543686,  0.03284438,  0.17298461,
+            M_my_pose << 0.08959188, -0.99543686,  0.03284438,  0.17298461,
         0.96004952,  0.07753545, -0.26887389,  1.35417363,
         0.26510037,  0.05562115,  0.96261523,  0.42004326,
         0,0,0,1;
         }
         
-        cur_orb = nullptr;
-        prev_orb = nullptr;
+        M_cur_orb = nullptr;
+        M_prev_orb = nullptr;
 
-        POINT_COLOR = cv::Scalar(255,0,0);
-        LINE_COLOR = cv::Scalar(0,255,0);
-        match_publisher = n_frame.advertise<sensor_msgs::Image>("unfiltered_matches", 1);
-        ransac_publisher = n_frame.advertise<sensor_msgs::Image>("RANSAC_filtered", 1);
+        M_match_publisher = M_n_frame.advertise<sensor_msgs::Image>("unfiltered_matches", 1);
+        M_ransac_publisher = M_n_frame.advertise<sensor_msgs::Image>("RANSAC_filtered", 1);
 
-        kp_pc_publisher_cur = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1);
-        kp_pc_publisher_prev = n_frame.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1);
-        pc_distance_publisher_c = n_frame.advertise<PointCloud>("Distance_filtered_3D_c", 1);
-        pc_distance_publisher_p = n_frame.advertise<PointCloud>("Distance_filtered_3D_p", 1);
-        line_publisher = n_frame.advertise<visualization_msgs::Marker>("connection_lines", 1);
-        line_distance_publisher = n_frame.advertise<visualization_msgs::Marker>("connection_lines_distance", 1);
-        odom_publisher = n_frame.advertise<nav_msgs::Odometry>("Odometry", 1);
-        if(image_source == 1)
-            intensity_publisher = n_frame.advertise<sensor_msgs::Image>("intensity_matches", 1);
-        else if(image_source == 2)
-            range_publisher = n_frame.advertise<sensor_msgs::Image>("range_matches", 1);
+        M_kp_pc_publisher_cur = M_n_frame.advertise<PointCloud>("Keypoint_Pointcloud_cur", 1);
+        M_kp_pc_publisher_prev = M_n_frame.advertise<PointCloud>("Keypoint_Pointcloud_prev", 1);
+        M_pc_distance_publisher_c = M_n_frame.advertise<PointCloud>("Distance_filtered_3D_c", 1);
+        M_pc_distance_publisher_p = M_n_frame.advertise<PointCloud>("Distance_filtered_3D_p", 1);
+        M_line_publisher = M_n_frame.advertise<visualization_msgs::Marker>("connection_lines", 1);
+        M_line_distance_publisher = M_n_frame.advertise<visualization_msgs::Marker>("connection_lines_distance", 1);
+        M_odom_publisher = M_n_frame.advertise<nav_msgs::Odometry>("Odometry", 1);
+        if(M_image_source == 1)
+            M_intensity_publisher = M_n_frame.advertise<sensor_msgs::Image>("intensity_matches", 1);
+        else if(M_image_source == 2)
+            M_range_publisher = M_n_frame.advertise<sensor_msgs::Image>("range_matches", 1);
         else
-            ambient_publisher = n_frame.advertise<sensor_msgs::Image>("ambient_matches", 1);
+            M_ambient_publisher = M_n_frame.advertise<sensor_msgs::Image>("ambient_matches", 1);
     }
 
-void ORB_Framehandler::newIteration(const std::shared_ptr<ORB> new_frame, ros::Time _raw_time){
-        raw_time = _raw_time;
+void ORB_Framehandler::newIteration(const std::shared_ptr<ORB> new_frame, ros::Time _M_raw_time){
+        M_raw_time = _M_raw_time;
         //if first iteration
-        if(cur_orb == nullptr){
-            cur_orb = new_frame;
+        if(M_cur_orb == nullptr){
+            M_cur_orb = new_frame;
             //Set up plot files, store the inital pose and feature num and publish the transform of the first frame
             publish_tf();
             if(SHOULD_STORE)
             set_plotting_columns_and_start_pose();
         }
         else{
-            prev_orb = cur_orb;
-            cur_orb = new_frame;
+            M_prev_orb = M_cur_orb;
+            M_cur_orb = new_frame;
             matches_filtering_motion();
         }
     }
@@ -86,56 +91,56 @@ void ORB_Framehandler::matches_filtering_motion(){
 
         //create matches
         bool cur_first = false;
-        if(cur_orb->orb_keypoints_2d.size() < prev_orb->orb_keypoints_2d.size()){
+        if(M_cur_orb->orb_keypoints_2d.size() < M_prev_orb->orb_keypoints_2d.size()){
             cur_first = true;
-            matcher->match(cur_orb->orb_descriptors,prev_orb->orb_descriptors,matches);
+            matcher->match(M_cur_orb->orb_descriptors,M_prev_orb->orb_descriptors,M_matches);
         }
         else{
-            matcher->match(prev_orb->orb_descriptors,cur_orb->orb_descriptors,matches);
+            matcher->match(M_prev_orb->orb_descriptors,M_cur_orb->orb_descriptors,M_matches);
         }
         //sort matches in ascending order (concerning distance)
-        std::sort(matches.begin(),matches.end());
+        std::sort(M_matches.begin(),M_matches.end());
         std::vector<cv::Point2d> sorted_2d_cur, sorted_2d_prev;
-        MatrixXd prev_SVD(3,matches.size()),cur_SVD(3,matches.size());
+        MatrixXd prev_SVD(3,M_matches.size()),cur_SVD(3,M_matches.size());
         //pair the keypoints up according to the matches:
-        for (size_t i = 0; i < matches.size(); i++)
+        for (size_t i = 0; i < M_matches.size(); i++)
         {
             //the match indexes for point association
             int cur_index;
             int prev_index;
             if(cur_first){
-                cur_index = matches.at(i).queryIdx;
-                prev_index = matches.at(i).trainIdx;
+                cur_index = M_matches.at(i).queryIdx;
+                prev_index = M_matches.at(i).trainIdx;
             }
             else{
-                cur_index = matches.at(i).trainIdx;
-                prev_index = matches.at(i).queryIdx;
+                cur_index = M_matches.at(i).trainIdx;
+                prev_index = M_matches.at(i).queryIdx;
             }
 
             //create sorted keypoint vectors
-            sorted_2d_cur.push_back(cur_orb->orb_keypoints_2d.at(cur_index));
-            sorted_2d_prev.push_back(prev_orb->orb_keypoints_2d.at(prev_index));
+            sorted_2d_cur.push_back(M_cur_orb->orb_keypoints_2d.at(cur_index));
+            sorted_2d_prev.push_back(M_prev_orb->orb_keypoints_2d.at(prev_index));
             //create sorted 3d keypoint vectors
-            cur_SVD(0,i) = cur_orb->orb_points_3d.at(cur_index).x;
-            cur_SVD(1,i) = cur_orb->orb_points_3d.at(cur_index).y;
-            cur_SVD(2,i) = cur_orb->orb_points_3d.at(cur_index).z;
-            prev_SVD(0,i) = prev_orb->orb_points_3d.at(prev_index).x;
-            prev_SVD(1,i) = prev_orb->orb_points_3d.at(prev_index).y;
-            prev_SVD(2,i) = prev_orb->orb_points_3d.at(prev_index).z;
+            cur_SVD(0,i) = M_cur_orb->orb_points_3d.at(cur_index).x;
+            cur_SVD(1,i) = M_cur_orb->orb_points_3d.at(cur_index).y;
+            cur_SVD(2,i) = M_cur_orb->orb_points_3d.at(cur_index).z;
+            prev_SVD(0,i) = M_prev_orb->orb_points_3d.at(prev_index).x;
+            prev_SVD(1,i) = M_prev_orb->orb_points_3d.at(prev_index).y;
+            prev_SVD(2,i) = M_prev_orb->orb_points_3d.at(prev_index).z;
         }
-        matches.clear();
+        M_matches.clear();
 
         //Publish matches before filtering:
-        publish_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+        publish_matches_2F(&M_match_publisher, sorted_2d_cur, sorted_2d_prev,2,M_POINT_COLOR,M_LINE_COLOR,true);
         // cout << "right after matching: " << prev_SVD.cols() << " " << endl;
         
         if(APPLY_RANSAC_FILTERING){
             RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
-            publish_matches_2F(&ransac_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+            publish_matches_2F(&M_ransac_publisher, sorted_2d_cur, sorted_2d_prev,2,M_POINT_COLOR,M_LINE_COLOR,true);
             // cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         }
 
-        visualizer_3D(cur_SVD,prev_SVD,&pc_distance_publisher_c,&pc_distance_publisher_p,&line_distance_publisher);
+        visualizer_3D(cur_SVD,prev_SVD,&M_pc_distance_publisher_c,&M_pc_distance_publisher_p,&M_line_distance_publisher);
         
         if(APPLY_DISTANCE_FILTERING){
             filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
@@ -145,7 +150,7 @@ void ORB_Framehandler::matches_filtering_motion(){
         if(SHOULD_STORE)
         store_feature_number(cur_SVD);
 
-        visualizer_3D(cur_SVD,prev_SVD,&kp_pc_publisher_cur,&kp_pc_publisher_prev,&line_publisher);
+        visualizer_3D(cur_SVD,prev_SVD,&M_kp_pc_publisher_cur,&M_kp_pc_publisher_prev,&M_line_publisher);
 
 
         //SVD Here
@@ -159,18 +164,18 @@ void ORB_Framehandler::matches_filtering_motion(){
 
         //First 2D match display option
         
-        if(image_source == 1)
-        publish_matches_2F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
-        else if(image_source == 2)
-        publish_matches_2F(&range_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+        if(M_image_source == 1)
+        publish_matches_2F(&M_intensity_publisher, sorted_2d_cur, sorted_2d_prev,2,M_POINT_COLOR,M_LINE_COLOR,true);
+        else if(M_image_source == 2)
+        publish_matches_2F(&M_range_publisher, sorted_2d_cur, sorted_2d_prev,2,M_POINT_COLOR,M_LINE_COLOR,true);
         else
-        publish_matches_2F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,2,POINT_COLOR,LINE_COLOR,true);
+        publish_matches_2F(&M_ambient_publisher, sorted_2d_cur, sorted_2d_prev,2,M_POINT_COLOR,M_LINE_COLOR,true);
         
         //Second 2D match display option
 
-        // if(image_source == 1)
+        // if(M_image_source == 1)
         // publish_matches_1F(&intensity_publisher, sorted_2d_cur, sorted_2d_prev,1,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
-        // else if(image_source == 2)
+        // else if(M_image_source == 2)
         // publish_matches_1F(&range_publisher, sorted_2d_cur, sorted_2d_prev,1,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
         // else
         // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,1,cv::Scalar(255,0,0),cv::Scalar(0,255,0),true);
@@ -182,7 +187,7 @@ void ORB_Framehandler::matches_filtering_motion(){
 void ORB_Framehandler::set_plotting_columns_and_start_pose(){
 
     // store the start pose (either their start or identity)
-        Matrix3d R_complete = my_pose.topLeftCorner(3,3);
+        Matrix3d R_complete = M_my_pose.topLeftCorner(3,3);
         Quaterniond q_complete(R_complete);
         tfScalar xqc = q_complete.x();
         tfScalar yqc = q_complete.y();
@@ -194,9 +199,9 @@ void ORB_Framehandler::set_plotting_columns_and_start_pose(){
         qtfc.setZ(zqc);
         qtfc.setW(wqc);
 
-        tfScalar xc = my_pose(0,3);
-        tfScalar yc = my_pose(1,3);
-        tfScalar zc = my_pose(2,3);
+        tfScalar xc = M_my_pose(0,3);
+        tfScalar yc = M_my_pose(1,3);
+        tfScalar zc = M_my_pose(2,3);
         tf::Vector3 tc_fill = tf::Vector3(xc,yc,zc);
         tf::Transform odom_t_velo_complete = tf::Transform(qtfc,tc_fill);
         Eigen::Vector3d e1c, e2c;
@@ -213,16 +218,16 @@ void ORB_Framehandler::set_plotting_columns_and_start_pose(){
         
 
 
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + DIRECTORY + "/prediction_pose_"+FILE_PATH+".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_pose_"+M_FILE_PATH+".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
-    OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
+    OUT << M_my_pose(0,3) << "," << M_my_pose(1,3) << "," << M_my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << M_raw_time << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + DIRECTORY + "/prediction_steps_"+FILE_PATH+".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_steps_"+M_FILE_PATH+".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + DIRECTORY + "/feature_number_"+FILE_PATH+".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/feature_number_"+M_FILE_PATH+".csv",ios_base::app);
     OUT << "num_of_features" "," << "time" << endl;
     OUT.close(); 
 }
@@ -259,15 +264,15 @@ void ORB_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
             ea = e1;
         else
             ea = e2;
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + DIRECTORY + "/prediction_steps_"+FILE_PATH+".csv",ios_base::app);
-        OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << raw_time <<  endl;
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_steps_"+M_FILE_PATH+".csv",ios_base::app);
+        OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << M_raw_time <<  endl;
         OUT.close(); 
 
 
 
 
         // overall
-        Matrix3d R_complete = my_pose.topLeftCorner(3,3);
+        Matrix3d R_complete = M_my_pose.topLeftCorner(3,3);
         Quaterniond q_complete(R_complete);
         tfScalar xqc = q_complete.x();
         tfScalar yqc = q_complete.y();
@@ -279,9 +284,9 @@ void ORB_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
         qtfc.setZ(zqc);
         qtfc.setW(wqc);
 
-        tfScalar xc = my_pose(0,3);
-        tfScalar yc = my_pose(1,3);
-        tfScalar zc = my_pose(2,3);
+        tfScalar xc = M_my_pose(0,3);
+        tfScalar yc = M_my_pose(1,3);
+        tfScalar zc = M_my_pose(2,3);
         tf::Vector3 tc_fill = tf::Vector3(xc,yc,zc);
         tf::Transform odom_t_velo_complete = tf::Transform(qtfc,tc_fill);
         Eigen::Vector3d e1c, e2c;
@@ -294,14 +299,14 @@ void ORB_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
         else
             eac = e2c;
         
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + DIRECTORY + "/prediction_pose_"+FILE_PATH+".csv",ios_base::app);
-        OUT << my_pose(0,3) << "," << my_pose(1,3) << "," << my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << raw_time << endl;
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_pose_"+M_FILE_PATH+".csv",ios_base::app);
+        OUT << M_my_pose(0,3) << "," << M_my_pose(1,3) << "," << M_my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << M_raw_time << endl;
         OUT.close();
     }
 
 void ORB_Framehandler::store_feature_number(const MatrixXd& cur_SVD){
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + DIRECTORY + "/feature_number_"+FILE_PATH+".csv",ios_base::app);
-    OUT << cur_SVD.cols() << "," << raw_time <<  endl;
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/feature_number_"+M_FILE_PATH+".csv",ios_base::app);
+    OUT << cur_SVD.cols() << "," << M_raw_time <<  endl;
     OUT.close(); 
 }
 
@@ -311,7 +316,7 @@ void ORB_Framehandler::publish_tf(){
         cout << "TF Publisher " << endl;
         tf::TransformBroadcaster odom_t_velo_b;
         //Create Eigen Quaternion
-        Matrix3d R = my_pose.topLeftCorner(3,3);
+        Matrix3d R = M_my_pose.topLeftCorner(3,3);
         Quaterniond q(R);
         tfScalar xq = q.x();
         tfScalar yq = q.y();
@@ -325,9 +330,9 @@ void ORB_Framehandler::publish_tf(){
         qtf.setW(wq);
 
         //Create translational part of transform
-        tfScalar x = my_pose(0,3);
-        tfScalar y = my_pose(1,3);
-        tfScalar z = my_pose(2,3);
+        tfScalar x = M_my_pose(0,3);
+        tfScalar y = M_my_pose(1,3);
+        tfScalar z = M_my_pose(2,3);
         tf::Vector3 t = tf::Vector3(x,y,z);
 
         // std::cout << "translation: [" << t.getX() << ", " << t.getY() << ", " << t.getZ() << "]" << std::endl;
@@ -335,43 +340,43 @@ void ORB_Framehandler::publish_tf(){
         tf::Transform odom_t_velo = tf::Transform(qtf,t);
         // cout << "t: " << t.getX() << ", "<< t.getY() << ", "<< t.getZ() << " " << endl;
         // ros::Duration delay(252940.892);
-        // ros::Time now_p_delay = raw_time + delay;
+        // ros::Time now_p_delay = M_raw_time + delay;
         // cout << "my translation: " << COUNT << "(" << odom_t_velo.getOrigin().getX() << ", " << odom_t_velo.getOrigin().getY() << ", " << odom_t_velo.getOrigin().getZ() << ") " << endl;
         // cout << "my rotation: " << COUNT << "(" << odom_t_velo.getRotation().getX() << ", " << odom_t_velo.getRotation().getY() << ", " << odom_t_velo.getRotation().getZ() << ", " << odom_t_velo.getRotation().getW() << ") " << endl;
         // COUNT++;
-        odom_t_velo_b.sendTransform(tf::StampedTransform(odom_t_velo,raw_time,"odom","my_velo"));
+        odom_t_velo_b.sendTransform(tf::StampedTransform(odom_t_velo,M_raw_time,"odom","my_velo"));
     }
 
 void ORB_Framehandler::publish_odom(){
         nav_msgs::Odometry odom;
         //translation
-        odom.pose.pose.position.x = my_pose(0,3);
-        odom.pose.pose.position.y = my_pose(1,3);
-        odom.pose.pose.position.z = my_pose(2,3);
+        odom.pose.pose.position.x = M_my_pose(0,3);
+        odom.pose.pose.position.y = M_my_pose(1,3);
+        odom.pose.pose.position.z = M_my_pose(2,3);
         //Quaternions (rotation)
-        Matrix3d R = my_pose.topLeftCorner(3,3);
+        Matrix3d R = M_my_pose.topLeftCorner(3,3);
         Quaterniond q(R);
         odom.pose.pose.orientation.x = q.x();
         odom.pose.pose.orientation.y = q.y();
         odom.pose.pose.orientation.z = q.z();
         odom.pose.pose.orientation.w = q.w();
         odom.header.frame_id = "odom";
-        odom_publisher.publish(odom);
+        M_odom_publisher.publish(odom);
     }
 
 //member visualization functions
 
 void ORB_Framehandler::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD,ros::Publisher* cur_publisher,ros::Publisher* prev_publisher,ros::Publisher* line_publisher){
-        publish_3D_keypoints(cur_SVD, cur_publisher, raw_time);
-        publish_3D_keypoints(prev_SVD, prev_publisher, raw_time);
-        publish_lines_3D(cur_SVD, prev_SVD, line_publisher, raw_time);
+        publish_3D_keypoints(cur_SVD, cur_publisher, M_raw_time);
+        publish_3D_keypoints(prev_SVD, prev_publisher, M_raw_time);
+        publish_lines_3D(cur_SVD, prev_SVD, line_publisher, M_raw_time);
 }
 
 void ORB_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
     const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar point_color, cv::Scalar line_color, bool draw_lines){
     cv::Mat color_img,gray_img;
-    const cv::Mat old_img = prev_orb->input_image.clone();
-    const cv::Mat new_img = cur_orb->input_image.clone();
+    const cv::Mat old_img = M_prev_orb->input_image.clone();
+    const cv::Mat new_img = M_cur_orb->input_image.clone();
     int gap = 1;
     cv::Mat gap_img(gap, new_img.size().width, CV_8UC1, cv::Scalar(255, 255, 255));
     //create colored concatenated image with gap inbetween
@@ -401,9 +406,9 @@ void ORB_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  
             cv::line(color_img, sorted_KP_cur[i] * 1, old_pt, line_color, 1*2, 8, 0);
         }
     }
-    if(image_source == 1)
+    if(M_image_source == 1)
     cv::putText(color_img, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-    else if (image_source == 2)
+    else if (M_image_source == 2)
     cv::putText(color_img, "Range",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
     else
     cv::putText(color_img, "Ambient",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
@@ -415,7 +420,7 @@ void ORB_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  
 
 void ORB_Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
     const std::vector<cv::Point2d>& sorted_KP_prev, int circle_size, cv::Scalar point_color, cv::Scalar line_color, bool draw_lines){
-        cv::Mat image = cur_orb->input_image.clone();
+        cv::Mat image = M_cur_orb->input_image.clone();
         cv::cvtColor(image,image,CV_GRAY2RGB);
 
         for (int i = 0; i< (int)sorted_KP_cur.size(); i++)
@@ -427,9 +432,9 @@ void ORB_Framehandler::publish_matches_1F(const ros::Publisher* this_pub,const  
             if(draw_lines)
                 cv::line(image, cur_pt * 1, old_pt, line_color, 1, 8, 0);
         }
-        if(image_source == 1)
+        if(M_image_source == 1)
         cv::putText(image, "Intensity",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
-        else if (image_source == 2)
+        else if (M_image_source == 2)
         cv::putText(image, "Range",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
         else
         cv::putText(image, "Ambient",   cv::Point2d(5, 20), cv::FONT_HERSHEY_SIMPLEX, 0.8, cv::Scalar(255,0,255), 2);
@@ -488,7 +493,7 @@ void ORB_Framehandler::SVD(MatrixXd& cur_SVD,MatrixXd& prev_SVD){
         current_iteration.block<3,1>(0,3) = t;
 
 
-        my_pose = my_pose*current_iteration;
+        M_my_pose = M_my_pose*current_iteration;
 
         //Storing the plot data
         if(SHOULD_STORE)

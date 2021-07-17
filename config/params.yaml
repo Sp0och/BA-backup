@@ -4,59 +4,58 @@
 project_name: "descriptor_and_image"
 
 # Source setup
-cloud_topic: "points_raw"       # point cloud input topic
-image_width: 1024               # image horitontal resolution
-image_height: 128               # image vertical resolution
-image_crop: 225                 # normally 225, mask for blocking feature extraction; indoor/handheld=196-256; jackal=0
-image_source: 1                         #which image source to use  1 is int, 2 range, 3 ambient
+cloud_topic: "points_raw"                     # point cloud input topic
+image_width: 1024                             # image horitontal resolution
+image_height: 128                             # image vertical resolution
+image_crop: 225                               # normally 225, mask for blocking feature extraction; indoor/handheld=196-256
+image_source: 1                               #which image source to use  1 is int, 2 range, 3 ambient
 
 #start time and pose:
-start_pose: 1                #0 for identity, 1 for indoor and 2 for handheld at 3s
-start_timestamp: 0  # first timestamp on which to display tf and store coord.
-#1598537681.4 for 3s in 
+start_pose: 2                                 #0 for identity, 1 for indoor and 2 for handheld at 3s
+start_timestamp: 1598537681.4                 # first timestamp on which to display tf and store coord.
+                                              #1598537681.4 for 3s in (start of lio-sam pose estimation dataset)
 
 #Extractor choice
-extractor: "orb"                #which extractor to use
+extractor: "orb"                              #which extractor to use
 
 #ORB:
-num_orb_features: 1000          # maximal feature num for ORB
-orb_accuracy: 31                # ORB extractor threshold for letting the points pass
-scale_factor: 1.7               # greater than 1, if smaller-> more expensive but good, if higher less quality
-levels: 8                       # number of pyramid levels
+num_orb_features: 1000                        # maximal feature num for ORB
+orb_accuracy: 31                              # ORB extractor threshold for letting the points pass
+scale_factor: 1.7                             # scale factor in between levels
+levels: 8                                     # number of pyramid levels
 
 #brisk
-brisk_threshold: 45             # threshold for brisk feature acceptance
-octaves: 3                      #number of octaves
-pattern_scale: 0.5              #scale applied to pattern used for sampling neighborhood
+brisk_threshold: 45                           # threshold for brisk feature acceptance
+octaves: 3                                    #number of octaves
+pattern_scale: 0.5                            #scale applied to pattern used for sampling neighborhood
 
 #klt extraction
-min_klt_features: 70            #min number of features until new ones have to be found
-max_klt_features: 1000           #upper level klt feature number
-quality_level: 0.05              #quality threshold for point detection
-blocksize: 3                    #Block size for comparing the most promissing points  
-min_klt_detection_distance: 3   #minimum distance to previously tracked point
+min_klt_features: 70                          #min number of features until new ones have to be found
+max_klt_features: 1000                        #upper level klt feature number
+quality_level: 0.05                           #quality threshold for point detection
+blocksize: 3                                  #Block size for comparing the most promissing points  
+min_klt_detection_distance: 3                 #minimum distance to previously tracked point
 #klt point tracking
-epsilon: 0.005                    #the parameter change at which to stop
-criteria_reps: 10               #the maximal number of reps to achieve it
-opt_size: 17                     # Size of the search window at each pyramid iteration
-num_pyramids: 2                  #number of pyramid layers
-use_harris: 0                   # use harris corner detector
+epsilon: 0.005                                #the parameter change at which to stop
+criteria_reps: 10                             #the maximal number of reps to achieve it
+opt_size: 17                                  # Size of the search window at each pyramid iteration
+num_pyramids: 2                               #number of pyramid layers
+use_harris: 0                                 # use harris corner detector
 
 #match filtering
 apply_duplicate_filtering: 1
-apply_ransac_filtering: 1        #set filter active or not
+apply_ransac_filtering: 1                     #set filter active or not
 apply_distance_filtering: 1
-duplicate_filtering_size: 3      # (pixels) the circle patch size in which another point can not be located
-max_depth_distance: 0.3              # max ratio that match distance can be in comparision to point sensor difference
+duplicate_filtering_size: 3                   # (pixels) the circle patch size in which another point can not be located
+max_depth_distance: 0.3                       # max ratio that match distance can be in comparision to point sensor difference
 
 # Visualization
-blurr_size: 2                    # blurring kernel size
-
+blurr_size: 2                                 # blurring kernel size
 
 # Data Storage
-should_store: 0                  # whether results should be stored
+should_store: 0                               # whether pose results should be stored in csv files
 orb_file_path: "orb_indoor_intensity"         # where orb results should be stored
-brisk_file_path: "brisk_0.3_3_2"         # where brisk results should be stored
+brisk_file_path: "brisk_0.3_3_2"              # where brisk results should be stored
 klt_file_path: "klt_indoor_intensity"         # where klt results should be stored
-directory: "output"              # storage directory
+directory: "output"                           # storage directory
 
