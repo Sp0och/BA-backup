@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(descriptor_and_image)
+project(image_and_descriptor)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
   visualization_msgs
+  jsk_rviz_plugins
 )
 
 find_package(OpenMP REQUIRED)
@@ -30,10 +31,10 @@ catkin_package(
 
 
 include_directories(
+  include
   ${catkin_INCLUDE_DIRS}
   ${PCL_LIBRARY_DIRS}
   ${OpenCV_LIBRARY_DIRS}
-  "include"
   )
 
 set(LIBRARY_FILES
@@ -45,18 +46,9 @@ set(LIBRARY_FILES
     "src/BRISK_Framehandler"
     "src/KLT.cpp"
 )
-    
 
-add_executable(${PROJECT_NAME}_main "src/main_node.cpp")
+add_library(${PROJECT_NAME}_lib ${LIBRARY_FILES})
+target_link_libraries(${PROJECT_NAME}_lib ${catkin_LIBRARIES})
 
-add_library(${PROJECT_NAME}_lib 
-            ${LIBRARY_FILES})
-
- target_compile_options(${PROJECT_NAME}_main PRIVATE ${OpenMP_CXX_FLAGS})
- 
- target_link_libraries(${PROJECT_NAME}_main ${catkin_LIBRARIES}
-                                            ${PCL_LIBRARIES} 
-                                            ${OpenCV_LIBRARIES} 
-                                            ${OpenMP_CXX_FLAGS}
-                                            ${PROJECT_NAME}_lib
-                                            )
+add_executable(${PROJECT_NAME}_node "src/image_and_descriptor_node.cpp")
+target_link_libraries(${PROJECT_NAME}_node ${PROJECT_NAME}_lib)

@@ -1,4 +1,4 @@
-#include "package_BA_LF/BRISK.h"
+#include "image_and_descriptor/BRISK.h"
 #include "helper.cpp"
 
 //Member functions:

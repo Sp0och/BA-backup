@@ -1,4 +1,4 @@
-#include "package_BA_LF/setup.h"
+#include "image_and_descriptor/setup.h"
 
 typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
