@@ -1,6 +1,6 @@
 #pragma once
 
-#include "parameters.h"
+#include "setup.h"
 using namespace Eigen;
 
 // void publish_tracked_points (ros::Publisher* publisher, cv::Mat& image, const vector<cv::Point2d>& keypoints,cv::Scalar line_color, int circle_size){

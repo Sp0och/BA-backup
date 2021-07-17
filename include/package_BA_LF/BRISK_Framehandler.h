@@ -1,6 +1,6 @@
 
 #pragma once
-#include "parameters.h"
+#include "setup.h"
 #include "BRISK.h"
 
 using namespace Eigen;

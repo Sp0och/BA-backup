@@ -12,7 +12,7 @@ packages
 
 General architecture:
 
-    -libraries are included in the parameters.h file
+    -libraries are included in the setup.h file
     -The main node is in the main_node.cpp file
     -h files with the declarations are in the include folder while the definitions are in src
     -ImageHandler creates the projections from the rosbag data

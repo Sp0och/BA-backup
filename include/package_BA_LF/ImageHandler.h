@@ -1,6 +1,6 @@
 #pragma once
 
-#include "parameters.h"
+#include "setup.h"
 
 
 //Create images from the laserscan

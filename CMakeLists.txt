@@ -33,28 +33,26 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${PCL_LIBRARY_DIRS}
   ${OpenCV_LIBRARY_DIRS}
-  ${include}
+  include
   )
 
 set(LIBRARY_FILES
-    src/ImageHandler.cpp
-    src/helper.cpp
-    src/ORB.cpp
-    src/ORB_Framehandler
-    src/BRISK.cpp
-    src/BRISK_Framehandler
-    src/KLT.cpp
-    )
+    "src/ImageHandler.cpp"
+    "src/helper.cpp"
+    "src/ORB.cpp"
+    "src/ORB_Framehandler"
+    "src/BRISK.cpp"
+    "src/BRISK_Framehandler"
+    "src/KLT.cpp"
+)
     
+
+add_executable(${PROJECT_NAME}_main "src/main_node.cpp")
 
 add_library(${PROJECT_NAME}_lib 
             ${LIBRARY_FILES})
 
-add_executable(${PROJECT_NAME}_main "src/main_node.cpp")
-
  target_compile_options(${PROJECT_NAME}_main PRIVATE ${OpenMP_CXX_FLAGS})
- target_link_directories(${PROJECT_NAME}_main  
-                          PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include") 
  target_link_libraries(${PROJECT_NAME}_main ${catkin_LIBRARIES}
                                             ${PCL_LIBRARIES} 
                                             ${OpenCV_LIBRARIES} 

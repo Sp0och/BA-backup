@@ -1,8 +1,7 @@
 
 #pragma once
 
-#include "parameters.h"
-
+#include "setup.h"
 
 class ORB
 {

@@ -1,29 +1,14 @@
-// #include "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/include/ImageHandler.h"
-#include "parameters.h"
-#include "ImageHandler.cpp"
-// #include "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/include/parameters.h"
-// #include "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/include/ORB.h"
-#include "ORB.cpp"
-// // #include "../include/framehandler_old.h"
-// #include "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/include/ORB_Framehandler.h"
-#include "ORB_Framehandler.cpp"
-// #include "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/include/BRISK_Framehandler.h"
-#include "BRISK_Framehandler.cpp"
-// // #include "../include/klt_old.h"
-// #include "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/include/KLT.h"
-#include "KLT.cpp"
-// #include "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/include/BRISK.h"
-#include "BRISK.cpp"
+#include "package_BA_LF/setup.h"
+#include "package_BA_LF/ImageHandler.h"
+#include "package_BA_LF/ORB.h"
+#include "package_BA_LF/ORB_Framehandler.h"
+#include "package_BA_LF/BRISK_Framehandler.h"
+#include "package_BA_LF/KLT.h"
+#include "package_BA_LF/BRISK.h"
 
-// #include <ImageHandler.cpp>
-// #include <ORB.cpp>
-// #include <ORB_Framehandler.cpp>
-// #include <BRISK.cpp>
-// #include <BRISK_Framehandler.cpp>
-// #include <KLT.cpp>
 
 std::string CLOUD_TOPIC;
-std::string EXTRACTOR;
+std::string EXTRACTOR; 
 int IMAGE_WIDTH;
 int IMAGE_HEIGHT;
 int IMAGE_CROP;
