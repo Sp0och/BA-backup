@@ -4,20 +4,6 @@
 #include "helper.h"
 using namespace Eigen;
 
-// void publish_tracked_points (ros::Publisher* publisher, cv::Mat& image, const vector<cv::Point2d>& keypoints,cv::Scalar line_color, int circle_size){
-//     cv::cvtColor(image, image, CV_GRAY2RGB);
-//     for(int i = 0; i < (int)keypoints.size(); i++){
-//         cv::Point2d cur_pt = keypoints[i];
-//         cv::circle(image,cur_pt,circle_size,line_color);
-//         cv::circle(image,cur_pt,2,line_color);
-//     }
-//     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
-//     publisher->publish(msg);
-// }
-
-
-
-
 class KLT {
     public:
     

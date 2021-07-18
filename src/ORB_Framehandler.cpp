@@ -5,10 +5,6 @@ using namespace std;
 //core member methods:
 
 ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
-<<<<<<< HEAD
-        
-=======
->>>>>>> cmake
         std::string config_file;
         M_n_frame.getParam("parameter_file", config_file);
         cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);

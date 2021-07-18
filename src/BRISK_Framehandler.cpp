@@ -3,15 +3,9 @@
 //core member methods:
 
 BRISK_Framehandler::BRISK_Framehandler(int _image_source,int START_POSE){
-<<<<<<< HEAD
-        image_source = _image_source;
-        cur_brisk = nullptr;
-        prev_brisk = nullptr;
-=======
         M_image_source = _image_source;
         M_cur_brisk = nullptr;
         M_prev_brisk = nullptr;
->>>>>>> cmake
 
         std::string config_file;
         M_n_frame.getParam("parameter_file", config_file);

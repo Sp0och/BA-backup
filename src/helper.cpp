@@ -17,23 +17,6 @@ void helper::keypointTransition(vector<cv::KeyPoint>& keypoints_in, vector<cv::P
     }
 }
 
-<<<<<<< HEAD
-template <typename Derived>
-/**
- * Trim a 2D Vector according to a flag vector status
- * */
-static void trimVector(vector<Derived>& v,const vector<bool>& status)
-{
-    int j = 0;
-    for (int i = 0; i < int(v.size()); i++){
-        if (status[i])
-            v[j++] = v[i];
-    }
-    v.resize(j);
-}
-
-=======
->>>>>>> tidying
 /**
  * Trim Eigen Matrix according to flag vector
  * */
