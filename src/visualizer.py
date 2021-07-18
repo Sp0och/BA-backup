@@ -655,7 +655,7 @@ def plot_trajectory(storeBool, extractor):
 if __name__ == "__main__":
 
     prediction_pose = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/prediction_pose_"+file_name+".csv", nrows=file_length)
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + directory + "/prediction_pose_"+file_name+".csv", nrows=file_length)
     prediction_xc = pd.DataFrame.to_numpy(prediction_pose["x"])
     prediction_yc = pd.DataFrame.to_numpy(prediction_pose["y"])
     prediction_zc = pd.DataFrame.to_numpy(prediction_pose["z"])
@@ -664,7 +664,7 @@ if __name__ == "__main__":
     prediction_yawc = pd.DataFrame.to_numpy(prediction_pose["yaw"])
 
     prediction_step = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/prediction_steps_"+file_name+".csv", nrows=file_length)
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + directory + "/prediction_steps_"+file_name+".csv", nrows=file_length)
     prediction_xs = pd.DataFrame.to_numpy(prediction_step["x"])
     prediction_ys = pd.DataFrame.to_numpy(prediction_step["y"])
     prediction_zs = pd.DataFrame.to_numpy(prediction_step["z"])
@@ -673,7 +673,7 @@ if __name__ == "__main__":
     prediction_yaws = pd.DataFrame.to_numpy(prediction_step["yaw"])
 
     GT_steps = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_steps.csv", nrows=file_length
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/output/GT_steps.csv", nrows=file_length
     )
 
     GT_xs = pd.DataFrame.to_numpy(GT_steps["x"])
@@ -684,7 +684,7 @@ if __name__ == "__main__":
     GT_yaws = pd.DataFrame.to_numpy(GT_steps["yaw"])
 
     GT_pose = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/GT_pose.csv", nrows=file_length
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/output/GT_pose.csv", nrows=file_length
     )
 
     GT_xc = pd.DataFrame.to_numpy(GT_pose["x"])
@@ -695,7 +695,7 @@ if __name__ == "__main__":
     GT_yawc = pd.DataFrame.to_numpy(GT_pose["yaw"])
 
     loam_pose_file = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_pose_scan_2_scan.csv", nrows=file_length
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/output/loam_pose_scan_2_scan.csv", nrows=file_length
     )
     loam_xp = pd.DataFrame.to_numpy(loam_pose_file["x"])
     loam_yp = pd.DataFrame.to_numpy(loam_pose_file["y"])
@@ -705,7 +705,7 @@ if __name__ == "__main__":
     loam_yawp = pd.DataFrame.to_numpy(loam_pose_file["yaw"])
 
     loam_file_steps = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_steps_scan_2_scan.csv", nrows=file_length
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/output/loam_steps_scan_2_scan.csv", nrows=file_length
     )
 
     loam_xs = pd.DataFrame.to_numpy(loam_file_steps["x"])
@@ -716,7 +716,7 @@ if __name__ == "__main__":
     loam_yaws = pd.DataFrame.to_numpy(loam_file_steps["yaw"])
 
     loam_map_file = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_pose_scan_2_map.csv", nrows=file_length
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/output/loam_pose_scan_2_map.csv", nrows=file_length
     )
     loam_map_xp = pd.DataFrame.to_numpy(loam_map_file["x"])
     loam_map_yp = pd.DataFrame.to_numpy(loam_map_file["y"])
@@ -726,7 +726,7 @@ if __name__ == "__main__":
     loam_map_yawp = pd.DataFrame.to_numpy(loam_map_file["yaw"])
 
     loam_map_steps = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/output/loam_steps_scan_2_map.csv", nrows=file_length
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/output/loam_steps_scan_2_map.csv", nrows=file_length
     )
 
     loam_map_xs = pd.DataFrame.to_numpy(loam_map_steps["x"])
@@ -737,7 +737,7 @@ if __name__ == "__main__":
     loam_map_yaws = pd.DataFrame.to_numpy(loam_map_steps["yaw"])
 
     feature_number_file = pd.read_csv(
-        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + directory + "/feature_number_"+file_name+".csv", nrows=file_length
+        "/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + directory + "/feature_number_"+file_name+".csv", nrows=file_length
     )
 
     feature_number = pd.DataFrame.to_numpy(

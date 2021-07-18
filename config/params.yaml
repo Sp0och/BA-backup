@@ -1,7 +1,7 @@
 %YAML:1.0
 
 # Project
-project_name: "descriptor_and_image"
+project_name: "image_and_descriptor"
 
 # Source setup
 cloud_topic: "points_raw"                     # point cloud input topic

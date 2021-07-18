@@ -2,7 +2,7 @@
 <package format="2">
   <name>image_and_descriptor</name>
   <version>0.0.0</version>
-  <description>The descriptor_and_image package</description>
+  <description>The image_and_descriptor package</description>
 
   <maintainer email="fierz@todo.todo">fierz</maintainer>
   <license>TODO</license>

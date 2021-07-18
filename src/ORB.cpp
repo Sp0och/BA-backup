@@ -1,5 +1,5 @@
 #include "image_and_descriptor/ORB.h"
-#include "helper.cpp"
+#include "image_and_descriptor/helper.h"
 //Member functions:
 
 ORB::ORB(const cv::Mat &_input_image, const pcl::PointCloud<PointType>::Ptr _cloud,
@@ -40,26 +40,26 @@ void ORB::create_descriptors(){
         cv::Ptr<cv::ORB> detector = cv::ORB::create(M_NUM_ORB_FEATURES, M_SCALE_FACTOR, M_LEVELS, M_ORB_ACCURACY/* ,0,2,cv::ORB::HARRIS_SCORE,31,20 */);
         //store keypoints in orb_keypoints
         detector->detect(image,orb_keypoints,MASK);
-        keypointTransition(orb_keypoints,orb_keypoints_2d);
+        helper::keypointTransition(orb_keypoints,orb_keypoints_2d);
         // cout << "orb size after extraction: " << orb_keypoints_2d.size() << " " << endl;
         get_3D_data();
         // cout << "orb size after min distance filtering: " << orb_keypoints_2d.size() << " " << endl;
-        publish_keypoints(&M_pub_3D, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+        helper::publish_keypoints(&M_pub_3D, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
         if(APPLY_DUPLICATE_FILTERING){
             duplicate_filtering();
             // cout << "orb size after duplicate filtering: " << orb_keypoints_2d.size() << " " << endl;
-            publish_keypoints(&M_dupl_publisher, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+            helper::publish_keypoints(&M_dupl_publisher, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
         }
         //Create descriptors
         detector->compute(image,orb_keypoints,orb_descriptors);
         
         // publishing the keypoints on whatever image type they are
         if(M_image_source == 1)
-        publish_keypoints(&M_KP_pub_intensity, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+        helper::publish_keypoints(&M_KP_pub_intensity, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
         else if(M_image_source == 2)
-        publish_keypoints(&M_KP_pub_range, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+        helper::publish_keypoints(&M_KP_pub_range, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
         else
-        publish_keypoints(&M_KP_pub_ambient, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+        helper::publish_keypoints(&M_KP_pub_ambient, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
 
     }
 /**
@@ -86,9 +86,9 @@ void ORB::get_3D_data(){
             orb_points_3d[i] = p_3d;
         }
         
-        trimVector(orb_points_3d,status);
-        trimVector(orb_keypoints_2d,status);
-        trimVector(orb_keypoints,status);
+        helper::trimVector(orb_points_3d,status);
+        helper::trimVector(orb_keypoints_2d,status);
+        helper::trimVector(orb_keypoints,status);
     }
 
 void ORB::duplicate_filtering(){
@@ -105,8 +105,8 @@ void ORB::duplicate_filtering(){
             duplicate_status.push_back(0);
         }
     }
-    trimVector(orb_keypoints_2d,duplicate_status);
-    trimVector(orb_keypoints,duplicate_status);
-    trimVector(orb_points_3d,duplicate_status);
+    helper::trimVector(orb_keypoints_2d,duplicate_status);
+    helper::trimVector(orb_keypoints,duplicate_status);
+    helper::trimVector(orb_points_3d,duplicate_status);
 }
 
