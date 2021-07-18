@@ -112,10 +112,6 @@ void helper::filtering_3D(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, v
     helper::trimVector(prev,distance_flag);
 }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> tidying
 /**
  * Apply RANSAC filtering to the point clouds using the find Homography method
  * */

@@ -77,19 +77,13 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         M_prev_image = input_image.clone();
         M_prev_cloud = _cloud;
 
-<<<<<<< HEAD
         cv::goodFeaturesToTrack(prev_image,prev_corners,MAX_KLT_FEATURES,QUALITY_LEVEL,MIN_KLT_DETECTION_DISTANCE,MASK,BLOCKSIZE,USE_HARRIS,0.04);
 
         get_3D_points(prev_corners,prev_3D_points,prev_cloud);
-=======
         cv::goodFeaturesToTrack(M_prev_image,M_prev_corners,M_MAX_KLT_FEATURES,M_QUALITY_LEVEL,M_MIN_KLT_DETECTION_DISTANCE,MASK,M_BLOCKSIZE,M_USE_HARRIS,0.04);
 
-<<<<<<< HEAD
         get_3D_points(M_prev_corners,M_prev_3D_points,M_prev_cloud);
->>>>>>> cmake
-=======
         Helper->get_3D_points(M_prev_corners,M_prev_3D_points,M_prev_cloud);
->>>>>>> tidying
 
         publish_extraction(&M_extraction_publisher,M_prev_image,M_prev_corners,cv::Scalar(0,255,0),1);
 
@@ -119,7 +113,6 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         Helper->trimVector(M_prev_corners,status);
         Helper->trim_matrix(M_prev_3D_points,status);
         
-<<<<<<< HEAD
         // publish_tracking_2F(&match_publisher,cur_image,prev_image,cur_corners,prev_corners,2);
 
         //Filtering
@@ -129,7 +122,6 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         }
         if(APPLY_DISTANCE_FILTERING){
             filtering_3D_f(cur_3D_points,prev_3D_points,cur_corners,prev_corners);
-=======
         // publish_tracking_2F(&match_publisher,M_cur_image,M_prev_image,M_cur_corners,M_prev_corners,2);
 
         //Filtering
@@ -138,12 +130,8 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
             // publish_tracking(&ransac_publisher,M_cur_image,M_cur_corners,M_prev_corners,2);
         }
         if(APPLY_DISTANCE_FILTERING){
-<<<<<<< HEAD
             filtering_3D_f(M_cur_3D_points,M_prev_3D_points,M_cur_corners,M_prev_corners);
->>>>>>> cmake
-=======
             Helper->filtering_3D_f(M_cur_3D_points,M_prev_3D_points,M_cur_corners,M_prev_corners);
->>>>>>> tidying
         }
 
         //visualization
@@ -183,7 +171,6 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         M_prev_3D_points = M_cur_3D_points;
         if(M_prev_corners.size()<M_MIN_KLT_FEATURES){
             std::cout << "GET NEW CORNERS" << std::endl;
-<<<<<<< HEAD
             // std::cout << "size_before" << prev_corners.size() << " " <<::endl;
             cv::goodFeaturesToTrack(prev_image,prev_corners,MAX_KLT_FEATURES,QUALITY_LEVEL,MIN_KLT_DETECTION_DISTANCE,MASK,BLOCKSIZE,USE_HARRIS,0.04);
             get_3D_points(prev_corners,prev_3D_points,prev_cloud);
@@ -192,13 +179,11 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
         }
         else{
             // std::cout << "All Goodie" << std::endl;
-=======
             // std::cout << "size_before" << M_prev_corners.size() << " " <<::endl;
             cv::goodFeaturesToTrack(M_prev_image,M_prev_corners,M_MAX_KLT_FEATURES,M_QUALITY_LEVEL,M_MIN_KLT_DETECTION_DISTANCE,MASK,M_BLOCKSIZE,M_USE_HARRIS,0.04);
             Helper->get_3D_points(M_prev_corners,M_prev_3D_points,M_prev_cloud);
             // std::cout << "size_after" << M_prev_corners.size() << " " <<::endl;
             publish_extraction(&M_extraction_publisher,M_prev_image,M_prev_corners,cv::Scalar(0,255,0),1);
->>>>>>> cmake
         }
     }
 }
