@@ -5,7 +5,6 @@ typedef pcl::PointCloud<pcl::PointXYZ> PointCloud;
 
 namespace helper{
 
-
     //Conversion and Trimming
 
     static void keypointTransition(vector<cv::KeyPoint>& keypoints_in, vector<cv::Point2d>& points_in);
