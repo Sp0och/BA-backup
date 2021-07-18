@@ -1,6 +1,7 @@
 
 #pragma once
 #include "setup.h"
+#include "helper.h"
 #include "ORB.h"
 
 using namespace Eigen;
@@ -78,5 +79,7 @@ class ORB_Framehandler{
 
     std::string M_FILE_PATH;
     std::string M_DIRECTORY;
+    
+    helper* Helper;
 
 };

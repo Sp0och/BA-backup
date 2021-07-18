@@ -1,5 +1,4 @@
 #include "image_and_descriptor/ORB.h"
-#include "image_and_descriptor/helper.h"
 //Member functions:
 
 ORB::ORB(const cv::Mat &_input_image, const pcl::PointCloud<PointType>::Ptr _cloud,
@@ -18,6 +17,8 @@ ORB::ORB(const cv::Mat &_input_image, const pcl::PointCloud<PointType>::Ptr _clo
             fsSettings["scale_factor"] >> M_SCALE_FACTOR;
             fsSettings["levels"] >> M_LEVELS;
 
+            Helper = new helper();
+
             input_image = _input_image.clone();
             cv::resize(input_image, image, cv::Size(), 1, 1);
             //image for framehandler 
@@ -34,32 +35,34 @@ ORB::ORB(const cv::Mat &_input_image, const pcl::PointCloud<PointType>::Ptr _clo
             else
             M_KP_pub_ambient = M_n.advertise<sensor_msgs::Image>("orb_keypoints_ambient", 1);
             create_descriptors();
+            delete Helper;
+            Helper = nullptr;
         }
 
 void ORB::create_descriptors(){
         cv::Ptr<cv::ORB> detector = cv::ORB::create(M_NUM_ORB_FEATURES, M_SCALE_FACTOR, M_LEVELS, M_ORB_ACCURACY/* ,0,2,cv::ORB::HARRIS_SCORE,31,20 */);
         //store keypoints in orb_keypoints
         detector->detect(image,orb_keypoints,MASK);
-        helper::keypointTransition(orb_keypoints,orb_keypoints_2d);
+        Helper->keypointTransition(orb_keypoints,orb_keypoints_2d);
         // cout << "orb size after extraction: " << orb_keypoints_2d.size() << " " << endl;
         get_3D_data();
         // cout << "orb size after min distance filtering: " << orb_keypoints_2d.size() << " " << endl;
-        helper::publish_keypoints(&M_pub_3D, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+        Helper->publish_keypoints(&M_pub_3D, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
         if(APPLY_DUPLICATE_FILTERING){
             duplicate_filtering();
             // cout << "orb size after duplicate filtering: " << orb_keypoints_2d.size() << " " << endl;
-            helper::publish_keypoints(&M_dupl_publisher, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+            Helper->publish_keypoints(&M_dupl_publisher, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
         }
         //Create descriptors
         detector->compute(image,orb_keypoints,orb_descriptors);
         
         // publishing the keypoints on whatever image type they are
         if(M_image_source == 1)
-        helper::publish_keypoints(&M_KP_pub_intensity, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+        Helper->publish_keypoints(&M_KP_pub_intensity, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
         else if(M_image_source == 2)
-        helper::publish_keypoints(&M_KP_pub_range, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+        Helper->publish_keypoints(&M_KP_pub_range, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
         else
-        helper::publish_keypoints(&M_KP_pub_ambient, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+        Helper->publish_keypoints(&M_KP_pub_ambient, image,orb_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
 
     }
 /**
@@ -86,9 +89,9 @@ void ORB::get_3D_data(){
             orb_points_3d[i] = p_3d;
         }
         
-        helper::trimVector(orb_points_3d,status);
-        helper::trimVector(orb_keypoints_2d,status);
-        helper::trimVector(orb_keypoints,status);
+        Helper->trimVector(orb_points_3d,status);
+        Helper->trimVector(orb_keypoints_2d,status);
+        Helper->trimVector(orb_keypoints,status);
     }
 
 void ORB::duplicate_filtering(){
@@ -105,8 +108,8 @@ void ORB::duplicate_filtering(){
             duplicate_status.push_back(0);
         }
     }
-    helper::trimVector(orb_keypoints_2d,duplicate_status);
-    helper::trimVector(orb_keypoints,duplicate_status);
-    helper::trimVector(orb_points_3d,duplicate_status);
+    Helper->trimVector(orb_keypoints_2d,duplicate_status);
+    Helper->trimVector(orb_keypoints,duplicate_status);
+    Helper->trimVector(orb_points_3d,duplicate_status);
 }
 

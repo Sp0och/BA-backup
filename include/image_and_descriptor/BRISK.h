@@ -1,5 +1,6 @@
 #pragma once
 #include "setup.h"
+#include "helper.h"
 
 class BRISK
 {
@@ -47,6 +48,7 @@ class BRISK
     int M_OCTAVES;
     float M_PATTERN_SCALE;
 
+    helper* Helper;
 };
 
 

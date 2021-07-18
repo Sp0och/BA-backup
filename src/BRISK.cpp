@@ -1,5 +1,4 @@
 #include "image_and_descriptor/BRISK.h"
-#include "image_and_descriptor/helper.h"
 
 //Member functions:
 
@@ -20,6 +19,8 @@ BRISK::BRISK(const cv::Mat &_input_image,
         fsSettings["octaves"] >> M_OCTAVES;
         fsSettings["pattern_scale"] >> M_PATTERN_SCALE;
 
+        Helper = new helper();
+
         input_image = _input_image.clone();
         cv::resize(input_image, image, cv::Size(), 1, 1);
         cv::resize(input_image, input_image, cv::Size(), 1, 1);
@@ -36,31 +37,33 @@ BRISK::BRISK(const cv::Mat &_input_image,
         M_KP_pub_ambient = M_n.advertise<sensor_msgs::Image>("brisk_keypoints_ambient", 1);
 
         create_descriptors();
+        delete Helper;
+        Helper = nullptr;
 }
 
 void BRISK::create_descriptors(){
     static cv::Ptr<cv::BRISK> detector = cv::BRISK::create(M_BRISK_THRESHOLD,M_OCTAVES,M_PATTERN_SCALE);
     
     detector->detect(image,brisk_keypoints,MASK);
-    helper::keypointTransition(brisk_keypoints,brisk_keypoints_2d);
+    Helper->keypointTransition(brisk_keypoints,brisk_keypoints_2d);
     get_3D_data();
 
-    helper::publish_keypoints(&M_pub_3D, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+    Helper->publish_keypoints(&M_pub_3D, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
     
     if(APPLY_DUPLICATE_FILTERING){
         duplicate_filtering();
-        helper::publish_keypoints(&M_dupl_publisher, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+        Helper->publish_keypoints(&M_dupl_publisher, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
     }
     detector->compute(image,brisk_keypoints,brisk_descriptors);
 
 
 
     if(M_image_source == 1)
-    helper::publish_keypoints(&M_KP_pub_intensity, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+    Helper->publish_keypoints(&M_KP_pub_intensity, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
     else if(M_image_source == 2)
-    helper::publish_keypoints(&M_KP_pub_range, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+    Helper->publish_keypoints(&M_KP_pub_range, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
     else
-    helper::publish_keypoints(&M_KP_pub_ambient, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
+    Helper->publish_keypoints(&M_KP_pub_ambient, image,brisk_keypoints_2d,1,cv::Scalar(0,255,0),M_image_source);
 
 }
 
@@ -82,9 +85,9 @@ void BRISK::get_3D_data(){
             
         brisk_points_3d[i] = p_3d;
     }
-    helper::trimVector(brisk_points_3d,status);
-    helper::trimVector(brisk_keypoints_2d,status);
-    helper::trimVector(brisk_keypoints,status);
+    Helper->trimVector(brisk_points_3d,status);
+    Helper->trimVector(brisk_keypoints_2d,status);
+    Helper->trimVector(brisk_keypoints,status);
 }
 
 void BRISK::duplicate_filtering(){
@@ -101,9 +104,9 @@ void BRISK::duplicate_filtering(){
                 duplicate_status.push_back(0);
             }
         }
-        helper::trimVector(brisk_keypoints_2d,duplicate_status);
-        helper::trimVector(brisk_keypoints,duplicate_status);
-        helper::trimVector(brisk_points_3d,duplicate_status);
+        Helper->trimVector(brisk_keypoints_2d,duplicate_status);
+        Helper->trimVector(brisk_keypoints,duplicate_status);
+        Helper->trimVector(brisk_points_3d,duplicate_status);
     }
 
 

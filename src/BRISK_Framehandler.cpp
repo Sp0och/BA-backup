@@ -1,5 +1,4 @@
 #include "image_and_descriptor/BRISK_Framehandler.h"
-#include "image_and_descriptor/helper.h"
 
 //core member methods:
 
@@ -21,6 +20,7 @@ BRISK_Framehandler::BRISK_Framehandler(int _image_source,int START_POSE){
         fsSettings["brisk_file_path"] >> M_FILE_PATH;
         fsSettings["directory"] >> M_DIRECTORY;
 
+        Helper = new helper();
 
         if(START_POSE == 0){
             M_my_pose << 1,0,0,0,
@@ -125,12 +125,12 @@ void BRISK_Framehandler::matches_filtering_motion(){
         
         cout << "right after matching: " << prev_SVD.cols() << " " << endl;
         if(APPLY_RANSAC_FILTERING){
-            helper::RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
+            Helper->RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
             publish_matches_2F(&M_ransac_publisher,sorted_2d_cur,sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,1);
             cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         }
         if(APPLY_DISTANCE_FILTERING){
-            helper::filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
+            Helper->filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
             cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
         }
 
@@ -344,9 +344,9 @@ void BRISK_Framehandler::publish_odom(){
 //member visualization functions
 
 void BRISK_Framehandler::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD){
-        helper::publish_3D_keypoints(cur_SVD, &M_kp_pc_publisher_cur, M_raw_time);
-        helper::publish_3D_keypoints(prev_SVD, &M_kp_pc_publisher_prev, M_raw_time);
-        helper::publish_lines_3D(cur_SVD, prev_SVD, &M_line_publisher, M_raw_time);
+        Helper->publish_3D_keypoints(cur_SVD, &M_kp_pc_publisher_cur, M_raw_time);
+        Helper->publish_3D_keypoints(prev_SVD, &M_kp_pc_publisher_prev, M_raw_time);
+        Helper->publish_lines_3D(cur_SVD, prev_SVD, &M_line_publisher, M_raw_time);
 }
 
 void BRISK_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 

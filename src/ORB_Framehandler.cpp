@@ -1,5 +1,4 @@
 #include "image_and_descriptor/ORB_Framehandler.h"
-#include "image_and_descriptor/helper.h"
 
 using namespace std;
 
@@ -21,6 +20,8 @@ ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
         fsSettings["directory"] >> M_DIRECTORY;
 
         M_image_source = _image_source;
+
+        Helper = new helper();
 
         M_POINT_COLOR = cv::Scalar(255,0,0);
         M_LINE_COLOR = cv::Scalar(255,0,0);
@@ -131,7 +132,7 @@ void ORB_Framehandler::matches_filtering_motion(){
         // cout << "right after matching: " << prev_SVD.cols() << " " << endl;
         
         if(APPLY_RANSAC_FILTERING){
-            helper::RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
+            Helper->RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
             publish_matches_2F(&M_ransac_publisher, sorted_2d_cur, sorted_2d_prev,2,M_POINT_COLOR,M_LINE_COLOR,true);
             // cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         }
@@ -139,7 +140,7 @@ void ORB_Framehandler::matches_filtering_motion(){
         visualizer_3D(cur_SVD,prev_SVD,&M_pc_distance_publisher_c,&M_pc_distance_publisher_p,&M_line_distance_publisher);
         
         if(APPLY_DISTANCE_FILTERING){
-            helper::filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
+            Helper->filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
             // cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
         }
 
@@ -363,9 +364,9 @@ void ORB_Framehandler::publish_odom(){
 //member visualization functions
 
 void ORB_Framehandler::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD,ros::Publisher* cur_publisher,ros::Publisher* prev_publisher,ros::Publisher* line_publisher){
-        helper::publish_3D_keypoints(cur_SVD, cur_publisher, M_raw_time);
-        helper::publish_3D_keypoints(prev_SVD, prev_publisher, M_raw_time);
-        helper::publish_lines_3D(cur_SVD, prev_SVD, line_publisher, M_raw_time);
+        Helper->publish_3D_keypoints(cur_SVD, cur_publisher, M_raw_time);
+        Helper->publish_3D_keypoints(prev_SVD, prev_publisher, M_raw_time);
+        Helper->publish_lines_3D(cur_SVD, prev_SVD, line_publisher, M_raw_time);
 }
 
 void ORB_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
