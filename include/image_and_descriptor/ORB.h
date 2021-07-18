@@ -2,6 +2,7 @@
 #pragma once
 
 #include "setup.h"
+#include "helper.h"
 
 class ORB
 {
@@ -49,4 +50,5 @@ class ORB
     int M_LEVELS;
     ros::Time M_RAW_TIME;
 
+    helper* Helper;
 };

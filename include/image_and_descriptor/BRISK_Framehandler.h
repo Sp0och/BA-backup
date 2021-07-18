@@ -1,6 +1,7 @@
 
 #pragma once
 #include "setup.h"
+#include "helper.h"
 #include "BRISK.h"
 
 using namespace Eigen;
@@ -68,5 +69,7 @@ class BRISK_Framehandler{
     int M_BRISK_THRESHOLD;
     int M_OCTAVES;
     float M_PATTERN_SCALE;
+
+    helper* Helper;
 
 };

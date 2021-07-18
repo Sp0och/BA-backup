@@ -1,10 +1,10 @@
-#include "package_BA_LF/setup.h"
-#include "package_BA_LF/ImageHandler.h"
-#include "package_BA_LF/ORB.h"
-#include "package_BA_LF/ORB_Framehandler.h"
-#include "package_BA_LF/BRISK_Framehandler.h"
-#include "package_BA_LF/KLT.h"
-#include "package_BA_LF/BRISK.h"
+#include "image_and_descriptor/setup.h"
+#include "image_and_descriptor/ImageHandler.h"
+#include "image_and_descriptor/ORB.h"
+#include "image_and_descriptor/ORB_Framehandler.h"
+#include "image_and_descriptor/BRISK_Framehandler.h"
+#include "image_and_descriptor/KLT.h"
+#include "image_and_descriptor/BRISK.h"
 
 
 std::string CLOUD_TOPIC;
@@ -40,8 +40,6 @@ int min_distance_filtered_count;
 int COUNT;
 
 pcl::PointCloud<PointType>::Ptr cloud_traj(new pcl::PointCloud<PointType>());
-
-
 
 ImageHandler *image_handler;
 ORB_Framehandler *orb_frame_handler;

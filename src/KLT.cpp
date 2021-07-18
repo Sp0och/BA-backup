@@ -1,15 +1,10 @@
-#include "package_BA_LF/KLT.h"
-#include "helper.cpp"
+#include "image_and_descriptor/KLT.h"
 
 //class core
 
 KLT::KLT(int _image_source,int START_POSE){
 
-<<<<<<< HEAD
-        image_source = _image_source;
-=======
         M_image_source = _image_source;
->>>>>>> cmake
 
         std::string config_file;
         M_n_KLT.getParam("parameter_file", config_file);
@@ -32,6 +27,8 @@ KLT::KLT(int _image_source,int START_POSE){
         //storage
         fsSettings["directory"] >> M_DIRECTORY;
         fsSettings["klt_file_path"] >> M_FILE_PATH;
+
+        Helper = new helper();
 
         M_prev_corners.resize(M_MAX_KLT_FEATURES);
         M_cur_corners.resize(M_MAX_KLT_FEATURES);
@@ -87,8 +84,12 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
 =======
         cv::goodFeaturesToTrack(M_prev_image,M_prev_corners,M_MAX_KLT_FEATURES,M_QUALITY_LEVEL,M_MIN_KLT_DETECTION_DISTANCE,MASK,M_BLOCKSIZE,M_USE_HARRIS,0.04);
 
+<<<<<<< HEAD
         get_3D_points(M_prev_corners,M_prev_3D_points,M_prev_cloud);
 >>>>>>> cmake
+=======
+        Helper->get_3D_points(M_prev_corners,M_prev_3D_points,M_prev_cloud);
+>>>>>>> tidying
 
         publish_extraction(&M_extraction_publisher,M_prev_image,M_prev_corners,cv::Scalar(0,255,0),1);
 
@@ -114,9 +115,9 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
             if(stat.at(i) == 0 || M_cur_corners.at(i).x < IMAGE_CROP || M_cur_corners.at(i).x > IMAGE_WIDTH-IMAGE_CROP/2 || M_cur_corners.at(i).y >127)
             status.at(i) = 0;
         }
-        get_3D_points_adapt_status(M_cur_corners,M_cur_3D_points,M_cur_cloud,status);
-        trimVector(M_prev_corners,status);
-        trim_matrix(M_prev_3D_points,status);
+        Helper->get_3D_points_adapt_status(M_cur_corners,M_cur_3D_points,M_cur_cloud,status);
+        Helper->trimVector(M_prev_corners,status);
+        Helper->trim_matrix(M_prev_3D_points,status);
         
 <<<<<<< HEAD
         // publish_tracking_2F(&match_publisher,cur_image,prev_image,cur_corners,prev_corners,2);
@@ -133,12 +134,16 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
 
         //Filtering
         if(APPLY_RANSAC_FILTERING){
-            RANSAC_filtering_f(M_cur_corners,M_prev_corners,M_cur_3D_points,M_prev_3D_points);
+            Helper->RANSAC_filtering_f(M_cur_corners,M_prev_corners,M_cur_3D_points,M_prev_3D_points);
             // publish_tracking(&ransac_publisher,M_cur_image,M_cur_corners,M_prev_corners,2);
         }
         if(APPLY_DISTANCE_FILTERING){
+<<<<<<< HEAD
             filtering_3D_f(M_cur_3D_points,M_prev_3D_points,M_cur_corners,M_prev_corners);
 >>>>>>> cmake
+=======
+            Helper->filtering_3D_f(M_cur_3D_points,M_prev_3D_points,M_cur_corners,M_prev_corners);
+>>>>>>> tidying
         }
 
         //visualization
@@ -190,7 +195,7 @@ void KLT::KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointTy
 =======
             // std::cout << "size_before" << M_prev_corners.size() << " " <<::endl;
             cv::goodFeaturesToTrack(M_prev_image,M_prev_corners,M_MAX_KLT_FEATURES,M_QUALITY_LEVEL,M_MIN_KLT_DETECTION_DISTANCE,MASK,M_BLOCKSIZE,M_USE_HARRIS,0.04);
-            get_3D_points(M_prev_corners,M_prev_3D_points,M_prev_cloud);
+            Helper->get_3D_points(M_prev_corners,M_prev_3D_points,M_prev_cloud);
             // std::cout << "size_after" << M_prev_corners.size() << " " <<::endl;
             publish_extraction(&M_extraction_publisher,M_prev_image,M_prev_corners,cv::Scalar(0,255,0),1);
 >>>>>>> cmake
@@ -286,9 +291,9 @@ void KLT::publish_tracking_2F(ros::Publisher* publisher, const cv::Mat& M_cur_im
 
 
 void KLT::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD){
-        publish_3D_keypoints(cur_SVD, &M_kp_pc_publisher_cur, M_raw_time);
-        publish_3D_keypoints(prev_SVD, &M_kp_pc_publisher_prev, M_raw_time);
-        publish_lines_3D(cur_SVD, prev_SVD, &M_line_publisher, M_raw_time);
+        Helper->publish_3D_keypoints(cur_SVD, &M_kp_pc_publisher_cur, M_raw_time);
+        Helper->publish_3D_keypoints(prev_SVD, &M_kp_pc_publisher_prev, M_raw_time);
+        Helper->publish_lines_3D(cur_SVD, prev_SVD, &M_line_publisher, M_raw_time);
 }
 
 void KLT::publish_tf(){
@@ -322,7 +327,7 @@ void KLT::publish_tf(){
 //plotting functions
 
 void KLT::store_feature_number(const MatrixXd& cur_SVD){
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/feature_number_"+ M_FILE_PATH + ".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/feature_number_"+ M_FILE_PATH + ".csv",ios_base::app);
     OUT << cur_SVD.cols() << "," << M_raw_time <<  endl;
     OUT.close(); 
 }
@@ -359,16 +364,16 @@ void KLT::set_plotting_columns_and_start_pose(){
         
     string Param = to_string(M_CRITERIA_REPS);
 
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_pose_"+ M_FILE_PATH + ".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_pose_"+ M_FILE_PATH + ".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT << M_my_pose(0,3) << "," << M_my_pose(1,3) << "," << M_my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << M_raw_time << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_steps_"+ M_FILE_PATH + ".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_steps_"+ M_FILE_PATH + ".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/feature_number_"+ M_FILE_PATH + ".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/feature_number_"+ M_FILE_PATH + ".csv",ios_base::app);
     OUT << "num_of_features" "," << "time" << endl;
     OUT.close(); 
 }
@@ -405,7 +410,7 @@ void KLT::store_coordinates(const Vector3d& t, const Matrix3d& R){
             ea = e1;
         else
             ea = e2;
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_steps_"+ M_FILE_PATH + ".csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_steps_"+ M_FILE_PATH + ".csv",ios_base::app);
         OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << M_raw_time <<  endl;
         OUT.close(); 
 
@@ -438,7 +443,7 @@ void KLT::store_coordinates(const Vector3d& t, const Matrix3d& R){
         else
             eac = e2c;
         
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_pose_"+ M_FILE_PATH + ".csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_pose_"+ M_FILE_PATH + ".csv",ios_base::app);
         OUT << M_my_pose(0,3) << "," << M_my_pose(1,3) << "," << M_my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << M_raw_time << endl;
         OUT.close();
     }

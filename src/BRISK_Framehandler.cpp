@@ -1,5 +1,4 @@
-#include "package_BA_LF/BRISK_Framehandler.h"
-#include "helper.cpp"
+#include "image_and_descriptor/BRISK_Framehandler.h"
 
 //core member methods:
 
@@ -27,6 +26,7 @@ BRISK_Framehandler::BRISK_Framehandler(int _image_source,int START_POSE){
         fsSettings["brisk_file_path"] >> M_FILE_PATH;
         fsSettings["directory"] >> M_DIRECTORY;
 
+        Helper = new helper();
 
         if(START_POSE == 0){
             M_my_pose << 1,0,0,0,
@@ -137,12 +137,12 @@ void BRISK_Framehandler::matches_filtering_motion(){
         
         cout << "right after matching: " << prev_SVD.cols() << " " << endl;
         if(APPLY_RANSAC_FILTERING){
-            RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
+            Helper->RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
             publish_matches_2F(&M_ransac_publisher,sorted_2d_cur,sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,1);
             cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         }
         if(APPLY_DISTANCE_FILTERING){
-            filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
+            Helper->filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
             cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
         }
 
@@ -217,16 +217,16 @@ void BRISK_Framehandler::set_plotting_columns_and_start_pose(){
         
     string Param = to_string(M_OCTAVES);
 
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_pose_" + M_FILE_PATH + ".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_pose_" + M_FILE_PATH + ".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT << M_my_pose(0,3) << "," << M_my_pose(1,3) << "," << M_my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << M_raw_time << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_steps_" + M_FILE_PATH + ".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_steps_" + M_FILE_PATH + ".csv",ios_base::app);
     OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
     OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/feature_number_" + M_FILE_PATH + ".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/feature_number_" + M_FILE_PATH + ".csv",ios_base::app);
     OUT << "num_of_features" "," << "time" << endl;
     OUT.close(); 
 }
@@ -263,7 +263,7 @@ void BRISK_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R)
             ea = e1;
         else
             ea = e2;
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_steps_" + M_FILE_PATH + ".csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_steps_" + M_FILE_PATH + ".csv",ios_base::app);
         OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << M_raw_time <<  endl;
         OUT.close(); 
 
@@ -298,13 +298,13 @@ void BRISK_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R)
         else
             eac = e2c;
         
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/prediction_pose_" + M_FILE_PATH + ".csv",ios_base::app);
+        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_pose_" + M_FILE_PATH + ".csv",ios_base::app);
         OUT << M_my_pose(0,3) << "," << M_my_pose(1,3) << "," << M_my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << M_raw_time << endl;
         OUT.close();
     }
 
 void BRISK_Framehandler::store_feature_number(const MatrixXd& cur_SVD){
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/descriptor_and_image/" + M_DIRECTORY + "/feature_number_" + M_FILE_PATH + ".csv",ios_base::app);
+    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/feature_number_" + M_FILE_PATH + ".csv",ios_base::app);
     OUT << cur_SVD.cols() << "," << M_raw_time <<  endl;
     OUT.close(); 
 }
@@ -360,9 +360,9 @@ void BRISK_Framehandler::publish_odom(){
 //member visualization functions
 
 void BRISK_Framehandler::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD){
-        publish_3D_keypoints(cur_SVD, &M_kp_pc_publisher_cur, M_raw_time);
-        publish_3D_keypoints(prev_SVD, &M_kp_pc_publisher_prev, M_raw_time);
-        publish_lines_3D(cur_SVD, prev_SVD, &M_line_publisher, M_raw_time);
+        Helper->publish_3D_keypoints(cur_SVD, &M_kp_pc_publisher_cur, M_raw_time);
+        Helper->publish_3D_keypoints(prev_SVD, &M_kp_pc_publisher_prev, M_raw_time);
+        Helper->publish_lines_3D(cur_SVD, prev_SVD, &M_line_publisher, M_raw_time);
 }
 
 void BRISK_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 

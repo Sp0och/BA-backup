@@ -1,6 +1,7 @@
 #pragma once
 
 #include "setup.h"
+#include "helper.h"
 using namespace Eigen;
 
 // void publish_tracked_points (ros::Publisher* publisher, cv::Mat& image, const vector<cv::Point2d>& keypoints,cv::Scalar line_color, int circle_size){
@@ -104,5 +105,10 @@ class KLT {
 
     std::string M_FILE_PATH;
     std::string M_DIRECTORY;
+<<<<<<< HEAD:include/package_BA_LF/KLT.h
 >>>>>>> cmake:include/package_BA_LF/KLT.h
+=======
+
+    helper* Helper;
+>>>>>>> tidying:include/image_and_descriptor/KLT.h
 };
