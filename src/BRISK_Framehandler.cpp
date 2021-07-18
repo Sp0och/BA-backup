@@ -119,15 +119,9 @@ void BRISK_Framehandler::matches_filtering_motion(){
             prev_SVD(1,i) = M_prev_brisk->brisk_points_3d.at(prev_index).y;
             prev_SVD(2,i) = M_prev_brisk->brisk_points_3d.at(prev_index).z;
         }
-<<<<<<< HEAD
-        matches.clear();
-        //Publish matches before RANSAC filtering:
-        publish_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,2,cv::Scalar(0,255,0),1);
-=======
         M_matches.clear();
         //Publish M_matches before any filtering:
         // publish_M_matches_2F(&match_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,1);
->>>>>>> cmake
         
         cout << "right after matching: " << prev_SVD.cols() << " " << endl;
         if(APPLY_RANSAC_FILTERING){
@@ -169,11 +163,7 @@ void BRISK_Framehandler::matches_filtering_motion(){
         // else if(M_image_source == 2)
         // publish_matches_1F(&M_range_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,true);
         // else
-<<<<<<< HEAD
-        // publish_matches_1F(&ambient_publisher, sorted_2d_cur, sorted_2d_prev,2,true);
-=======
         // publish_matches_1F(&M_ambient_publisher, sorted_2d_cur, sorted_2d_prev,cv::Scalar(255,0,0),cv::Scalar(0,255,0),2,true);
->>>>>>> cmake
 
     }
 

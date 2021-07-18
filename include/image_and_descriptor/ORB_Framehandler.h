@@ -53,12 +53,6 @@ class ORB_Framehandler{
     
     private:
 
-<<<<<<< HEAD:include/ORB_Framehandler.h
-    std::shared_ptr<ORB> cur_orb, prev_orb;
-    vector<cv::DMatch> matches; 
-    int image_source;
-    Matrix4d my_pose;
-=======
     std::shared_ptr<ORB> M_cur_orb, M_prev_orb;
     vector<cv::DMatch> M_matches; 
     int M_image_source;
@@ -67,7 +61,6 @@ class ORB_Framehandler{
     int M_unfiltered_count;
     int M_ransac_filtered_count;
     int M_filtered_count;
->>>>>>> cmake:include/package_BA_LF/ORB_Framehandler.h
 
     ros::Time M_raw_time;
 

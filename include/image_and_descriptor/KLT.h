@@ -73,7 +73,6 @@ class KLT {
     int M_BLOCKSIZE;
     int M_MAX_KLT_FEATURES;
     //OpticalFlowPyr
-<<<<<<< HEAD:include/KLT.h
     double EPSILON;
     int CRITERIA_REPS;
     int OPT_SIZE;
@@ -82,7 +81,6 @@ class KLT {
 
     std::string FILE_PATH;
     std::string DIRECTORY;
-=======
     double M_EPSILON;
     int M_CRITERIA_REPS;
     int M_OPT_SIZE;
@@ -91,10 +89,6 @@ class KLT {
 
     std::string M_FILE_PATH;
     std::string M_DIRECTORY;
-<<<<<<< HEAD:include/package_BA_LF/KLT.h
->>>>>>> cmake:include/package_BA_LF/KLT.h
-=======
 
     helper* Helper;
->>>>>>> tidying:include/image_and_descriptor/KLT.h
 };
