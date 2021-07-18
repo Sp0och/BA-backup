@@ -14,7 +14,7 @@ class BRISK_Framehandler{
 
     public:
     //Constructor
-    BRISK_Framehandler(int _image_source,int START_POSE);
+    BRISK_Framehandler(int _image_source);
     //Boundary condition for first iteration and then just calling matches_filtering_motion
     void newIteration(std::shared_ptr<BRISK> new_frame, ros::Time _raw_time);
     /**
@@ -57,8 +57,15 @@ class BRISK_Framehandler{
     vector<cv::DMatch> M_matches; 
     int M_image_source;
     Matrix4d M_my_pose;
+
+    int M_START_POSE;
+    bool M_APPLY_DISTANCE_FILTERING;
+    bool M_APPLY_RANSAC_FILTERING;
+
+    bool M_SHOULD_STORE;
     std::string M_FILE_PATH;
     std::string M_DIRECTORY;
+    ofstream M_OUT;
 
     ros::Time M_raw_time;
 
@@ -66,10 +73,13 @@ class BRISK_Framehandler{
     ros::Publisher M_match_publisher, M_range_publisher, M_ambient_publisher, M_intensity_publisher, 
     M_kp_pc_publisher_cur, M_kp_pc_publisher_prev, M_midpoint_publisher, M_odom_publisher, M_line_publisher,M_ransac_publisher,M_duplicate_publisher;
     
+    cv::Scalar M_POINT_COLOR;
+    cv::Scalar M_LINE_COLOR;
+
     int M_BRISK_THRESHOLD;
     int M_OCTAVES;
     float M_PATTERN_SCALE;
 
-    helper* Helper;
+    helper* M_Helper;
 
 };

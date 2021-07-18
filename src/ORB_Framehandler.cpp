@@ -4,35 +4,44 @@ using namespace std;
 
 //core member methods:
 
-ORB_Framehandler::ORB_Framehandler(int _image_source,int START_POSE){
+ORB_Framehandler::ORB_Framehandler(int _image_source){
         std::string config_file;
         M_n_frame.getParam("parameter_file", config_file);
         cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
         if(!fsSettings.isOpened())
             std::cerr << "ERROR: Wrong path to settings" << std::endl;
         usleep(100);
+        fsSettings["image_width"]  >> M_IMAGE_WIDTH;
+        fsSettings["image_height"] >> M_IMAGE_HEIGHT;
+
         fsSettings["num_orb_features"] >> M_NUM_ORB_FEATURES;
         fsSettings["orb_accuracy"] >> M_ORB_ACCURACY;
         fsSettings["scale_factor"] >> M_SCALE_FACTOR;
         fsSettings["levels"] >> M_LEVELS;
 
+        fsSettings["should_store"] >> M_SHOULD_STORE;
         fsSettings["orb_file_path"] >> M_FILE_PATH;
         fsSettings["directory"] >> M_DIRECTORY;
+        
+        fsSettings["start_pose"] >> M_START_POSE;
+        fsSettings["apply_ransac_filtering"] >> M_APPLY_RANSAC_FILTERING;
+        fsSettings["apply_distance_filtering"] >> M_APPLY_DISTANCE_FILTERING;
+
 
         M_image_source = _image_source;
 
-        Helper = new helper();
+        M_Helper = new helper();
 
         M_POINT_COLOR = cv::Scalar(255,0,0);
-        M_LINE_COLOR = cv::Scalar(255,0,0);
+        M_LINE_COLOR = cv::Scalar(0,255,0);
 
-        if(START_POSE == 0){
+        if(M_START_POSE == 0){
             M_my_pose << 1,0,0,0,
                     0,1,0,0,
                     0,0,1,0,
                     0,0,0,1;
         }
-        else if(START_POSE == 1){
+        else if(M_START_POSE == 1){
             M_my_pose << -0.98877182,  0.14125801,  0.04874899, -0.03791867,
                     -0.14255745, -0.9894887,  -0.02427929, -0.02220684,
                     0.04480693, -0.03095621,  0.99851592, -0.01088667,
@@ -73,7 +82,7 @@ void ORB_Framehandler::newIteration(const std::shared_ptr<ORB> new_frame, ros::T
             M_cur_orb = new_frame;
             //Set up plot files, store the inital pose and feature num and publish the transform of the first frame
             publish_tf();
-            if(SHOULD_STORE)
+            if(M_SHOULD_STORE)
             set_plotting_columns_and_start_pose();
         }
         else{
@@ -131,20 +140,20 @@ void ORB_Framehandler::matches_filtering_motion(){
         publish_matches_2F(&M_match_publisher, sorted_2d_cur, sorted_2d_prev,2,M_POINT_COLOR,M_LINE_COLOR,true);
         // cout << "right after matching: " << prev_SVD.cols() << " " << endl;
         
-        if(APPLY_RANSAC_FILTERING){
-            Helper->RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
+        if(M_APPLY_RANSAC_FILTERING){
+            M_Helper->RANSAC_filtering(sorted_2d_cur,sorted_2d_prev,cur_SVD,prev_SVD);
             publish_matches_2F(&M_ransac_publisher, sorted_2d_cur, sorted_2d_prev,2,M_POINT_COLOR,M_LINE_COLOR,true);
             // cout << "size after RANSAC: " << prev_SVD.cols() << " "<< endl;
         }
 
         visualizer_3D(cur_SVD,prev_SVD,&M_pc_distance_publisher_c,&M_pc_distance_publisher_p,&M_line_distance_publisher);
         
-        if(APPLY_DISTANCE_FILTERING){
-            Helper->filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
+        if(M_APPLY_DISTANCE_FILTERING){
+            M_Helper->filtering_3D(cur_SVD,prev_SVD, sorted_2d_cur, sorted_2d_prev);
             // cout << "size after distance filtering: " << prev_SVD.cols() << " "<< endl;
         }
 
-        if(SHOULD_STORE)
+        if(M_SHOULD_STORE)
         store_feature_number(cur_SVD);
 
         visualizer_3D(cur_SVD,prev_SVD,&M_kp_pc_publisher_cur,&M_kp_pc_publisher_prev,&M_line_publisher);
@@ -211,27 +220,22 @@ void ORB_Framehandler::set_plotting_columns_and_start_pose(){
         else
             eac = e2c;
 
-    string Param = to_string(DUPLICATE_FILTERING_SIZE);
-        
 
-
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_pose_"+M_FILE_PATH+".csv",ios_base::app);
-    OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
-    OUT << M_my_pose(0,3) << "," << M_my_pose(1,3) << "," << M_my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << M_raw_time << endl;
-    OUT.close(); 
+    M_OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_pose_"+M_FILE_PATH+".csv",ios_base::app);
+    M_OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
+    M_OUT << M_my_pose(0,3) << "," << M_my_pose(1,3) << "," << M_my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << M_raw_time << endl;
+    M_OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_steps_"+M_FILE_PATH+".csv",ios_base::app);
-    OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
-    OUT.close(); 
+    M_OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_steps_"+M_FILE_PATH+".csv",ios_base::app);
+    M_OUT << "x" << "," << "y" << "," << "z" << "," << "roll"<< "," << "pitch"<< "," << "yaw" << "," << "time" << endl;
+    M_OUT.close(); 
     
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/feature_number_"+M_FILE_PATH+".csv",ios_base::app);
-    OUT << "num_of_features" "," << "time" << endl;
-    OUT.close(); 
+    M_OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/feature_number_"+M_FILE_PATH+".csv",ios_base::app);
+    M_OUT << "num_of_features" "," << "time" << endl;
+    M_OUT.close(); 
 }
 
 void ORB_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
-
-        string Param = to_string(DUPLICATE_FILTERING_SIZE);
 
         //step changes:
         Quaterniond q(R);
@@ -261,9 +265,9 @@ void ORB_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
             ea = e1;
         else
             ea = e2;
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_steps_"+M_FILE_PATH+".csv",ios_base::app);
-        OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << M_raw_time <<  endl;
-        OUT.close(); 
+        M_OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_steps_"+M_FILE_PATH+".csv",ios_base::app);
+        M_OUT << t(0) << "," << t(1) << "," << t(2) << "," << ea(0)<< "," << ea(1)<< "," << ea(2) << "," << M_raw_time <<  endl;
+        M_OUT.close(); 
 
 
 
@@ -296,15 +300,15 @@ void ORB_Framehandler::store_coordinates(const Vector3d& t, const Matrix3d& R){
         else
             eac = e2c;
         
-        OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_pose_"+M_FILE_PATH+".csv",ios_base::app);
-        OUT << M_my_pose(0,3) << "," << M_my_pose(1,3) << "," << M_my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << M_raw_time << endl;
-        OUT.close();
+        M_OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/prediction_pose_"+M_FILE_PATH+".csv",ios_base::app);
+        M_OUT << M_my_pose(0,3) << "," << M_my_pose(1,3) << "," << M_my_pose(2,3) << "," << eac(0)<< "," << eac(1)<< "," << eac(2) << "," << M_raw_time << endl;
+        M_OUT.close();
     }
 
 void ORB_Framehandler::store_feature_number(const MatrixXd& cur_SVD){
-    OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/feature_number_"+M_FILE_PATH+".csv",ios_base::app);
-    OUT << cur_SVD.cols() << "," << M_raw_time <<  endl;
-    OUT.close(); 
+    M_OUT.open("/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/image_and_descriptor/" + M_DIRECTORY + "/feature_number_"+M_FILE_PATH+".csv",ios_base::app);
+    M_OUT << cur_SVD.cols() << "," << M_raw_time <<  endl;
+    M_OUT.close(); 
 }
 
 // publishing functions
@@ -364,9 +368,9 @@ void ORB_Framehandler::publish_odom(){
 //member visualization functions
 
 void ORB_Framehandler::visualizer_3D(const MatrixXd& cur_SVD, const MatrixXd& prev_SVD,ros::Publisher* cur_publisher,ros::Publisher* prev_publisher,ros::Publisher* line_publisher){
-        Helper->publish_3D_keypoints(cur_SVD, cur_publisher, M_raw_time);
-        Helper->publish_3D_keypoints(prev_SVD, prev_publisher, M_raw_time);
-        Helper->publish_lines_3D(cur_SVD, prev_SVD, line_publisher, M_raw_time);
+        M_Helper->publish_3D_keypoints(cur_SVD, cur_publisher, M_raw_time);
+        M_Helper->publish_3D_keypoints(prev_SVD, prev_publisher, M_raw_time);
+        M_Helper->publish_lines_3D(cur_SVD, prev_SVD, line_publisher, M_raw_time);
 }
 
 void ORB_Framehandler::publish_matches_2F(const ros::Publisher* this_pub,const  std::vector<cv::Point2d>& sorted_KP_cur, 
@@ -493,7 +497,7 @@ void ORB_Framehandler::SVD(MatrixXd& cur_SVD,MatrixXd& prev_SVD){
         M_my_pose = M_my_pose*current_iteration;
 
         //Storing the plot data
-        if(SHOULD_STORE)
+        if(M_SHOULD_STORE)
         store_coordinates(t,R);
 
     }

@@ -14,7 +14,7 @@ class ORB_Framehandler{
 
     public:
     //Constructor
-    ORB_Framehandler(int _image_source,int START_POSE);
+    ORB_Framehandler(int _image_source);
     //Boundary condition for first iteration and then just calling matches_filtering_motion
     void newIteration(std::shared_ptr<ORB> new_frame, ros::Time _raw_time);
     /**
@@ -55,12 +55,14 @@ class ORB_Framehandler{
 
     std::shared_ptr<ORB> M_cur_orb, M_prev_orb;
     vector<cv::DMatch> M_matches; 
+    int M_START_POSE;
+    int M_IMAGE_WIDTH;
+    int M_IMAGE_HEIGHT;
     int M_image_source;
     Matrix4d M_my_pose;
-    int M_COUNT;
-    int M_unfiltered_count;
-    int M_ransac_filtered_count;
-    int M_filtered_count;
+
+    bool M_APPLY_DISTANCE_FILTERING;
+    bool M_APPLY_RANSAC_FILTERING;
 
     ros::Time M_raw_time;
 
@@ -77,9 +79,11 @@ class ORB_Framehandler{
     cv::Scalar M_POINT_COLOR;
     cv::Scalar M_LINE_COLOR;
 
+    bool M_SHOULD_STORE;
     std::string M_FILE_PATH;
     std::string M_DIRECTORY;
+    ofstream M_OUT;
     
-    helper* Helper;
+    helper* M_Helper;
 
 };

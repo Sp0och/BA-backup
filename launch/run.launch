@@ -7,7 +7,9 @@
     <node pkg="image_and_descriptor"  
           type="image_and_descriptor_node"
           name="image_and_descriptor"
-          output="screen" />
+          output="screen" 
+          launch-prefix="gdb -ex run --args"
+          />
 
     <!--- Run Rviz-->
     <node pkg="rviz" 

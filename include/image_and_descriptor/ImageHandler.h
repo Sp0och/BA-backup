@@ -17,8 +17,10 @@ public:
     cv::Mat image_range;
     cv::Mat image_noise;
     cv::Mat image_intensity;
+    int M_IMAGE_WIDTH;
+    int M_IMAGE_HEIGHT;
     //blurr strength
-    int BLURR_SIZE;
+    int M_BLURR_SIZE;
 
     //pointcloud
     pcl::PointCloud<PointType>::Ptr cloud_track;

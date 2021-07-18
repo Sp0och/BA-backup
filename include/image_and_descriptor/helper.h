@@ -44,7 +44,7 @@ class helper{
             row_index = 127;
             if(row_index < 0)
             row_index = 0;
-            int index = row_index*IMAGE_WIDTH + col_index;
+            int index = row_index*M_IMAGE_HEIGHT + col_index;
             PointType *pi = &PC->points[index];
             if(pi->x == pi->y && pi->y == pi->z && pi->z == 0)
                 status.at(i) = 0;
@@ -69,7 +69,7 @@ class helper{
             row_index = 127;
             if(row_index < 0)
             row_index = 0;
-            unsigned int index = row_index*IMAGE_WIDTH + col_index;
+            unsigned int index = row_index*M_IMAGE_HEIGHT + col_index;
             const PointType *pi = &PC->points[index];
             if(pi->x == pi->y && pi->y == pi->z && pi->z == 0)
                 status.at(i) = 0;
@@ -118,5 +118,12 @@ class helper{
     void publish_3D_keypoints(const Eigen::MatrixXd& points,const  ros::Publisher* kp_pc_publisher, ros::Time raw_time);
 
     void publish_lines_3D(const Eigen::MatrixXd& cur_SVD,const Eigen::MatrixXd& prev_SVD,const  ros::Publisher* line_publisher, ros::Time raw_time);
+
+    private:
+
+    ros::NodeHandle M_n_helper;
+
+    double M_MAX_DEPTH_DISTANCE;
+    int M_IMAGE_HEIGHT;
 
 };

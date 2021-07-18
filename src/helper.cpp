@@ -1,7 +1,17 @@
 #include "image_and_descriptor/helper.h"
 
 
-helper::helper(){}
+helper::helper(){
+    std::string config_file;
+    M_n_helper.getParam("parameter_file", config_file);
+    cv::FileStorage fsSettings(config_file, cv::FileStorage::READ);
+    if(!fsSettings.isOpened())
+        std::cerr << "ERROR: Wrong path to settings" << std::endl;
+    usleep(100);
+    fsSettings["max_depth_distance"] >> M_MAX_DEPTH_DISTANCE;
+    fsSettings["image_height"] >> M_IMAGE_HEIGHT;
+}
+
 
 //conversions and trimming: 
 
@@ -102,7 +112,7 @@ void helper::filtering_3D(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD, v
         //     distance_flag.at(i) = 0;
         // if((costheta * mdif > MAX_MATCH_DISTANCE) || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
         //     distance_flag.at(i) = 0;
-        if(depth_distance > MAX_DEPTH_DISTANCE)
+        if(depth_distance > M_MAX_DEPTH_DISTANCE)
             distance_flag.at(i) = 0;
     }
 
@@ -160,7 +170,7 @@ void helper::filtering_3D_f(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD,
         //     distance_flag.at(i) = 0;
         // if((costheta * mdif > MAX_MATCH_DISTANCE) || dist_c < MIN_KP_DISTANCE || dist_p < MIN_KP_DISTANCE)
         //     distance_flag.at(i) = 0;
-        if(depth_distance > MAX_DEPTH_DISTANCE)
+        if(depth_distance > M_MAX_DEPTH_DISTANCE)
             distance_flag.at(i) = 0;
     }
 

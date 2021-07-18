@@ -69,25 +69,8 @@ using namespace std;
 
 typedef pcl::PointXYZI PointType;
 
-extern cv::FileStorage fsSettings;
 
-extern pcl::PointCloud<PointType>::Ptr cloud_traj;
-extern string CLOUD_TOPIC;
-extern int IMAGE_WIDTH;
-extern int IMAGE_HEIGHT;
-extern int IMAGE_CROP;
-extern cv::Mat MASK;
-extern ofstream OUT;
 
-extern int DUPLICATE_FILTERING_SIZE;
-extern double MAX_DEPTH_DISTANCE;
-extern bool APPLY_DUPLICATE_FILTERING;
-extern bool APPLY_DISTANCE_FILTERING;
-extern bool APPLY_RANSAC_FILTERING;
-
-extern int START_POSE;
-
-extern bool SHOULD_STORE;
 
 
 

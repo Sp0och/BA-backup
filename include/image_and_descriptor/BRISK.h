@@ -20,7 +20,7 @@ class BRISK
      * */
     BRISK(const cv::Mat &_input_image, 
         const pcl::PointCloud<PointType>::Ptr _cloud,
-        int _image_source);
+        int image_source, cv::Mat& MASK);
 
     /**
      * Stores the BRISK keypoints in the vector in the std::vector format, creates the descriptors around the keypoints and calls the ransac point creator
@@ -42,13 +42,18 @@ class BRISK
     ros::NodeHandle M_n;
     ros::Publisher M_KP_pub_intensity,M_KP_pub_range,M_KP_pub_ambient,M_dupl_publisher,M_pub_3D;
     int M_image_source;
+    int M_IMAGE_WIDTH;
+    int M_IMAGE_HEIGHT;
+    cv::Mat M_MASK;
     
-
     int M_BRISK_THRESHOLD;
     int M_OCTAVES;
     float M_PATTERN_SCALE;
 
-    helper* Helper;
+    bool M_APPLY_DUPLICATE_FILTERING;
+    int M_DUPLICATE_FILTERING_SIZE;
+
+    helper* M_Helper;
 };
 
 

@@ -41,10 +41,11 @@ set(LIBRARY_FILES
     "src/ImageHandler.cpp"
     "src/helper.cpp"
     "src/ORB.cpp"
-    "src/ORB_Framehandler"
+    "src/ORB_Framehandler.cpp"
     "src/BRISK.cpp"
-    "src/BRISK_Framehandler"
+    "src/BRISK_Framehandler.cpp"
     "src/KLT.cpp"
+    "src/cloud_displayer.cpp"
 )
 
 add_library(${PROJECT_NAME}_lib ${LIBRARY_FILES})

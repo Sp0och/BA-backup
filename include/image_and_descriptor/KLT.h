@@ -9,7 +9,7 @@ class KLT {
     
     // core methods
 
-    KLT(int image_source,int START_POSE);
+    KLT(int image_source, cv::Mat& MASK);
 
     void KLT_Iteration(const cv::Mat& input_image,const pcl::PointCloud<PointType>::Ptr _cloud,ros::Time _raw_time);
 
@@ -63,7 +63,14 @@ class KLT {
     pcl::PointCloud<PointType>::Ptr M_cur_cloud;
     Matrix4d M_my_pose;
 
+    bool M_APPLY_RANSAC_FILTERING;
+    bool M_APPLY_DISTANCE_FILTERING;
+
+    int M_START_POSE;
     int M_image_source;
+    int M_IMAGE_WIDTH;
+    int M_IMAGE_CROP;
+    cv::Mat M_MASK;
     ros::Time M_raw_time;  //timestamps of the bagfile
     int M_MIN_KLT_FEATURES;
 
@@ -73,22 +80,19 @@ class KLT {
     int M_BLOCKSIZE;
     int M_MAX_KLT_FEATURES;
     //OpticalFlowPyr
-    double EPSILON;
-    int CRITERIA_REPS;
-    int OPT_SIZE;
-    int NUM_PYRAMIDS;
-    bool USE_HARRIS;
-
-    std::string FILE_PATH;
-    std::string DIRECTORY;
     double M_EPSILON;
     int M_CRITERIA_REPS;
     int M_OPT_SIZE;
     int M_NUM_PYRAMIDS;
     bool M_USE_HARRIS;
 
+    cv::Scalar M_POINT_COLOR;
+    cv::Scalar M_LINE_COLOR;
+
+    bool M_SHOULD_STORE;
     std::string M_FILE_PATH;
     std::string M_DIRECTORY;
+    ofstream M_OUT;
 
-    helper* Helper;
+    helper* M_Helper;
 };
