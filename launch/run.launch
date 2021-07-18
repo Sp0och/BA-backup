@@ -19,5 +19,5 @@
     <!--arg name="bag_path" default="/home/fierz/Downloads/catkin_tools/ros_catkin_ws/src/imaging_lidar_place_recognition/launch/handheld_registered.bag"/>
 
     <node pkg="rosbag" type="play" name="player" output="screen" 
-        args="$(arg bag_path)"/-->
+        args="$(arg bag_path)"/ -->
 </launch>

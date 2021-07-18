@@ -170,8 +170,6 @@ void helper::filtering_3D_f(Eigen::MatrixXd& cur_SVD, Eigen::MatrixXd& prev_SVD,
     helper::trimVector(prev,distance_flag);
 }
 
-
-
 //Visualization Functions:
 
 /**
